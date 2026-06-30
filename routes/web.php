@@ -1,0 +1,57 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Auth::routes();
+
+// Super Admin Panel Routes
+Route::middleware(['auth', 'role:super_admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('activity-logs');
+    Route::get('/audit-logs', [App\Http\Controllers\SuperAdminController::class, 'auditLogs'])->name('audit-logs');
+    Route::get('/api-logs', [App\Http\Controllers\SuperAdminController::class, 'apiLogs'])->name('api-logs');
+    Route::resource('tenants', App\Http\Controllers\SuperAdminController::class);
+    Route::patch('users/{id}/toggle-status', [App\Http\Controllers\SuperAdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::resource('users', App\Http\Controllers\SuperAdminUserController::class);
+});
+
+//Language Translation
+Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
+
+// Tenant Panel Routes (accessible to tenant_admin and investigador)
+Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')->name('tenant.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\TenantDashboardController::class, 'index'])->name('dashboard');
+    Route::resource('projects', App\Http\Controllers\ProjectController::class);
+    
+    // Background check execution and report endpoints
+    Route::post('/subjects/{id}/investigate', [App\Http\Controllers\InvestigationController::class, 'investigate'])->name('subjects.investigate');
+    Route::post('/subjects/{id}/investigate/{source_type}', [App\Http\Controllers\InvestigationController::class, 'investigateSource'])->name('subjects.investigate.source');
+    Route::get('/subjects/{id}/report', [App\Http\Controllers\ReportController::class, 'downloadReport'])->name('subjects.report');
+    
+    Route::resource('subjects', App\Http\Controllers\SubjectController::class);
+
+    // Tenant User Management & Consumption (exclusively for tenant_admin)
+    Route::middleware(['role:tenant_admin'])->group(function () {
+        Route::resource('users', App\Http\Controllers\TenantUserController::class);
+        Route::get('/consumption', [App\Http\Controllers\TenantDashboardController::class, 'consumption'])->name('consumption');
+    });
+});
+
+Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
+
+//Update User Details
+Route::post('/update-profile/{id}', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('updateProfile');
+Route::post('/update-password/{id}', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('updatePassword');
+
+Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
