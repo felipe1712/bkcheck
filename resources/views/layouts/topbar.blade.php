@@ -9,7 +9,7 @@
                             <span class="fs-16 fw-bold text-primary">A</span>
                         </span>
                         <span class="logo-lg">
-                            <span class="fs-20 fw-bold text-primary">ATLAS</span>
+                            <img src="{{ asset('images/avalid-logo.png') }}" alt="AvalID" style="height:32px;">
                         </span>
                     </a>
 
@@ -18,7 +18,7 @@
                             <span class="fs-16 fw-bold text-white">A</span>
                         </span>
                         <span class="logo-lg">
-                            <span class="fs-20 fw-bold text-white">ATLAS</span>
+                            <img src="{{ asset('images/avalid-logo.png') }}" alt="AvalID" style="height:32px; filter: brightness(0) invert(1);">
                         </span>
                     </a>
                 </div>

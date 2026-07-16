@@ -72,7 +72,7 @@ class TenantIsolationTest extends TestCase
     {
         $userA = User::where('email', 'investigador@alfa.com')->firstOrFail();
         $userB = User::where('email', 'investigador@beta.com')->firstOrFail();
-        $superAdmin = User::where('email', 'superadmin@atlas.com')->firstOrFail();
+        $superAdmin = User::where('email', 'superadmin@avalid.com.mx')->firstOrFail();
 
         // Create projects for both tenants
         $this->actingAs($userA);

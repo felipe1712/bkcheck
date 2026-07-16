@@ -8,7 +8,7 @@
                 <span class="fs-16 fw-bold text-primary">A</span>
             </span>
             <span class="logo-lg">
-                <span class="fs-20 fw-bold text-primary">ATLAS</span>
+                <img src="{{ asset('images/avalid-logo.png') }}" alt="AvalID" style="height:36px;">
             </span>
         </a>
         <!-- Light Logo-->
@@ -17,7 +17,7 @@
                 <span class="fs-16 fw-bold text-white">A</span>
             </span>
             <span class="logo-lg">
-                <span class="fs-20 fw-bold text-white">ATLAS</span>
+                <img src="{{ asset('images/avalid-logo.png') }}" alt="AvalID" style="height:36px; filter: brightness(0) invert(1);">
             </span>
         </a>
         <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"

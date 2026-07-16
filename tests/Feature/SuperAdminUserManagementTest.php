@@ -22,7 +22,7 @@ class SuperAdminUserManagementTest extends TestCase
      */
     public function test_super_admin_can_view_users_list_and_filter()
     {
-        $superAdmin = User::where('email', 'superadmin@atlas.com')->firstOrFail();
+        $superAdmin = User::where('email', 'superadmin@avalid.com.mx')->firstOrFail();
         $tenantA = Tenant::where('name', 'Consultoría Alfa')->firstOrFail();
 
         $this->actingAs($superAdmin);
@@ -30,7 +30,7 @@ class SuperAdminUserManagementTest extends TestCase
         // View all users
         $response = $this->get(route('superadmin.users.index'));
         $response->assertStatus(200);
-        $response->assertSee('superadmin@atlas.com');
+        $response->assertSee('superadmin@avalid.com.mx');
         $response->assertSee('admin@alfa.com');
         $response->assertSee('admin@beta.com');
 
@@ -58,7 +58,7 @@ class SuperAdminUserManagementTest extends TestCase
      */
     public function test_super_admin_user_creation_and_validation()
     {
-        $superAdmin = User::where('email', 'superadmin@atlas.com')->firstOrFail();
+        $superAdmin = User::where('email', 'superadmin@avalid.com.mx')->firstOrFail();
         $tenantA = Tenant::where('name', 'Consultoría Alfa')->firstOrFail();
 
         $this->actingAs($superAdmin);
@@ -107,7 +107,7 @@ class SuperAdminUserManagementTest extends TestCase
      */
     public function test_super_admin_user_update()
     {
-        $superAdmin = User::where('email', 'superadmin@atlas.com')->firstOrFail();
+        $superAdmin = User::where('email', 'superadmin@avalid.com.mx')->firstOrFail();
         $tenantB = Tenant::where('name', 'Investigaciones Beta')->firstOrFail();
         $investigatorA = User::where('email', 'investigador@alfa.com')->firstOrFail();
 
@@ -134,7 +134,7 @@ class SuperAdminUserManagementTest extends TestCase
      */
     public function test_toggle_user_status_and_self_exclusion()
     {
-        $superAdmin = User::where('email', 'superadmin@atlas.com')->firstOrFail();
+        $superAdmin = User::where('email', 'superadmin@avalid.com.mx')->firstOrFail();
         $investigatorA = User::where('email', 'investigador@alfa.com')->firstOrFail();
 
         $this->actingAs($superAdmin);
@@ -163,7 +163,7 @@ class SuperAdminUserManagementTest extends TestCase
      */
     public function test_delete_user_and_self_exclusion()
     {
-        $superAdmin = User::where('email', 'superadmin@atlas.com')->firstOrFail();
+        $superAdmin = User::where('email', 'superadmin@avalid.com.mx')->firstOrFail();
         $investigatorA = User::where('email', 'investigador@alfa.com')->firstOrFail();
 
         $this->actingAs($superAdmin);

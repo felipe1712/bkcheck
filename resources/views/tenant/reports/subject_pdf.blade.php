@@ -136,7 +136,7 @@
     <table style="width: 100%;" class="header">
         <tr>
             <td>
-                <span class="logo-text">ATLAS</span><br>
+                <span class="logo-text">AvalID</span><br>
                 <span style="color:#777; font-size:9px;">PLATAFORMA DE DUE DILIGENCE</span>
             </td>
             <td style="text-align: right;">
@@ -673,7 +673,7 @@
 
     <!-- Footer for page numbers and brand -->
     <div class="footer">
-        Atlas Due Diligence — Reporte Confidencial Generado bajo Licencia. Página 1 de 1.
+        AvalID — Reporte Confidencial. La Confianza de tu Gente.
     </div>
 
 </body>

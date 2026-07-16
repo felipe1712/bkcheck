@@ -12,7 +12,7 @@
                     <div class="text-center mt-sm-5 mb-4 text-white-50">
                         <div>
                             <a href="{{ route('root') }}" class="d-inline-block auth-logo">
-                                <span class="fs-24 fw-bold text-white tracking-widest">ATLAS</span>
+                                <img src="{{ asset('images/avalid-logo.png') }}" alt="AvalID" style="height:48px;">
                             </a>
                         </div>
                     </div>
@@ -25,7 +25,7 @@
                         <div class="card-body p-4">
                             <div class="text-center mt-2">
                                 <h5 class="text-primary">¡Bienvenido de nuevo!</h5>
-                                <p class="text-muted">Inicia sesión para continuar en Atlas.</p>
+                                <p class="text-muted">Inicia sesión para continuar en AvalID.</p>
                             </div>
                             <div class="p-2 mt-4">
                                 <form action="{{ route('login') }}" method="POST">
@@ -77,7 +77,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="text-center">
-                        <p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> Atlas Value Management.</p>
+                        <p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> AvalID — La Confianza de tu Gente.</p>
                     </div>
                 </div>
             </div>

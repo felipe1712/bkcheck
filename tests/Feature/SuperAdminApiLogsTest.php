@@ -26,7 +26,7 @@ class SuperAdminApiLogsTest extends TestCase
      */
     public function test_super_admin_can_access_api_logs_and_apply_filters()
     {
-        $superAdmin = User::where('email', 'superadmin@atlas.com')->firstOrFail();
+        $superAdmin = User::where('email', 'superadmin@avalid.com.mx')->firstOrFail();
         $tenantA = Tenant::where('name', 'Consultoría Alfa')->firstOrFail();
         $tenantB = Tenant::where('name', 'Investigaciones Beta')->firstOrFail();
 

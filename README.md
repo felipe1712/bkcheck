@@ -56,7 +56,7 @@ php artisan queue:work
 
 ### 1. Panel de Administración Global (Super Admin)
 * **URL:** `http://127.0.0.1:8001/superadmin/dashboard`
-* **Usuario:** `superadmin@atlas.com`
+* **Usuario:** `superadmin@avalid.com.mx`
 * **Contraseña:** `password`
 * *Funcionalidades:* Administración de Tenants (Clientes), límites mensuales de consultas, registro inmutable de auditoría, bitácoras de llamadas a la API de NuFi.
 

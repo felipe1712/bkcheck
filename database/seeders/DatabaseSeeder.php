@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         // 2. Create Global Super Admin User (tenant_id = null)
         $superAdmin = User::create([
             'name' => 'Super Administrador Global',
-            'email' => 'superadmin@atlas.com',
+            'email' => 'superadmin@avalid.com.mx',
             'password' => Hash::make('password'),
             'tenant_id' => null,
             'avatar' => 'avatar-1.jpg',

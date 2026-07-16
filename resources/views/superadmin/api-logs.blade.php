@@ -226,7 +226,7 @@
                                                     @endphp
 
                                                     <!-- Support Technical Markdown Template (Hidden) -->
-                                                    <pre id="support-payload-{{ $query->id }}" class="d-none">### REPORTE DE INCIDENCIA DE API - ATLAS DUE DILIGENCE
+                                                    <pre id="support-payload-{{ $query->id }}" class="d-none">### REPORTE DE INCIDENCIA DE API - AVALID
 ===================================================
 Fecha/Hora del Suceso: {{ $query->created_at ? $query->created_at->format('d/m/Y H:i:s') : 'N/A' }}
 Cliente: {{ $query->tenant->name ?? 'Global' }}
