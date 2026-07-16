@@ -202,6 +202,8 @@
                         @case('siger') Registro Público de Comercio (SIGER) @break
                         @case('sat_listas') Listas 69 / 69-B (SAT) @break
                         @case('marcas') Búsqueda de Marcas (IMPI) @break
+                        @case('ine_frente') Identificación INE Frente (OCR) @break
+                        @case('ine_reverso') Identificación INE Reverso (OCR) @break
                         @default {{ $query->source_type }}
                     @endswitch
                 </td>
@@ -227,6 +229,10 @@
                         @endif
                     @elseif($query->source_type === 'marcas')
                         {{ count($query->result->processed_data['marcas'] ?? []) }} Marca(s) encontrada(s)
+                    @elseif($query->source_type === 'ine_frente')
+                        Lectura OCR frontal completada
+                    @elseif($query->source_type === 'ine_reverso')
+                        Lectura OCR reverso completada
                     @else
                         Consulta realizada
                     @endif
@@ -248,6 +254,8 @@
                 @case('siger') Registro Público de Comercio (SIGER) @break
                 @case('sat_listas') Listas 69 / 69-B (SAT) @break
                 @case('marcas') Búsqueda de Marcas (IMPI) @break
+                @case('ine_frente') Identificación INE Frente (OCR) @break
+                @case('ine_reverso') Identificación INE Reverso (OCR) @break
                 @default {{ $query->source_type }}
             @endswitch
         </div>
@@ -434,11 +442,228 @@
                     </tbody>
                 </table>
             @endif
+        @elseif($query->source_type === 'ine_frente' && $query->result)
+            @php $frenteData = $query->result->processed_data; @endphp
+            <table class="metadata-table">
+                <tr>
+                    <td style="width: 25%; font-weight: bold;">Nombre Completo:</td>
+                    <td style="width: 75%;">{{ ($frenteData['nombre'] ?? '') . ' ' . ($frenteData['apellido_paterno'] ?? '') . ' ' . ($frenteData['apellido_materno'] ?? '') }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">CURP:</td>
+                    <td><code>{{ $frenteData['curp'] ?? 'N/A' }}</code></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Clave Elector:</td>
+                    <td><code>{{ $frenteData['clave_elector'] ?? 'N/A' }}</code></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Sección Electoral:</td>
+                    <td>{{ $frenteData['seccion'] ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Vigencia:</td>
+                    <td>{{ $frenteData['vigencia'] ?? 'N/A' }}</td>
+                </tr>
+            </table>
+
+        @elseif($query->source_type === 'ine_reverso' && $query->result)
+            @php $reversoData = $query->result->processed_data; @endphp
+            <table class="metadata-table">
+                <tr>
+                    <td style="width: 25%; font-weight: bold;">Código CIC:</td>
+                    <td style="width: 75%;"><code>{{ $reversoData['cic'] ?? 'N/A' }}</code></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Código OCR:</td>
+                    <td><code>{{ $reversoData['codigo_ocr'] ?? 'N/A' }}</code></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Número Identificador:</td>
+                    <td><code>{{ $reversoData['numero_identificador'] ?? 'N/A' }}</code></td>
+                </tr>
+            </table>
+        @elseif($query->source_type === 'sanciones' && $query->result)
+            @php $sancData = $query->result->processed_data; @endphp
+            @if(empty($sancData['hits'] ?? []))
+                <p>Sin incidencias registradas en listas de sanciones, PEPs o terrorismo.</p>
+            @else
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Lista</th>
+                            <th>Nombre Detectado</th>
+                            <th>País</th>
+                            <th>Tipo</th>
+                            <th>Comentarios</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($sancData['hits'] as $hit)
+                        <tr>
+                            <td style="font-weight: bold; color: #f06548;">{{ $hit['lista'] ?? 'N/A' }}</td>
+                            <td>{{ $hit['nombre_encontrado'] ?? 'N/A' }}</td>
+                            <td>{{ $hit['entidad_pais'] ?? 'N/A' }}</td>
+                            <td>{{ $hit['tipo_lista'] ?? 'Sanción' }}</td>
+                            <td>{{ $hit['comentarios'] ?? '' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+        @elseif($query->source_type === 'litigios' && $query->result)
+            @php $litigData = $query->result->processed_data; @endphp
+            @if(empty($litigData['juicios'] ?? []))
+                <p>Sin historial de juicios o demandas registrado ante juzgados locales o federales.</p>
+            @else
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Expediente</th>
+                            <th>Juzgado</th>
+                            <th>Materia</th>
+                            <th>Actor</th>
+                            <th>Demandado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($litigData['juicios'] as $juicio)
+                        <tr>
+                            <td><code>{{ $juicio['expediente'] ?? 'N/A' }}</code></td>
+                            <td>{{ $juicio['juzgado'] ?? 'N/A' }}</td>
+                            <td>{{ $juicio['materia'] ?? 'Civil' }}</td>
+                            <td>{{ $juicio['actor'] ?? 'N/A' }}</td>
+                            <td>{{ $juicio['demandado'] ?? 'N/A' }}</td>
+                            <td>{{ isset($juicio['fecha']) ? \Carbon\Carbon::parse($juicio['fecha'])->format('d/m/Y') : 'N/A' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         @endif
         <hr style="border: 0; border-top: 1px dashed #e9ebec; margin: 15px 0;">
     @endforeach
 
+    {{-- ══════════ SECCIONES TIER 2 ══════════ --}}
+    @php
+        $curpQ    = $queries->firstWhere('source_type', 'curp');
+        $domQ     = $queries->firstWhere('source_type', 'comprobante_domicilio');
+        $nssQ     = $queries->firstWhere('source_type', 'nss_imss');
+        $scoreQ   = $queries->firstWhere('source_type', 'score_crediticio');
+        $denueQ   = $queries->firstWhere('source_type', 'denue');
+        $curpPdf  = $curpQ?->result?->processed_data  ?? [];
+        $domPdf   = $domQ?->result?->processed_data   ?? [];
+        $nssPdf   = $nssQ?->result?->processed_data   ?? [];
+        $scorePdf = $scoreQ?->result?->processed_data ?? [];
+        $denuePdf = $denueQ?->result?->processed_data ?? [];
+    @endphp
+
+    {{-- CURP / RENAPO --}}
+    @if($curpQ && $curpQ->status === 'completed' && !empty($curpPdf))
+    <div class="section-title">Validación CURP / RENAPO</div>
+    <table class="data-table">
+        <tbody>
+            <tr><td style="width:30%;font-weight:bold;">CURP</td><td><code>{{ $curpPdf['curp'] ?? $subject->curp }}</code></td><td style="width:30%;font-weight:bold;">Estatus RENAPO</td><td>{{ $curpPdf['estatus_curp'] ?? '—' }}</td></tr>
+            <tr><td style="font-weight:bold;">Nombre registrado</td><td>{{ trim(($curpPdf['nombre'] ?? '') . ' ' . ($curpPdf['primer_apellido'] ?? '') . ' ' . ($curpPdf['segundo_apellido'] ?? '')) ?: '—' }}</td><td style="font-weight:bold;">Fecha de nacimiento</td><td>{{ $curpPdf['fecha_nacimiento'] ?? '—' }}</td></tr>
+            <tr><td style="font-weight:bold;">Sexo</td><td>{{ $curpPdf['sexo'] ?? '—' }}</td><td style="font-weight:bold;">Entidad de nacimiento</td><td>{{ $curpPdf['estado_nacimiento'] ?? '—' }}</td></tr>
+            <tr><td style="font-weight:bold;">Válida</td><td colspan="3"><strong style="color:{{ ($curpPdf['valida'] ?? false) ? '#0ab39c' : '#f06548' }};">{{ ($curpPdf['valida'] ?? false) ? '✓ CURP válida ante RENAPO' : '✗ CURP no válida o no encontrada' }}</strong></td></tr>
+        </tbody>
+    </table>
+    <hr style="border: 0; border-top: 1px dashed #e9ebec; margin: 15px 0;">
+    @endif
+
+    {{-- Comprobante de Domicilio --}}
+    @if($domQ && $domQ->status === 'completed' && !empty($domPdf))
+    <div class="section-title">Comprobante de Domicilio — OCR</div>
+    <table class="data-table">
+        <tbody>
+            <tr><td style="width:30%;font-weight:bold;">Tipo</td><td>{{ $domPdf['tipo_comprobante'] ?? '—' }}</td><td style="width:30%;font-weight:bold;">Titular</td><td>{{ $domPdf['titular'] ?? '—' }}</td></tr>
+            <tr><td style="font-weight:bold;">Domicilio extraído</td><td colspan="3">{{ collect([$domPdf['calle'] ?? null, $domPdf['num_exterior'] ?? null, $domPdf['colonia'] ?? null, $domPdf['municipio'] ?? null, $domPdf['estado'] ?? null])->filter()->implode(', ') ?: '—' }}{{ !empty($domPdf['codigo_postal']) ? ' · C.P. ' . $domPdf['codigo_postal'] : '' }}</td></tr>
+            <tr><td style="font-weight:bold;">Fecha / Período</td><td>{{ $domPdf['periodo_facturado'] ?? $domPdf['fecha_emision'] ?? '—' }}</td><td style="font-weight:bold;">Coincide con sujeto</td><td><strong style="color:{{ ($domPdf['coincide_con_sujeto'] ?? false) ? '#0ab39c' : '#f06548' }};">{{ ($domPdf['coincide_con_sujeto'] ?? false) ? '✓ Sí' : '✗ No' }}</strong></td></tr>
+        </tbody>
+    </table>
+    <hr style="border: 0; border-top: 1px dashed #e9ebec; margin: 15px 0;">
+    @endif
+
+    {{-- NSS / IMSS --}}
+    @if($nssQ && $nssQ->status === 'completed' && !empty($nssPdf))
+    <div class="section-title">Historial Laboral IMSS (NSS)</div>
+    <table class="data-table">
+        <tbody>
+            <tr><td style="width:30%;font-weight:bold;">NSS</td><td><code>{{ $nssPdf['nss'] ?? '—' }}</code></td><td style="width:30%;font-weight:bold;">Semanas cotizadas</td><td><strong>{{ $nssPdf['semanas_cotizadas'] ?? '—' }}</strong></td></tr>
+            <tr><td style="font-weight:bold;">Último patrón</td><td>{{ $nssPdf['ultimo_patron'] ?? '—' }}</td><td style="font-weight:bold;">Últ. cotización</td><td>{{ $nssPdf['fecha_ultima_cotizacion'] ?? '—' }}</td></tr>
+            <tr><td style="font-weight:bold;">Estatus IMSS</td><td>{{ ($nssPdf['activo_actualmente'] ?? false) ? 'Activo' : 'Baja' }}</td><td style="font-weight:bold;">SBC</td><td>${{ number_format($nssPdf['salario_base_cotizacion'] ?? 0, 2) }}/día</td></tr>
+        </tbody>
+    </table>
+    @if(!empty($nssPdf['historial_empleos']))
+    <table class="data-table" style="margin-top:6px;">
+        <thead><tr><th>Patrón</th><th>Tipo</th><th>Inicio</th><th>Baja</th><th>Semanas</th></tr></thead>
+        <tbody>
+            @foreach(array_slice($nssPdf['historial_empleos'], 0, 5) as $emp)
+            <tr>
+                <td>{{ $emp['patron'] ?? '—' }}</td>
+                <td>{{ $emp['tipo_movimiento'] ?? '—' }}</td>
+                <td>{{ $emp['fecha_inicio'] ?? '—' }}</td>
+                <td>{{ $emp['fecha_baja'] ?? 'Vigente' }}</td>
+                <td>{{ $emp['semanas'] ?? '—' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+    <hr style="border: 0; border-top: 1px dashed #e9ebec; margin: 15px 0;">
+    @endif
+
+    {{-- Score Crediticio --}}
+    @if($scoreQ && $scoreQ->status === 'completed' && !empty($scorePdf))
+    <div class="section-title">Score Crediticio — Buró de Crédito</div>
+    <table class="data-table">
+        <tbody>
+            <tr><td style="width:30%;font-weight:bold;">Score Buró</td><td><strong style="font-size:16px;">{{ $scorePdf['score_buro'] ?? '—' }}</strong></td><td style="width:30%;font-weight:bold;">Rango</td><td>{{ $scorePdf['rango_score'] ?? '—' }}</td></tr>
+            <tr><td style="font-weight:bold;">Nivel de riesgo</td><td>{{ $scorePdf['nivel_riesgo'] ?? '—' }}</td><td style="font-weight:bold;">Cuentas activas</td><td>{{ $scorePdf['cuentas_activas'] ?? '—' }}</td></tr>
+            <tr><td style="font-weight:bold;">Cuentas en mora</td><td style="color:{{ ($scorePdf['cuentas_en_mora'] ?? 0) > 0 ? '#f06548' : '#0ab39c' }};"><strong>{{ $scorePdf['cuentas_en_mora'] ?? 0 }}</strong></td><td style="font-weight:bold;">Monto vencido</td><td>${{ number_format($scorePdf['monto_vencido'] ?? 0, 2) }}</td></tr>
+            <tr><td style="font-weight:bold;">Deuda total</td><td>${{ number_format($scorePdf['monto_total_deuda'] ?? 0, 2) }}</td><td style="font-weight:bold;">Consultas recientes</td><td>{{ $scorePdf['consultas_recientes'] ?? '—' }}</td></tr>
+        </tbody>
+    </table>
+    @if(!empty($scorePdf['aviso_legal']))
+    <p style="font-size:10px;color:#666;margin-top:6px;"><em>⚠ {{ $scorePdf['aviso_legal'] }}</em></p>
+    @endif
+    <hr style="border: 0; border-top: 1px dashed #e9ebec; margin: 15px 0;">
+    @endif
+
+    {{-- DENUE --}}
+    @if($denueQ && $denueQ->status === 'completed' && !empty($denuePdf['establecimientos'] ?? []))
+    <div class="section-title">Directorio Empresarial DENUE — INEGI</div>
+    <p style="font-size:11px;color:#666;margin-bottom:8px;">
+        Se encontraron <strong>{{ $denuePdf['total_encontrados'] ?? 0 }}</strong> registro(s) en el Directorio Estadístico Nacional de Unidades Económicas del INEGI.
+    </p>
+    <table class="data-table">
+        <thead><tr><th>Nombre / Razón Social</th><th>Actividad (SCIAN)</th><th>Personal</th><th>Domicilio</th></tr></thead>
+        <tbody>
+            @foreach($denuePdf['establecimientos'] as $e)
+            <tr>
+                <td>
+                    <strong>{{ $e['nombre_estab'] ?? '—' }}</strong>
+                    @if(!empty($e['id_denue']))<br><small>ID: {{ $e['id_denue'] }}</small>@endif
+                </td>
+                <td>{{ $e['codigo_act'] ?? '' }} — {{ $e['actividad'] ?? '—' }}</td>
+                <td>{{ $e['personal_ocupado'] ?? '—' }}</td>
+                <td>
+                    {{ collect([$e['calle'] ?? null, $e['num_exterior'] ?? null, $e['colonia'] ?? null, $e['municipio'] ?? null, $e['entidad'] ?? null])->filter()->implode(', ') ?: '—' }}
+                    @if(!empty($e['codigo_postal'])) · C.P. {{ $e['codigo_postal'] }} @endif
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    <p style="font-size:10px;color:#666;margin-top:4px;"><em>Fuente: INEGI DENUE — Datos Abiertos. Consulta gratuita.</em></p>
+    <hr style="border: 0; border-top: 1px dashed #e9ebec; margin: 15px 0;">
+    @endif
+
     <!-- Legal Disclaimer Section -->
+
     <div class="disclaimer-box">
         <div class="disclaimer-title">DESCARGO DE RESPONSABILIDAD LEGAL (DISCLAIMER)</div>
         <div class="disclaimer-text">

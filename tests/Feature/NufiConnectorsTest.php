@@ -56,12 +56,12 @@ class NufiConnectorsTest extends TestCase
         $runner = new InvestigationRunner();
         $runner->run($subject);
 
-        // Verify that 5 jobs were dispatched (rfc, csd, siger, sat_listas, marcas)
-        Queue::assertPushed(\App\Jobs\ProcessConnectorQuery::class, 5);
+        // Verify 9 jobs dispatched: rfc, csd, siger, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue
+        Queue::assertPushed(\App\Jobs\ProcessConnectorQuery::class, 9);
 
-        // Verify that 5 SourceQuery records were created in pending state
+        // Verify 9 SourceQuery records in pending state
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(5, $queries);
+        $this->assertCount(9, $queries);
         foreach ($queries as $q) {
             $this->assertEquals('pending', $q->status);
         }
@@ -91,8 +91,9 @@ class NufiConnectorsTest extends TestCase
 
         // Under PHPUnit's sync queue driver, the runner's dispatches execute immediately.
         // We can query the results and assert states directly.
+        // persona_fisica (no INE, no selfie): rfc, csd, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue = 8
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(4, $queries);
+        $this->assertCount(8, $queries);
 
         // Verify that query statuses are completed
         foreach ($queries as $q) {
@@ -102,13 +103,12 @@ class NufiConnectorsTest extends TestCase
             $this->assertIsArray($q->result->raw_payload);
         }
 
-        // Verify that audit logs were populated (4 entries)
         $auditLogs = AuditLog::where('tenant_id', $user->tenant_id)->get();
-        $this->assertCount(4, $auditLogs);
+        $this->assertCount(8, $auditLogs);
 
-        // Verify that api_usage entries were created/updated
+        // Verify api_usage totals
         $usageCount = ApiUsage::where('tenant_id', $user->tenant_id)->sum('conteo');
-        $this->assertEquals(4, $usageCount);
+        $this->assertEquals(8, $usageCount);
     }
 
     /**
@@ -305,5 +305,88 @@ class NufiConnectorsTest extends TestCase
         // CSD has uuid, so status should remain 'processing', not 'completed'
         $this->assertEquals('processing', $sourceQuery->status);
         $this->assertEquals('test-async-uuid-5678', $sourceQuery->result->processed_data['uuid']);
+    }
+
+    /**
+     * Test INE Frente and Reverso connectors mapping and execution.
+     */
+    public function test_ine_connectors_ocr_processing()
+    {
+        $user = User::where('email', 'investigador@alfa.com')->firstOrFail();
+        $this->actingAs($user);
+
+        $project = Project::create(['name' => 'Project 3']);
+        $subject = Subject::create([
+            'project_id' => $project->id,
+            'tipo' => 'persona_fisica',
+            'name_or_company' => 'Juan Perez Lopez',
+            'rfc' => 'PEHJ8405021H0',
+            'consent_granted' => true,
+            'consent_date' => now(),
+            'consent_legal_basis' => 'Autorización expresa',
+            'ine_front_path' => 'ine_documents/test_front.png',
+            'ine_back_path' => 'ine_documents/test_back.png',
+        ]);
+
+        $runner = new InvestigationRunner();
+        $runner->run($subject);
+
+        // 10 jobs: rfc, csd, sat_listas, marcas, ine_frente, ine_reverso, sanciones, litigios, presencia_en_linea, denue
+        $queries = SourceQuery::where('subject_id', $subject->id)->get();
+        $this->assertCount(10, $queries);
+
+        // Verify status
+        $frenteQuery = $queries->where('source_type', 'ine_frente')->first();
+        $reversoQuery = $queries->where('source_type', 'ine_reverso')->first();
+
+        $this->assertNotNull($frenteQuery);
+        $this->assertNotNull($reversoQuery);
+
+        $frenteQuery->refresh();
+        $reversoQuery->refresh();
+
+        $this->assertEquals('completed', $frenteQuery->status);
+        $this->assertEquals('completed', $reversoQuery->status);
+
+        $this->assertEquals('JUAN', $frenteQuery->result->processed_data['nombre']);
+        $this->assertNotEmpty($reversoQuery->result->processed_data['cic']);
+    }
+
+    /**
+     * Test Sanciones and Litigios connectors mock processing.
+     */
+    public function test_sanciones_and_litigios_connectors_mapping()
+    {
+        $user = User::where('email', 'investigador@alfa.com')->firstOrFail();
+        $this->actingAs($user);
+
+        $project = Project::create(['name' => 'Project 4']);
+        // Subject name contains "pep" and "litigio" to trigger positive mocks
+        $subject = Subject::create([
+            'project_id' => $project->id,
+            'tipo' => 'persona_fisica',
+            'name_or_company' => 'Juan Perez PEP Litigio',
+            'rfc' => 'PEHJ8405021H0',
+            'consent_granted' => true,
+            'consent_date' => now(),
+            'consent_legal_basis' => 'Autorización expresa',
+        ]);
+
+        $runner = new InvestigationRunner();
+        $runner->run($subject);
+
+        $queries = SourceQuery::where('subject_id', $subject->id)->get();
+        
+        $sancionesQuery = $queries->where('source_type', 'sanciones')->first();
+        $litigiosQuery = $queries->where('source_type', 'litigios')->first();
+
+        $this->assertNotNull($sancionesQuery);
+        $this->assertNotNull($litigiosQuery);
+
+        $this->assertEquals('completed', $sancionesQuery->status);
+        $this->assertEquals('completed', $litigiosQuery->status);
+
+        $this->assertTrue($sancionesQuery->result->processed_data['encontrado']);
+        $this->assertTrue($litigiosQuery->result->processed_data['tiene_juicios']);
     }
 }

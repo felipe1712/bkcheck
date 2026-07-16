@@ -1,5 +1,5 @@
 /**
- * simplebar - v6.2.7
+ * simplebar - v6.3.3
  * Scrollbars, simpler.
  * https://grsmto.github.io/simplebar/
  *
@@ -41,6 +41,36 @@ var SimpleBar = (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    /**
+     * Checks if `value` is the
+     * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+     * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+     *
+     * @static
+     * @memberOf _
+     * @since 0.1.0
+     * @category Lang
+     * @param {*} value The value to check.
+     * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+     * @example
+     *
+     * _.isObject({});
+     * // => true
+     *
+     * _.isObject([1, 2, 3]);
+     * // => true
+     *
+     * _.isObject(_.noop);
+     * // => true
+     *
+     * _.isObject(null);
+     * // => false
+     */
+    function isObject(value) {
+      var type = typeof value;
+      return value != null && (type == 'object' || type == 'function');
+    }
+
     /** Detect free variable `global` from Node.js. */
     var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
 
@@ -53,6 +83,62 @@ var SimpleBar = (function () {
     var root = freeGlobal$1 || freeSelf || Function('return this')();
 
     var root$1 = root;
+
+    /**
+     * Gets the timestamp of the number of milliseconds that have elapsed since
+     * the Unix epoch (1 January 1970 00:00:00 UTC).
+     *
+     * @static
+     * @memberOf _
+     * @since 2.4.0
+     * @category Date
+     * @returns {number} Returns the timestamp.
+     * @example
+     *
+     * _.defer(function(stamp) {
+     *   console.log(_.now() - stamp);
+     * }, _.now());
+     * // => Logs the number of milliseconds it took for the deferred invocation.
+     */
+    var now = function() {
+      return root$1.Date.now();
+    };
+
+    var now$1 = now;
+
+    /** Used to match a single whitespace character. */
+    var reWhitespace = /\s/;
+
+    /**
+     * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
+     * character of `string`.
+     *
+     * @private
+     * @param {string} string The string to inspect.
+     * @returns {number} Returns the index of the last non-whitespace character.
+     */
+    function trimmedEndIndex(string) {
+      var index = string.length;
+
+      while (index-- && reWhitespace.test(string.charAt(index))) {}
+      return index;
+    }
+
+    /** Used to match leading whitespace. */
+    var reTrimStart = /^\s+/;
+
+    /**
+     * The base implementation of `_.trim`.
+     *
+     * @private
+     * @param {string} string The string to trim.
+     * @returns {string} Returns the trimmed string.
+     */
+    function baseTrim(string) {
+      return string
+        ? string.slice(0, trimmedEndIndex(string) + 1).replace(reTrimStart, '')
+        : string;
+    }
 
     /** Built-in value references. */
     var Symbol = root$1.Symbol;
@@ -199,70 +285,6 @@ var SimpleBar = (function () {
         (isObjectLike(value) && baseGetTag(value) == symbolTag);
     }
 
-    /** Used to match a single whitespace character. */
-    var reWhitespace = /\s/;
-
-    /**
-     * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
-     * character of `string`.
-     *
-     * @private
-     * @param {string} string The string to inspect.
-     * @returns {number} Returns the index of the last non-whitespace character.
-     */
-    function trimmedEndIndex(string) {
-      var index = string.length;
-
-      while (index-- && reWhitespace.test(string.charAt(index))) {}
-      return index;
-    }
-
-    /** Used to match leading whitespace. */
-    var reTrimStart = /^\s+/;
-
-    /**
-     * The base implementation of `_.trim`.
-     *
-     * @private
-     * @param {string} string The string to trim.
-     * @returns {string} Returns the trimmed string.
-     */
-    function baseTrim(string) {
-      return string
-        ? string.slice(0, trimmedEndIndex(string) + 1).replace(reTrimStart, '')
-        : string;
-    }
-
-    /**
-     * Checks if `value` is the
-     * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
-     * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
-     *
-     * @static
-     * @memberOf _
-     * @since 0.1.0
-     * @category Lang
-     * @param {*} value The value to check.
-     * @returns {boolean} Returns `true` if `value` is an object, else `false`.
-     * @example
-     *
-     * _.isObject({});
-     * // => true
-     *
-     * _.isObject([1, 2, 3]);
-     * // => true
-     *
-     * _.isObject(_.noop);
-     * // => true
-     *
-     * _.isObject(null);
-     * // => false
-     */
-    function isObject(value) {
-      var type = typeof value;
-      return value != null && (type == 'object' || type == 'function');
-    }
-
     /** Used as references for various `Number` constants. */
     var NAN = 0 / 0;
 
@@ -321,28 +343,6 @@ var SimpleBar = (function () {
         ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
         : (reIsBadHex.test(value) ? NAN : +value);
     }
-
-    /**
-     * Gets the timestamp of the number of milliseconds that have elapsed since
-     * the Unix epoch (1 January 1970 00:00:00 UTC).
-     *
-     * @static
-     * @memberOf _
-     * @since 2.4.0
-     * @category Date
-     * @returns {number} Returns the timestamp.
-     * @example
-     *
-     * _.defer(function(stamp) {
-     *   console.log(_.now() - stamp);
-     * }, _.now());
-     * // => Logs the number of milliseconds it took for the deferred invocation.
-     */
-    var now = function() {
-      return root$1.Date.now();
-    };
-
-    var now$1 = now;
 
     /** Error message constants. */
     var FUNC_ERROR_TEXT$1 = 'Expected a function';
@@ -596,7 +596,7 @@ var SimpleBar = (function () {
     }
 
     /**
-     * simplebar-core - v1.2.6
+     * simplebar-core - v1.3.2
      * Scrollbars, simpler.
      * https://grsmto.github.io/simplebar/
      *

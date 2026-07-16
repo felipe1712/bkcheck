@@ -11,6 +11,17 @@ use App\Services\BackgroundCheck\Nufi\NufiCsdConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSigerConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSatListasConnector;
 use App\Services\BackgroundCheck\Nufi\NufiMarcasConnector;
+use App\Services\BackgroundCheck\Nufi\NufiIneFrenteConnector;
+use App\Services\BackgroundCheck\Nufi\NufiIneReversoConnector;
+use App\Services\BackgroundCheck\Nufi\NufiSancionesConnector;
+use App\Services\BackgroundCheck\Nufi\NufiLitigiosConnector;
+use App\Services\BackgroundCheck\Nufi\NufiSelfieConnector;
+use App\Services\BackgroundCheck\Nufi\NufiCurpConnector;
+use App\Services\BackgroundCheck\Nufi\NufiDomicilioConnector;
+use App\Services\BackgroundCheck\Nufi\NufiNssConnector;
+use App\Services\BackgroundCheck\Nufi\NufiFinancialConnector;
+use App\Services\BackgroundCheck\PresenciaEnLineaConnector;
+use App\Services\BackgroundCheck\Inegi\DenueConnector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -29,6 +40,17 @@ class InvestigationRunner
             new NufiSigerConnector(),
             new NufiSatListasConnector(),
             new NufiMarcasConnector(),
+            new NufiIneFrenteConnector(),
+            new NufiIneReversoConnector(),
+            new NufiSancionesConnector(),
+            new NufiLitigiosConnector(),
+            new NufiSelfieConnector(),
+            new NufiCurpConnector(),
+            new NufiDomicilioConnector(),
+            new NufiNssConnector(),
+            new NufiFinancialConnector(),
+            new PresenciaEnLineaConnector(),
+            new DenueConnector(),
         ];
     }
 

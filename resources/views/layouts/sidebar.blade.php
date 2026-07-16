@@ -124,6 +124,11 @@
                         <i class="ri-money-dollar-circle-line"></i> <span>Consultas / Consumo</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ route('tenant.settings') }}">
+                        <i class="ri-settings-3-line"></i> <span>Configuración</span>
+                    </a>
+                </li>
                 @endrole
                 @endhasanyrole
             </ul>

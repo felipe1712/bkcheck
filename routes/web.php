@@ -45,7 +45,15 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
     Route::middleware(['role:tenant_admin'])->group(function () {
         Route::resource('users', App\Http\Controllers\TenantUserController::class);
         Route::get('/consumption', [App\Http\Controllers\TenantDashboardController::class, 'consumption'])->name('consumption');
+        // Configuración del tenant: Términos y Condiciones de enrolamiento
+        Route::get('/settings',  [App\Http\Controllers\TenantSettingsController::class, 'index']) ->name('settings');
+        Route::post('/settings', [App\Http\Controllers\TenantSettingsController::class, 'update'])->name('settings.update');
     });
+
+    // Regenerar token de enrolamiento (tenant_admin e investigador)
+    Route::post('/subjects/{id}/regenerate-enrollment',
+        [App\Http\Controllers\SubjectController::class, 'regenerateEnrollment']
+    )->name('subjects.regenerate-enrollment');
 });
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
@@ -53,5 +61,16 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('roo
 //Update User Details
 Route::post('/update-profile/{id}', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('updateProfile');
 Route::post('/update-password/{id}', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('updatePassword');
+
+// ─────────────────────────────────────────────────────────
+// RUTAS PÚBLICAS — Enrolamiento del Investigado (sin auth)
+// Seguridad basada en token UUID + expiración 24h
+// ─────────────────────────────────────────────────────────
+Route::prefix('enroll')->name('enroll.')->middleware('throttle:10,1')->group(function () {
+    Route::get('/{token}',             [App\Http\Controllers\EnrollmentController::class, 'show'])        ->name('show');
+    Route::post('/{token}/accept-tc',  [App\Http\Controllers\EnrollmentController::class, 'acceptTerms']) ->name('accept-tc');
+    Route::post('/{token}/upload',     [App\Http\Controllers\EnrollmentController::class, 'upload'])      ->name('upload');
+    Route::get('/{token}/done',        [App\Http\Controllers\EnrollmentController::class, 'done'])        ->name('done');
+});
 
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');

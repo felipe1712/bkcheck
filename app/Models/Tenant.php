@@ -13,6 +13,13 @@ class Tenant extends Model
         'name',
         'limite_consultas_mensual',
         'activo',
+        'enrollment_terms',
+        'enrollment_terms_updated_at',
+    ];
+
+    protected $casts = [
+        'activo'                       => 'boolean',
+        'enrollment_terms_updated_at'  => 'datetime',
     ];
 
     /**
@@ -22,4 +29,24 @@ class Tenant extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * Check whether this tenant has configured enrollment T&C text.
+     */
+    public function hasEnrollmentTerms(): bool
+    {
+        return !empty($this->enrollment_terms);
+    }
+
+    /**
+     * Return the T&C text or a generic legal fallback.
+     */
+    public function getEnrollmentTermsText(): string
+    {
+        if ($this->hasEnrollmentTerms()) {
+            return $this->enrollment_terms;
+        }
+        return 'Al continuar, usted autoriza expresamente el uso de sus datos personales (incluyendo imágenes de su identificación oficial y fotografía personal) para fines de verificación de identidad, en cumplimiento con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP). Sus datos serán tratados de forma confidencial y utilizados únicamente con la finalidad de este proceso de verificación.';
+    }
 }
+

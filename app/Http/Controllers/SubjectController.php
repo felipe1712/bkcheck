@@ -42,50 +42,76 @@ class SubjectController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'tipo' => 'required|string|in:persona_fisica,persona_moral',
-            'name_or_company' => 'required|string|max:255',
+            'project_id'           => 'required|exists:projects,id',
+            'tipo'                 => 'required|string|in:persona_fisica,persona_moral',
+            'name_or_company'      => 'required|string|max:255',
             'rfc' => [
-                'required',
-                'string',
-                'min:12',
-                'max:13',
-                // Custom regex to validate Mexican RFC structure:
-                // Moral (12 chars): 3 letters, 6 digits, 3 alphanumeric homoclave
-                // Fisica (13 chars): 4 letters, 6 digits, 3 alphanumeric homoclave
+                'required', 'string', 'min:12', 'max:13',
                 'regex:/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A\d])$/i'
             ],
             'curp' => [
-                'nullable',
-                'required_if:tipo,persona_fisica',
-                'string',
-                'size:18',
+                'nullable', 'required_if:tipo,persona_fisica', 'string', 'size:18',
                 'regex:/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/i'
             ],
-            'address' => 'nullable|string|max:500',
-            'consent_granted' => 'required|boolean|accepted',
-            'consent_legal_basis' => 'required|string|max:255',
-            'consent_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120', // Max 5MB
+            'address'              => 'nullable|string|max:500',
+            'consent_granted'      => 'required|boolean|accepted',
+            'consent_legal_basis'  => 'required|string|max:255',
+            'consent_document'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'ine_front'            => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'ine_back'             => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            // Tier 2
+            'username'             => 'nullable|string|max:100',
+            'nss'                  => 'nullable|digits:11',
+            'proof_of_address'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'credit_consent_granted' => 'nullable|boolean',
         ]);
 
         $consentPath = null;
         if ($request->hasFile('consent_document')) {
-            // Store the file securely in private local storage
             $consentPath = $request->file('consent_document')->store('consent_documents');
         }
 
+        $ineFrontPath = null;
+        if ($request->hasFile('ine_front')) {
+            $ineFrontPath = $request->file('ine_front')->store('ine_documents');
+        }
+
+        $ineBackPath = null;
+        if ($request->hasFile('ine_back')) {
+            $ineBackPath = $request->file('ine_back')->store('ine_documents');
+        }
+
+        // Tier 2: Comprobante de domicilio
+        $proofOfAddressPath = null;
+        if ($request->hasFile('proof_of_address')) {
+            $proofOfAddressPath = $request->file('proof_of_address')->store('proof_of_address_documents');
+        }
+
+        $creditConsent = (bool) $request->input('credit_consent_granted', false);
+
         $subject = Subject::create([
-            'project_id' => $request->project_id,
-            'tipo' => $request->tipo,
-            'name_or_company' => $request->name_or_company,
-            'rfc' => strtoupper($request->rfc),
-            'curp' => $request->curp ? strtoupper($request->curp) : null,
-            'address' => $request->address,
-            'consent_granted' => $request->consent_granted,
-            'consent_date' => now(),
-            'consent_legal_basis' => $request->consent_legal_basis,
-            'consent_document_path' => $consentPath,
+            'project_id'             => $request->project_id,
+            'tipo'                   => $request->tipo,
+            'name_or_company'        => $request->name_or_company,
+            'rfc'                    => strtoupper($request->rfc),
+            'curp'                   => $request->curp ? strtoupper($request->curp) : null,
+            'address'                => $request->address,
+            'consent_granted'        => $request->consent_granted,
+            'consent_date'           => now(),
+            'consent_legal_basis'    => $request->consent_legal_basis,
+            'consent_document_path'  => $consentPath,
+            'ine_front_path'         => $ineFrontPath,
+            'ine_back_path'          => $ineBackPath,
+            // Tier 2
+            'username'               => $request->username ?: null,
+            'nss'                    => $request->nss ?: null,
+            'proof_of_address_path'  => $proofOfAddressPath,
+            'credit_consent_granted' => $creditConsent,
+            'credit_consent_at'      => $creditConsent ? now() : null,
         ]);
+
+        // Generar token de enrolamiento automáticamente (válido 24h)
+        $subject->generateEnrollmentToken();
 
         // Log activity
         activity()
@@ -131,46 +157,79 @@ class SubjectController extends Controller
         $subject = Subject::findOrFail($id);
 
         $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'tipo' => 'required|string|in:persona_fisica,persona_moral',
-            'name_or_company' => 'required|string|max:255',
+            'project_id'           => 'required|exists:projects,id',
+            'tipo'                 => 'required|string|in:persona_fisica,persona_moral',
+            'name_or_company'      => 'required|string|max:255',
             'rfc' => [
-                'required',
-                'string',
-                'min:12',
-                'max:13',
+                'required', 'string', 'min:12', 'max:13',
                 'regex:/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A\d])$/i'
             ],
             'curp' => [
-                'nullable',
-                'required_if:tipo,persona_fisica',
-                'string',
-                'size:18',
+                'nullable', 'required_if:tipo,persona_fisica', 'string', 'size:18',
                 'regex:/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/i'
             ],
-            'address' => 'nullable|string|max:500',
-            'consent_legal_basis' => 'required|string|max:255',
-            'consent_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'address'              => 'nullable|string|max:500',
+            'consent_legal_basis'  => 'required|string|max:255',
+            'consent_document'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'ine_front'            => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'ine_back'             => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            // Tier 2
+            'username'             => 'nullable|string|max:100',
+            'nss'                  => 'nullable|digits:11',
+            'proof_of_address'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'credit_consent_granted' => 'nullable|boolean',
         ]);
 
         $consentPath = $subject->consent_document_path;
         if ($request->hasFile('consent_document')) {
-            // Delete old file if exists
-            if ($consentPath) {
-                Storage::delete($consentPath);
-            }
+            if ($consentPath) Storage::delete($consentPath);
             $consentPath = $request->file('consent_document')->store('consent_documents');
         }
 
+        $ineFrontPath = $subject->ine_front_path;
+        if ($request->hasFile('ine_front')) {
+            if ($ineFrontPath) Storage::delete($ineFrontPath);
+            $ineFrontPath = $request->file('ine_front')->store('ine_documents');
+        }
+
+        $ineBackPath = $subject->ine_back_path;
+        if ($request->hasFile('ine_back')) {
+            if ($ineBackPath) Storage::delete($ineBackPath);
+            $ineBackPath = $request->file('ine_back')->store('ine_documents');
+        }
+
+        // Tier 2: Comprobante de domicilio
+        $proofOfAddressPath = $subject->proof_of_address_path;
+        if ($request->hasFile('proof_of_address')) {
+            if ($proofOfAddressPath) Storage::delete($proofOfAddressPath);
+            $proofOfAddressPath = $request->file('proof_of_address')->store('proof_of_address_documents');
+        }
+
+        // Consentimiento crediticio: solo se activa, nunca se revoca via update form
+        $creditConsent       = $subject->credit_consent_granted;
+        $creditConsentAt     = $subject->credit_consent_at;
+        if (!$creditConsent && $request->boolean('credit_consent_granted')) {
+            $creditConsent   = true;
+            $creditConsentAt = now();
+        }
+
         $subject->update([
-            'project_id' => $request->project_id,
-            'tipo' => $request->tipo,
-            'name_or_company' => $request->name_or_company,
-            'rfc' => strtoupper($request->rfc),
-            'curp' => $request->curp ? strtoupper($request->curp) : null,
-            'address' => $request->address,
-            'consent_legal_basis' => $request->consent_legal_basis,
-            'consent_document_path' => $consentPath,
+            'project_id'             => $request->project_id,
+            'tipo'                   => $request->tipo,
+            'name_or_company'        => $request->name_or_company,
+            'rfc'                    => strtoupper($request->rfc),
+            'curp'                   => $request->curp ? strtoupper($request->curp) : null,
+            'address'                => $request->address,
+            'consent_legal_basis'    => $request->consent_legal_basis,
+            'consent_document_path'  => $consentPath,
+            'ine_front_path'         => $ineFrontPath,
+            'ine_back_path'          => $ineBackPath,
+            // Tier 2
+            'username'               => $request->username ?: $subject->username,
+            'nss'                    => $request->nss ?: $subject->nss,
+            'proof_of_address_path'  => $proofOfAddressPath,
+            'credit_consent_granted' => $creditConsent,
+            'credit_consent_at'      => $creditConsentAt,
         ]);
 
         // Log activity
@@ -184,6 +243,22 @@ class SubjectController extends Controller
     }
 
     /**
+     * Regenerar el token de enrolamiento del sujeto (genera nuevo UUID con 24h de expiración).
+     */
+    public function regenerateEnrollment($id)
+    {
+        $subject = Subject::findOrFail($id);
+        $subject->generateEnrollmentToken();
+
+        activity()
+            ->performedOn($subject)
+            ->causedBy(auth()->user())
+            ->log("Token de enrolamiento regenerado para: {$subject->name_or_company}");
+
+        return back()->with('success', 'Enlace de enrolamiento regenerado. El nuevo enlace es válido por 24 horas.');
+    }
+
+    /**
      * Remove the specified subject from storage.
      */
     public function destroy($id)
@@ -194,6 +269,15 @@ class SubjectController extends Controller
         // Delete consent file if exists
         if ($subject->consent_document_path) {
             Storage::delete($subject->consent_document_path);
+        }
+        if ($subject->ine_front_path) {
+            Storage::delete($subject->ine_front_path);
+        }
+        if ($subject->ine_back_path) {
+            Storage::delete($subject->ine_back_path);
+        }
+        if ($subject->selfie_path) {
+            Storage::delete($subject->selfie_path);
         }
 
         // Log activity before deletion

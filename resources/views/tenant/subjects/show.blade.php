@@ -41,26 +41,70 @@
     $sigerQuery = $queries->firstWhere('source_type', 'siger');
     $satListasQuery = $queries->firstWhere('source_type', 'sat_listas');
     $marcasQuery = $queries->firstWhere('source_type', 'marcas');
+    $ineFrenteQuery = $queries->firstWhere('source_type', 'ine_frente');
+    $ineReversoQuery = $queries->firstWhere('source_type', 'ine_reverso');
+    $sancionesQuery = $queries->firstWhere('source_type', 'sanciones');
+    $litigiosQuery = $queries->firstWhere('source_type', 'litigios');
 
     $hasCompletedQueries = $queries->where('status', 'completed')->isNotEmpty();
     $isProcessing = $queries->whereIn('status', ['pending', 'processing'])->isNotEmpty();
 
-    // Check SAT list alert
+    // Check alerts
     $hasSatAlert = false;
     if ($satListasQuery && $satListasQuery->status === 'completed' && isset($satListasQuery->result->processed_data['en_lista_69b'])) {
         $hasSatAlert = (bool) $satListasQuery->result->processed_data['en_lista_69b'];
     }
+
+    $hasSancionesAlert = false;
+    if ($sancionesQuery && $sancionesQuery->status === 'completed' && isset($sancionesQuery->result->processed_data['encontrado'])) {
+        $hasSancionesAlert = (bool) $sancionesQuery->result->processed_data['encontrado'];
+    }
+
+    $hasLitigiosAlert = false;
+    if ($litigiosQuery && $litigiosQuery->status === 'completed' && isset($litigiosQuery->result->processed_data['tiene_juicios'])) {
+        $hasLitigiosAlert = (bool) $litigiosQuery->result->processed_data['tiene_juicios'];
+    }
 @endphp
 
 @if($hasSatAlert)
-<div class="alert alert-danger alert-dismissible fade show border-0 shadow" role="alert">
+<div class="alert alert-danger alert-dismissible fade show border-0 shadow mb-3" role="alert">
     <div class="d-flex align-items-center">
         <div class="flex-shrink-0 me-3">
             <i class="ri-error-warning-fill fs-24 align-middle text-danger"></i>
         </div>
         <div class="flex-grow-1">
-            <h5 class="alert-heading text-danger fw-semibold">¡ALERTA DE RIESGO CRÍTICO!</h5>
-            <p class="mb-0 fs-13">El sujeto <strong>{{ $subject->name_or_company }}</strong> ha sido encontrado en las listas del SAT del artículo <strong>69-B (Facturación Simulada - EFOS/EDOS)</strong> con estatus de <strong>{{ $satListasQuery->result->processed_data['estatus_69b'] ?? 'Presunto' }}</strong>. Proceda con precaución y revise los detalles técnicos de la auditoría.</p>
+            <h5 class="alert-heading text-danger fw-semibold">¡ALERTA DE RIESGO FISCAL CRÍTICO!</h5>
+            <p class="mb-0 fs-13">El sujeto ha sido encontrado en las listas del SAT del artículo <strong>69-B (Facturación Simulada - EFOS/EDOS)</strong> con estatus de <strong>{{ $satListasQuery->result->processed_data['estatus_69b'] ?? 'Presunto' }}</strong>. Revise los detalles abajo.</p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
+@if($hasSancionesAlert)
+<div class="alert alert-danger alert-dismissible fade show border-0 shadow mb-3" role="alert">
+    <div class="d-flex align-items-center">
+        <div class="flex-shrink-0 me-3">
+            <i class="ri-shield-user-fill fs-24 align-middle text-danger"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h5 class="alert-heading text-danger fw-semibold">¡ALERTA DE CUMPLIMIENTO / LISTA NEGRA!</h5>
+            <p class="mb-0 fs-13">Se detectaron coincidencias del sujeto en <strong>listas de sanciones internacionales (OFAC/Vigilancia) o PEPs</strong>. Se recomienda revisión exhaustiva.</p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
+@if($hasLitigiosAlert)
+<div class="alert alert-warning alert-dismissible fade show border-0 shadow mb-3" role="alert">
+    <div class="d-flex align-items-center">
+        <div class="flex-shrink-0 me-3">
+            <i class="ri-folders-fill fs-24 align-middle text-warning"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h5 class="alert-heading text-warning fw-semibold">¡HISTORIAL LEGAL ENCONTRADO!</h5>
+            <p class="mb-0 fs-13">Se detectaron <strong>expedientes de juicios o litigios activos/pasados</strong> en juzgados civiles, mercantiles o laborales vinculados al nombre del sujeto.</p>
         </div>
     </div>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -68,98 +112,226 @@
 @endif
 
 <div class="row">
-    <!-- Demographic / Details Panel -->
-    <div class="col-xl-4">
-        <div class="card card-profile">
+    <!-- Ficha de Datos Horizontal (Ancho completo) -->
+    <div class="col-12">
+        <div class="card card-profile mb-4">
             <div class="card-body p-4">
-                <div class="text-center">
-                    <div class="avatar-md mx-auto mb-3">
-                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24 shadow material-shadow">
-                            {{ $subject->tipo == 'persona_fisica' ? 'PF' : 'PM' }}
-                        </span>
+                <div class="row align-items-center">
+                    <!-- Columna 1: Perfil y Tipo -->
+                    <div class="col-lg-3 border-end text-center text-lg-start mb-3 mb-lg-0">
+                        <div class="d-flex flex-column flex-lg-row align-items-center gap-3">
+                            <div class="avatar-md">
+                                <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24 shadow material-shadow">
+                                    {{ $subject->tipo == 'persona_fisica' ? 'PF' : 'PM' }}
+                                </span>
+                            </div>
+                            <div>
+                                <h5 class="fs-16 mb-1 text-dark fw-bold">{{ $subject->name_or_company }}</h5>
+                                <span class="badge bg-primary-subtle text-primary text-uppercase fs-11">
+                                    {{ str_replace('_', ' ', $subject->tipo) }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <h5 class="fs-16 mb-1">{{ $subject->name_or_company }}</h5>
-                    <p class="text-muted mb-4 text-capitalize">{{ str_replace('_', ' ', $subject->tipo) }}</p>
-                </div>
-                
-                <div class="table-responsive table-card">
-                    <table class="table table-borderless mb-0">
-                        <tbody>
-                            <tr>
-                                <td class="fw-semibold" style="width: 30%">RFC:</td>
-                                <td><code>{{ $subject->rfc }}</code></td>
-                            </tr>
+                    
+                    <!-- Columna 2: Identificaciones Oficiales -->
+                    <div class="col-lg-3 border-end mb-3 mb-lg-0 px-lg-4">
+                        <div class="d-flex flex-column gap-2">
+                            <div>
+                                <span class="text-muted fs-12 uppercase fw-semibold">RFC:</span>
+                                <span class="d-block"><code class="fs-13">{{ $subject->rfc }}</code></span>
+                            </div>
                             @if($subject->curp)
-                            <tr>
-                                <td class="fw-semibold">CURP:</td>
-                                <td><code>{{ $subject->curp }}</code></td>
-                            </tr>
+                            <div>
+                                <span class="text-muted fs-12 uppercase fw-semibold">CURP:</span>
+                                <span class="d-block"><code class="fs-13">{{ $subject->curp }}</code></span>
+                            </div>
                             @endif
-                            <tr>
-                                <td class="fw-semibold">Domicilio:</td>
-                                <td><span class="text-muted">{{ $subject->address ?: 'No provisto' }}</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                            <div>
+                                <span class="text-muted fs-12 uppercase fw-semibold">Domicilio:</span>
+                                <span class="d-block text-muted fs-13 text-truncate" style="max-width: 100%" title="{{ $subject->address ?: 'No provisto' }}">
+                                    {{ $subject->address ?: 'No provisto' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-                <hr>
+                    <!-- Columna 3: Consentimiento Legal -->
+                    <div class="col-lg-4 border-end mb-3 mb-lg-0 px-lg-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <span class="text-muted fs-12 fw-semibold d-block">Consentimiento:</span>
+                                <span class="badge bg-success-subtle text-success fs-11 mt-1">Sí, Expreso</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted fs-12 fw-semibold d-block">Fecha de Firma:</span>
+                                <span class="fs-13 text-dark d-block mt-1">{{ $subject->consent_date ? $subject->consent_date->format('d/m/Y H:i') : 'N/A' }}</span>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <span class="text-muted fs-12 fw-semibold d-block">Finalidad / Base Legal:</span>
+                                <span class="fs-13 text-muted d-block text-truncate" title="{{ $subject->consent_legal_basis }}">{{ $subject->consent_legal_basis }}</span>
+                            </div>
+                        </div>
+                    </div>
 
-                <h6 class="text-uppercase fs-12 mb-3">Consentimiento Legal</h6>
-                <div class="table-responsive table-card">
-                    <table class="table table-borderless mb-0 fs-13">
-                        <tbody>
-                            <tr>
-                                <td class="fw-semibold" style="width: 30%">Otorgado:</td>
-                                <td><span class="badge bg-success-subtle text-success">Sí, Expreso</span></td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold">Fecha:</td>
-                                <td>{{ $subject->consent_date ? $subject->consent_date->format('d/m/Y H:i') : 'No registrado' }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold">Finalidad:</td>
-                                <td><span class="text-muted">{{ $subject->consent_legal_basis }}</span></td>
-                            </tr>
-                            @if($subject->consent_document_path)
-                            <tr>
-                                <td class="fw-semibold">Documento:</td>
-                                <td>
-                                    <span class="badge bg-primary-subtle text-primary"><i class="ri-checkbox-circle-line"></i> Carta Adjunta</span>
-                                </td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mt-4 gap-2 d-flex flex-column">
-                    <a href="{{ route('tenant.subjects.edit', $subject->id) }}" class="btn btn-soft-primary w-100"><i class="ri-edit-box-line me-1"></i> Editar Ficha del Sujeto</a>
+                    <!-- Columna 4: Acciones Ficha -->
+                    <div class="col-lg-2 text-center">
+                        <a href="{{ route('tenant.subjects.edit', $subject->id) }}" class="btn btn-soft-primary btn-md w-100 mb-2">
+                            <i class="ri-edit-box-line align-middle me-1"></i> Editar Ficha
+                        </a>
+                        @if($hasCompletedQueries)
+                            <a href="{{ route('tenant.subjects.report', $subject->id) }}" target="_blank" class="btn btn-info btn-md w-100">
+                                <i class="ri-file-pdf-line align-middle me-1"></i> Reporte PDF
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Investigation Sources Tabs Panel -->
-    <div class="col-xl-8">
+{{-- ─────────── TARJETA DE ENROLAMIENTO ─────────── --}}
+@php
+    $enrollStatus = $subject->enrollmentStatus();
+    $enrollUrl    = $subject->enrollment_token
+        ? url('/enroll/' . $subject->enrollment_token)
+        : null;
+    $enrollBadge  = match($enrollStatus) {
+        'completado'  => ['class' => 'bg-success',          'icon' => 'ri-check-circle-fill',    'label' => 'Completado'],
+        'en_proceso'  => ['class' => 'bg-warning text-dark','icon' => 'ri-loader-4-line',        'label' => 'T&C Aceptados — Pendiente fotos'],
+        'expirado'    => ['class' => 'bg-danger',           'icon' => 'ri-time-line',            'label' => 'Expirado'],
+        'pendiente'   => ['class' => 'bg-primary',          'icon' => 'ri-send-plane-fill',      'label' => 'Pendiente de envío'],
+        default       => ['class' => 'bg-secondary',        'icon' => 'ri-link-unlink',          'label' => 'Sin enlace'],
+    };
+    $selfieQuery = $queries->firstWhere('source_type', 'selfie');
+@endphp
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border border-dashed border-primary-subtle">
+            <div class="card-body p-4">
+                <div class="row align-items-center g-3">
+                    <!-- Ícono + título -->
+                    <div class="col-auto d-none d-md-block">
+                        <div class="avatar-md">
+                            <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-22">
+                                <i class="ri-smartphone-line"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="col-md">
+                        <h5 class="fw-semibold fs-15 mb-1">
+                            <i class="ri-smartphone-line me-2 d-md-none text-primary"></i>
+                            Enrolamiento del Investigado
+                        </h5>
+                        <p class="text-muted fs-13 mb-0">
+                            Comparte este enlace con el investigado para que suba su INE y selfie desde su celular (sin necesidad de instalar ninguna aplicación).
+                        </p>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="badge {{ $enrollBadge['class'] }} fs-11">
+                                <i class="{{ $enrollBadge['icon'] }} me-1"></i>{{ $enrollBadge['label'] }}
+                            </span>
+                            @if($subject->enrollment_expires_at && $enrollStatus === 'pendiente')
+                                <span class="badge bg-light text-muted fs-11">
+                                    <i class="ri-timer-line me-1"></i>
+                                    Expira {{ $subject->enrollment_expires_at->diffForHumans() }}
+                                    ({{ $subject->enrollment_expires_at->format('d/m/Y H:i') }})
+                                </span>
+                            @endif
+                            @if($subject->enrollment_tc_accepted_at)
+                                <span class="badge bg-info-subtle text-info fs-11">
+                                    <i class="ri-file-text-line me-1"></i>
+                                    T&C aceptados: {{ $subject->enrollment_tc_accepted_at->format('d/m/Y H:i') }}
+                                </span>
+                            @endif
+                            @if($subject->enrollment_completed_at)
+                                <span class="badge bg-success-subtle text-success fs-11">
+                                    <i class="ri-calendar-check-line me-1"></i>
+                                    Completado: {{ $subject->enrollment_completed_at->format('d/m/Y H:i') }}
+                                </span>
+                            @endif
+                            @if($subject->selfie_path || ($selfieQuery && $selfieQuery->status === 'completed'))
+                                <span class="badge bg-success-subtle text-success fs-11">
+                                    <i class="ri-user-smile-line me-1"></i> Selfie recibida
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- URL + Acciones -->
+                    <div class="col-md-auto">
+                        @if($enrollUrl && in_array($enrollStatus, ['pendiente', 'en_proceso']))
+                            <div class="input-group input-group-sm mb-2" style="max-width:340px">
+                                <input type="text" class="form-control form-control-sm bg-light border-end-0 fs-12"
+                                    id="enrollUrlInput"
+                                    value="{{ $enrollUrl }}"
+                                    readonly>
+                                <button class="btn btn-light border border-start-0"
+                                    type="button"
+                                    id="btnCopyEnroll"
+                                    title="Copiar enlace"
+                                    onclick="copyEnrollUrl()">
+                                    <i class="ri-clipboard-line"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="https://wa.me/?text={{ urlencode('Hola ' . $subject->name_or_company . ', completa tu verificación de identidad aquí: ' . $enrollUrl . ' (válido 24h)') }}"
+                                   target="_blank"
+                                   class="btn btn-success btn-sm">
+                                    <i class="ri-whatsapp-line me-1"></i> WhatsApp
+                                </a>
+                                <a href="sms:?body={{ urlencode('Verifica tu identidad en: ' . $enrollUrl) }}"
+                                   class="btn btn-soft-info btn-sm">
+                                    <i class="ri-message-2-line me-1"></i> SMS
+                                </a>
+                            </div>
+                        @elseif($enrollStatus === 'completado')
+                            <div class="text-success fw-semibold fs-13">
+                                <i class="ri-check-double-line me-1 fs-16"></i>
+                                El investigado completó el proceso.<br>
+                                <span class="text-muted fs-12 fw-normal">Las imágenes están siendo procesadas.</span>
+                            </div>
+                        @endif
+
+                        <!-- Botón regenerar (cuando expiró o ya completó) -->
+                        @if(in_array($enrollStatus, ['expirado', 'completado', 'sin_token']))
+                            <form action="{{ route('tenant.subjects.regenerate-enrollment', $subject->id) }}" method="POST" class="mt-2">
+                                @csrf
+                                <button type="submit" class="btn btn-soft-warning btn-sm"
+                                    onclick="return confirm('¿Generar un nuevo enlace? El anterior quedará inactivo.')">
+                                    <i class="ri-refresh-line me-1"></i>
+                                    @if($enrollStatus === 'expirado') Regenerar enlace
+                                    @elseif($enrollStatus === 'completado') Nuevo proceso de enrolamiento
+                                    @else Generar enlace de enrolamiento
+                                    @endif
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Fuentes de Verificación (Renglones Colapsables / Acordeón) -->
+    <div class="col-12">
         <div class="card">
-            <div class="card-header border-0 align-items-center d-flex">
-                <h5 class="card-title mb-0 flex-grow-1">Fuentes de Verificación de Antecedentes</h5>
-                <div class="flex-shrink-0 d-flex gap-2">
-                    @if($hasCompletedQueries)
-                        <a href="{{ route('tenant.subjects.report', $subject->id) }}" target="_blank" class="btn btn-info btn-sm">
-                            <i class="ri-file-pdf-line align-bottom me-1"></i> Descargar PDF
-                        </a>
-                    @endif
-
+            <div class="card-header border-0 align-items-center d-flex pb-2">
+                <h5 class="card-title mb-0 flex-grow-1 text-dark fw-bold">Fuentes de Verificación de Antecedentes</h5>
+                <div class="flex-shrink-0">
                     @if($queries->isEmpty() || $isProcessing)
                     <form action="{{ route('tenant.subjects.investigate', $subject->id) }}" method="POST" id="startInvestigationForm">
                         @csrf
-                        <button type="submit" class="btn btn-danger btn-sm" id="runInvestigationBtn" {{ $isProcessing ? 'disabled' : '' }}>
+                        <button type="submit" class="btn btn-danger btn-md" id="runInvestigationBtn" {{ $isProcessing ? 'disabled' : '' }}>
                             @if($isProcessing)
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Investigando...
                             @else
-                                <i class="ri-play-circle-line align-bottom me-1"></i> Iniciar Investigación
+                                <i class="ri-play-circle-line align-bottom me-1"></i> Iniciar Investigación Completa
                             @endif
                         </button>
                     </form>
@@ -168,506 +340,1428 @@
             </div>
             
             <div class="card-body">
-                <!-- Nav tabs -->
-                <ul class="nav nav-tabs nav-tabs-custom nav-success nav-justified mb-3" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" data-bs-toggle="tab" href="#rfc-tab" role="tab">
-                            Validación RFC
-                            @if($rfcQuery)
-                                <span class="badge rounded-pill bg-{{ $rfcQuery->status === 'completed' ? 'success' : ($rfcQuery->status === 'failed' ? 'danger' : 'warning') }} fs-10 ms-1">{{ $rfcQuery->status }}</span>
-                            @endif
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#csd-tab" role="tab">
-                            Sellos CSD
-                            @if($csdQuery)
-                                <span class="badge rounded-pill bg-{{ $csdQuery->status === 'completed' ? 'success' : ($csdQuery->status === 'failed' ? 'danger' : 'warning') }} fs-10 ms-1">{{ $csdQuery->status }}</span>
-                            @endif
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ $subject->tipo === 'persona_fisica' ? 'disabled text-decoration-line-through' : '' }}" data-bs-toggle="tab" href="#siger-tab" role="tab">
-                            Registro SIGER
-                            @if($sigerQuery)
-                                <span class="badge rounded-pill bg-{{ $sigerQuery->status === 'completed' ? 'success' : ($sigerQuery->status === 'failed' ? 'danger' : 'warning') }} fs-10 ms-1">{{ $sigerQuery->status }}</span>
-                            @endif
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#sat69-tab" role="tab">
-                            Listas SAT 69/B
-                            @if($satListasQuery)
-                                <span class="badge rounded-pill bg-{{ $satListasQuery->status === 'completed' ? 'success' : ($satListasQuery->status === 'failed' ? 'danger' : 'warning') }} fs-10 ms-1">{{ $satListasQuery->status }}</span>
-                            @endif
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#impi-tab" role="tab">
-                            Marcas IMPI
-                            @if($marcasQuery)
-                                <span class="badge rounded-pill bg-{{ $marcasQuery->status === 'completed' ? 'success' : ($marcasQuery->status === 'failed' ? 'danger' : 'warning') }} fs-10 ms-1">{{ $marcasQuery->status }}</span>
-                            @endif
-                        </a>
-                    </li>
-                </ul>
+                <div class="accordion accordion-border-box" id="sourcesAccordion">
 
-                <!-- Tab panes -->
-                <div class="tab-content text-muted">
-                    
-                    <!-- VALIDACION RFC TAB -->
-                    <div class="tab-pane active" id="rfc-tab" role="tabpanel">
-                        @if(!$rfcQuery)
-                            <div class="text-center py-4">
-                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px"></lord-icon>
-                                <h5 class="mt-4">Validación del Registro Federal de Contribuyentes</h5>
-                                <p class="text-muted">La consulta de validación de este RFC ante el SAT aún no se ha iniciado.</p>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'rfc']) }}" method="POST" class="mt-3">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-play-circle-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($rfcQuery->status === 'pending' || $rfcQuery->status === 'processing')
-                            <div class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                                <h5 class="mt-4">Procesando consulta...</h5>
-                                <p class="text-muted">Estamos validando los datos del RFC ante el SAT. Por favor espere...</p>
-                            </div>
-                        @elseif($rfcQuery->status === 'failed')
-                            <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="alert-heading text-danger fw-semibold">Error al consultar la fuente</h6>
-                                    <p class="mb-0">{{ $rfcQuery->error_message }}</p>
-                                </div>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'rfc']) }}" method="POST" class="flex-shrink-0">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($rfcQuery->status === 'completed' && $rfcQuery->result)
-                            @php $rfcData = $rfcQuery->result->processed_data; @endphp
-                            <div class="card border-0">
-                                <div class="card-header bg-light-subtle pb-2 border-0 d-flex justify-content-between align-items-center">
-                                    <h6 class="card-title mb-0 text-primary fw-semibold">Información Oficial SAT</h6>
-                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'rfc']) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-soft-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                            <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                        </button>
-                                    </form>
-                                </div>
-                                <div class="card-body p-0 pt-2">
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr>
-                                                <td class="fw-semibold bg-light" style="width: 30%">RFC:</td>
-                                                <td><code>{{ $rfcData['rfc'] ?? 'N/A' }}</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold bg-light">Válido en SAT:</td>
-                                                <td>
-                                                    @if($rfcData['valido'] ?? false)
-                                                        <span class="badge bg-success-subtle text-success">Sí, Vigente</span>
-                                                    @else
-                                                        <span class="badge bg-danger-subtle text-danger">No Válido</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold bg-light">Situación SAT:</td>
-                                                <td>
-                                                    <span class="badge bg-info-subtle text-info">{{ $rfcData['situacion'] ?? 'ACTIVO' }}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold bg-light">Razón Social:</td>
-                                                <td class="fw-semibold text-dark">{{ $rfcData['razon_social'] ?? 'N/A' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold bg-light">Tipo de Persona:</td>
-                                                <td>{{ $rfcData['tipo_persona'] ?? 'N/A' }}</td>
-                                            </tr>
-                                            @if(isset($rfcData['curp']) && $rfcData['curp'])
-                                            <tr>
-                                                <td class="fw-semibold bg-light">CURP Validado:</td>
-                                                <td><code>{{ $rfcData['curp'] }}</code></td>
-                                            </tr>
-                                            @endif
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    
-                    <!-- CSD TAB -->
-                    <div class="tab-pane" id="csd-tab" role="tabpanel">
-                        @if(!$csdQuery)
-                            <div class="text-center py-4">
-                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px"></lord-icon>
-                                <h5 class="mt-4">Certificados de Sello Digital (CSD / FIEL)</h5>
-                                <p class="text-muted">La recuperación de certificados vigentes y caducos de este RFC aún no se ha iniciado.</p>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST" class="mt-3">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-play-circle-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($csdQuery->status === 'pending' || $csdQuery->status === 'processing')
-                            <div class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                                <h5 class="mt-4">Procesando consulta...</h5>
-                                <p class="text-muted">Recuperando el historial de sellos digitales del RFC. Espere...</p>
-                            </div>
-                        @elseif($csdQuery->status === 'failed')
-                            <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="alert-heading text-danger fw-semibold">Error al consultar la fuente</h6>
-                                    <p class="mb-0">{{ $csdQuery->error_message }}</p>
-                                </div>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST" class="flex-shrink-0">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($csdQuery->status === 'completed' && $csdQuery->result)
-                            @php $certs = $csdQuery->result->processed_data['certificados'] ?? []; @endphp
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="text-primary mb-0 fw-semibold">Historial de Certificados Detectados</h6>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-soft-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                            @if(empty($certs))
-                                <div class="text-center text-muted py-3">No se encontraron sellos o firmas electrónicas vinculadas a este RFC.</div>
-                            @else
-                                <div class="table-responsive">
-                                    <table class="table table-striped align-middle">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Número de Serie</th>
-                                                <th>Tipo</th>
-                                                <th>Estatus</th>
-                                                <th>Inicio de Vigencia</th>
-                                                <th>Fin de Vigencia</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($certs as $cert)
-                                            <tr>
-                                                <td><code>{{ $cert['numero_serie'] ?? '' }}</code></td>
-                                                <td><span class="badge bg-secondary-subtle text-secondary">{{ $cert['tipo'] ?? 'CSD' }}</span></td>
-                                                <td>
-                                                    <span class="badge bg-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}-subtle text-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}">
-                                                        {{ $cert['estado'] ?? 'CADUCO' }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ isset($cert['fecha_inicio']) ? \Carbon\Carbon::parse($cert['fecha_inicio'])->format('d/m/Y H:i') : 'N/A' }}</td>
-                                                <td>{{ isset($cert['fecha_fin']) ? \Carbon\Carbon::parse($cert['fecha_fin'])->format('d/m/Y H:i') : 'N/A' }}</td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @endif
-                        @endif
-                    </div>
-                    
-                    <!-- SIGER TAB -->
-                    <div class="tab-pane" id="siger-tab" role="tabpanel">
-                        @if($subject->tipo === 'persona_fisica')
-                            <div class="alert alert-warning border-0">
-                                <h6 class="alert-heading text-warning fw-semibold"><i class="ri-alert-line align-middle me-1"></i> Fuente Excluida</h6>
-                                <p class="mb-0">La consulta del Registro Público de Comercio (SIGER) no aplica para Personas Físicas. Esta fuente está restringida a Sociedades Mercantiles (Personas Morales).</p>
-                            </div>
-                        @elseif(!$sigerQuery)
-                            <div class="text-center py-4">
-                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px"></lord-icon>
-                                <h5 class="mt-4">Registro Público de Comercio (SIGER)</h5>
-                                <p class="text-muted">La búsqueda de sociedades mercantiles y participación accionaria aún no se ha iniciado.</p>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST" class="mt-3">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-play-circle-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($sigerQuery->status === 'pending' || $sigerQuery->status === 'processing')
-                            <div class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                                <h5 class="mt-4">Procesando consulta...</h5>
-                                <p class="text-muted">Buscando actas mercantiles y composiciones de socios ante la Secretaría de Economía. Espere...</p>
-                            </div>
-                        @elseif($sigerQuery->status === 'failed')
-                            <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="alert-heading text-danger fw-semibold">Error al consultar la fuente</h6>
-                                    <p class="mb-0">{{ $sigerQuery->error_message }}</p>
-                                </div>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST" class="flex-shrink-0">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($sigerQuery->status === 'completed' && $sigerQuery->result)
-                            @php $results = $sigerQuery->result->processed_data['resultados'] ?? []; @endphp
-                            <div class="d-flex justify-content-end mb-3">
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-soft-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                            @if(empty($results))
-                                <div class="text-center text-muted py-3">No se localizaron registros comerciales en SIGER vinculados a esta Razón Social.</div>
-                            @else
-                                @foreach($results as $res)
-                                <div class="card border border-dashed mb-3">
-                                    <div class="card-header bg-light-subtle align-items-center d-flex pb-2">
-                                        <h6 class="card-title mb-0 flex-grow-1 text-primary">Folio Mercantil Electrónico (FME): #{{ $res['fme'] ?? '' }}</h6>
-                                        <div class="flex-shrink-0">
-                                            <span class="badge bg-success-subtle text-success">{{ $res['entidad_federativa'] ?? 'CDMX' }}</span>
-                                        </div>
+                    <!-- 1. VALIDACIÓN RFC -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingRfc">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRfc" aria-expanded="false" aria-controls="collapseRfc">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-government-fill text-primary me-2 align-middle fs-18"></i> Validación RFC (SAT)
                                     </div>
-                                    <div class="card-body">
-                                        <div class="row mb-2">
-                                            <div class="col-sm-6">
-                                                <span class="text-muted">Fecha de Constitución:</span>
-                                                <span class="fw-semibold d-block text-dark">{{ isset($res['fecha_constitucion']) ? \Carbon\Carbon::parse($res['fecha_constitucion'])->format('d/m/Y') : 'N/A' }}</span>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <span class="text-muted">Capital Social de Inicio:</span>
-                                                <span class="fw-semibold d-block text-dark">${{ number_format($res['capital_social'] ?? 0, 2) }} MXN</span>
-                                            </div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <span class="text-muted">Objeto Social Constituido:</span>
-                                            <p class="text-muted fs-12 mb-0" style="text-align: justify;">{{ $res['objeto_social'] ?? 'N/A' }}</p>
-                                        </div>
+                                    <div>
+                                        @if(!$rfcQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($rfcQuery->status === 'pending' || $rfcQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($rfcQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($rfcQuery->status === 'completed')
+                                            @if($rfcQuery->result && isset($rfcQuery->result->processed_data['valido']) && $rfcQuery->result->processed_data['valido'])
+                                                <span class="badge bg-success text-white py-1 px-2">Completed - RFC Válido</span>
+                                            @else
+                                                <span class="badge bg-danger text-white py-1 px-2">Completed - RFC Inválido</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseRfc" class="accordion-collapse collapse" aria-labelledby="headingRfc" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$rfcQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La consulta de validación de este RFC ante el SAT aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'rfc']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($rfcQuery->status === 'pending' || $rfcQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Estamos validando los datos ante el SAT. Por favor espere...</span>
+                                    </div>
+                                @elseif($rfcQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $rfcQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'rfc']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($rfcQuery->status === 'completed' && $rfcQuery->result)
+                                    @php $rfcData = $rfcQuery->result->processed_data; @endphp
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered align-middle mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light" style="width: 30%">RFC Oficial:</td>
+                                                    <td><code>{{ $rfcData['rfc'] ?? 'N/A' }}</code></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Estatus Vigencia:</td>
+                                                    <td>
+                                                        @if($rfcData['valido'] ?? false)
+                                                            <span class="badge bg-success-subtle text-success">Sí, Vigente</span>
+                                                        @else
+                                                            <span class="badge bg-danger-subtle text-danger">No Registrado / No Válido</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Situación SAT:</td>
+                                                    <td><span class="badge bg-info-subtle text-info">{{ $rfcData['situacion'] ?? 'ACTIVO' }}</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Razón Social:</td>
+                                                    <td class="fw-semibold text-dark">{{ $rfcData['razon_social'] ?? 'N/A' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Tipo de Persona:</td>
+                                                    <td>{{ $rfcData['tipo_persona'] ?? 'N/A' }}</td>
+                                                </tr>
+                                                @if(isset($rfcData['curp']) && $rfcData['curp'])
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">CURP Cruzado:</td>
+                                                    <td><code>{{ $rfcData['curp'] }}</code></td>
+                                                </tr>
+                                                @endif
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
 
-                                        <h6 class="text-uppercase text-muted fs-11 mb-2">Socios y Accionistas Registrados</h6>
-                                        <div class="table-responsive table-card">
-                                            <table class="table table-sm table-nowrap mb-0">
+                    <!-- 2. CERTIFICADOS CSD -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingCsd">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCsd" aria-expanded="false" aria-controls="collapseCsd">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-key-2-fill text-primary me-2 align-middle fs-18"></i> Certificados CSD y e-Firma (SAT)
+                                    </div>
+                                    <div>
+                                        @if(!$csdQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($csdQuery->status === 'pending' || $csdQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($csdQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($csdQuery->status === 'completed')
+                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseCsd" class="accordion-collapse collapse" aria-labelledby="headingCsd" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$csdQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La recuperación de certificados de sellos de este sujeto aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($csdQuery->status === 'pending' || $csdQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Recuperando historial de sellos SAT. Espere...</span>
+                                    </div>
+                                @elseif($csdQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $csdQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($csdQuery->status === 'completed' && $csdQuery->result)
+                                    @php $certs = $csdQuery->result->processed_data['certificados'] ?? []; @endphp
+                                    @if(empty($certs))
+                                        <div class="text-center text-muted py-3">No se detectaron certificados asociados a este RFC en las bases públicas.</div>
+                                    @else
+                                        <div class="table-responsive">
+                                            <table class="table table-striped align-middle mb-0">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th>Nombre Completo</th>
-                                                        <th>Participación</th>
+                                                        <th>Número de Serie</th>
+                                                        <th>Tipo</th>
+                                                        <th>Estatus</th>
+                                                        <th>Inicio de Vigencia</th>
+                                                        <th>Fin de Vigencia</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach($res['socios'] ?? [] as $socio)
+                                                    @foreach($certs as $cert)
                                                     <tr>
-                                                        <td class="fw-semibold text-dark">{{ $socio['nombre'] ?? '' }}</td>
-                                                        <td><span class="badge bg-primary-subtle text-primary">{{ $socio['participacion'] ?? '' }}</span></td>
+                                                        <td><code>{{ $cert['numero_serie'] ?? '' }}</code></td>
+                                                        <td><span class="badge bg-secondary-subtle text-secondary">{{ $cert['tipo'] ?? 'CSD' }}</span></td>
+                                                        <td>
+                                                            <span class="badge bg-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}-subtle text-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}">
+                                                                {{ $cert['estado'] ?? 'CADUCO' }}
+                                                            </span>
+                                                        </td>
+                                                        <td>{{ isset($cert['fecha_inicio']) ? \Carbon\Carbon::parse($cert['fecha_inicio'])->format('d/m/Y H:i') : 'N/A' }}</td>
+                                                        <td>{{ isset($cert['fecha_fin']) ? \Carbon\Carbon::parse($cert['fecha_fin'])->format('d/m/Y H:i') : 'N/A' }}</td>
                                                     </tr>
                                                     @endforeach
                                                 </tbody>
                                             </table>
                                         </div>
-                                    </div>
-                                </div>
-                                @endforeach
-                            @endif
-                        @endif
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- LISTAS SAT TAB -->
-                    <div class="tab-pane" id="sat69-tab" role="tabpanel">
-                        @if(!$satListasQuery)
-                            <div class="text-center py-4">
-                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px"></lord-icon>
-                                <h5 class="mt-4">Cumplimiento Fiscal: EFOS / EDOS (Listas 69 y 69-B)</h5>
-                                <p class="text-muted">La revisión de listados negros de contribuyentes incumplidos o simuladores aún no se ha iniciado.</p>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST" class="mt-3">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-play-circle-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($satListasQuery->status === 'pending' || $satListasQuery->status === 'processing')
-                            <div class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                                <h5 class="mt-4">Procesando consulta...</h5>
-                                <p class="text-muted">Buscando reportes negativos o boletines en la lista negra del SAT. Espere...</p>
-                            </div>
-                        @elseif($satListasQuery->status === 'failed')
-                            <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="alert-heading text-danger fw-semibold">Error al consultar la fuente</h6>
-                                    <p class="mb-0">{{ $satListasQuery->error_message }}</p>
-                                </div>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST" class="flex-shrink-0">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($satListasQuery->status === 'completed' && $satListasQuery->result)
-                            @php $listData = $satListasQuery->result->processed_data; @endphp
-                            <div class="d-flex justify-content-end mb-3">
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-soft-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="card border">
-                                        <div class="card-body">
-                                            <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69 (Créditos condonados, exigibles o cancelados)</h6>
-                                            @if($listData['en_lista_69'] ?? false)
-                                                <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-error-warning-line me-1"></i> Contribuyente Exceptuado</span>
-                                            @else
-                                                <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="card border">
-                                        <div class="card-body">
-                                            <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69-B (EFOS - Emisores de Operaciones Simuladas)</h6>
-                                            @if($listData['en_lista_69b'] ?? false)
-                                                <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-alert-line me-1"></i> Boletinado Facturación Simulada</span>
-                                            @else
-                                                <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            @if($listData['en_lista_69b'] ?? false)
-                            <div class="card border border-danger border-dashed">
-                                <div class="card-header bg-danger-subtle text-danger pb-2">
-                                    <h6 class="card-title mb-0 text-danger fw-semibold"><i class="ri-error-warning-fill me-1 align-middle"></i> Detalles del Boletín Oficial</h6>
+                    <!-- 3. REGISTRO PÚBLICO SIGER -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingSiger">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSiger" aria-expanded="false" aria-controls="collapseSiger">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-bank-fill text-primary me-2 align-middle fs-18"></i> Registro Público de Comercio (SIGER)
+                                    </div>
+                                    <div>
+                                        @if($subject->tipo === 'persona_fisica')
+                                            <span class="badge bg-light text-muted py-1 px-2 text-decoration-line-through">No Aplica</span>
+                                        @elseif(!$sigerQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($sigerQuery->status === 'pending' || $sigerQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($sigerQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($sigerQuery->status === 'completed')
+                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <table class="table table-sm mb-0">
+                            </button>
+                        </h2>
+                        <div id="collapseSiger" class="accordion-collapse collapse" aria-labelledby="headingSiger" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if($subject->tipo === 'persona_fisica')
+                                    <div class="alert alert-warning border-0 mb-0">
+                                        <h6 class="alert-heading text-warning fw-semibold mb-1"><i class="ri-alert-line align-middle me-1"></i> Fuente Excluida</h6>
+                                        <p class="mb-0">La consulta del Registro Público de Comercio (SIGER) aplica únicamente para Sociedades Mercantiles (Personas Morales). Ha sido excluida por el tipo de sujeto.</p>
+                                    </div>
+                                @elseif(!$sigerQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La consulta mercantiles y composición de socios en SIGER aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($sigerQuery->status === 'pending' || $sigerQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando actas constitutivas mercantiles. Espere...</span>
+                                    </div>
+                                @elseif($sigerQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $sigerQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($sigerQuery->status === 'completed' && $sigerQuery->result)
+                                    @php $results = $sigerQuery->result->processed_data['resultados'] ?? []; @endphp
+                                    @if(empty($results))
+                                        <div class="text-center text-muted py-3">No se localizaron registros comerciales en SIGER vinculados a esta Razón Social.</div>
+                                    @else
+                                        @foreach($results as $res)
+                                        <div class="card border border-dashed mb-3">
+                                            <div class="card-header bg-light-subtle align-items-center d-flex pb-2">
+                                                <h6 class="card-title mb-0 flex-grow-1 text-primary">Folio Mercantil Electrónico (FME): #{{ $res['fme'] ?? '' }}</h6>
+                                                <span class="badge bg-success-subtle text-success">{{ $res['entidad_federativa'] ?? 'CDMX' }}</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row mb-2">
+                                                    <div class="col-sm-6">
+                                                        <span class="text-muted">Fecha Constitución:</span>
+                                                        <span class="fw-semibold d-block text-dark">{{ isset($res['fecha_constitucion']) ? \Carbon\Carbon::parse($res['fecha_constitucion'])->format('d/m/Y') : 'N/A' }}</span>
+                                                    </div>
+                                                    <div class="col-sm-6">
+                                                        <span class="text-muted">Capital Social de Inicio:</span>
+                                                        <span class="fw-semibold d-block text-dark">${{ number_format($res['capital_social'] ?? 0, 2) }} MXN</span>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <span class="text-muted">Objeto Social Constituido:</span>
+                                                    <p class="text-muted fs-12 mb-0" style="text-align: justify;">{{ $res['objeto_social'] ?? 'N/A' }}</p>
+                                                </div>
+                                                <h6 class="text-uppercase text-muted fs-11 mb-2">Socios y Accionistas Registrados</h6>
+                                                <div class="table-responsive table-card">
+                                                    <table class="table table-sm table-nowrap mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Nombre Completo</th>
+                                                                <th>Participación</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($res['socios'] ?? [] as $socio)
+                                                            <tr>
+                                                                <td class="fw-semibold text-dark">{{ $socio['nombre'] ?? '' }}</td>
+                                                                <td><span class="badge bg-primary-subtle text-primary">{{ $socio['participacion'] ?? '' }}</span></td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. LISTAS SAT 69/B -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingSatListas">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSatListas" aria-expanded="false" aria-controls="collapseSatListas">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-file-warning-fill text-primary me-2 align-middle fs-18"></i> Listas SAT 69 y 69-B (Cumplimiento Fiscal)
+                                    </div>
+                                    <div>
+                                        @if(!$satListasQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($satListasQuery->status === 'pending' || $satListasQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($satListasQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($satListasQuery->status === 'completed')
+                                            @if($hasSatAlert)
+                                                <span class="badge bg-danger text-white py-1 px-2"><i class="ri-error-warning-fill me-1"></i> RIESGO DETECTADO (69-B)</span>
+                                            @else
+                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Incidencias</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseSatListas" class="accordion-collapse collapse" aria-labelledby="headingSatListas" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$satListasQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La revisión de listados negros de contribuyentes no localizados o simuladores ante el SAT aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($satListasQuery->status === 'pending' || $satListasQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando reportes negativos en boletines oficiales del SAT. Espere...</span>
+                                    </div>
+                                @elseif($satListasQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $satListasQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($satListasQuery->status === 'completed' && $satListasQuery->result)
+                                    @php $listData = $satListasQuery->result->processed_data; @endphp
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border mb-0">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69 (Exceptuados/Incumplidos)</h6>
+                                                    @if($listData['en_lista_69'] ?? false)
+                                                        <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-error-warning-line me-1"></i> Contribuyente Exceptuado</span>
+                                                    @else
+                                                        <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border mb-0">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69-B (EFOS - Simulación de Operaciones)</h6>
+                                                    @if($listData['en_lista_69b'] ?? false)
+                                                        <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-alert-line me-1"></i> Boletinado Simulador</span>
+                                                    @else
+                                                        <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if($listData['en_lista_69b'] ?? false)
+                                    <div class="card border border-danger border-dashed mb-0 mt-3">
+                                        <div class="card-header bg-danger-subtle text-danger pb-2">
+                                            <h6 class="card-title mb-0 text-danger fw-semibold"><i class="ri-error-warning-fill me-1 align-middle"></i> Detalles del Boletín Oficial 69-B</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light" style="width: 30%">Estatus 69-B:</td>
+                                                        <td><span class="badge bg-warning text-dark">{{ $listData['estatus_69b'] ?? 'Presunto' }}</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Número de Oficio:</td>
+                                                        <td><code>{{ $listData['oficio_oficial'] ?? 'N/A' }}</code></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Publicación DOF:</td>
+                                                        <td>{{ $listData['fecha_publicacion'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. PROPUESTA INDUSTRIAL IMPI -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingMarcas">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMarcas" aria-expanded="false" aria-controls="collapseMarcas">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-trademark-fill text-primary me-2 align-middle fs-18"></i> Propiedad Industrial e Intelectual (IMPI)
+                                    </div>
+                                    <div>
+                                        @if(!$marcasQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($marcasQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($marcasQuery->status === 'completed')
+                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseMarcas" class="accordion-collapse collapse" aria-labelledby="headingMarcas" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$marcasQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La búsqueda de marcas y patentes a nombre del sujeto en las bases del IMPI aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando marcas registradas. Espere...</span>
+                                    </div>
+                                @elseif($marcasQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $marcasQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($marcasQuery->status === 'completed' && $marcasQuery->result)
+                                    @php $marcas = $marcasQuery->result->processed_data['marcas'] ?? []; @endphp
+                                    @if(empty($marcas))
+                                        <div class="text-center text-muted py-3">No se detectaron marcas o solicitudes registradas a nombre del titular en el IMPI.</div>
+                                    @else
+                                        <div class="table-responsive">
+                                            <table class="table table-striped align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Registro</th>
+                                                        <th>Expediente</th>
+                                                        <th>Denominación</th>
+                                                        <th>Titular</th>
+                                                        <th>Clase Nice</th>
+                                                        <th>Concesión</th>
+                                                        <th>Estatus</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($marcas as $marca)
+                                                    <tr>
+                                                        <td><code>{{ $marca['numero_registro'] ?? 'N/A' }}</code></td>
+                                                        <td><code>{{ $marca['numero_expediente'] ?? 'N/A' }}</code></td>
+                                                        <td class="fw-semibold text-dark">{{ $marca['denominacion'] ?? '' }}</td>
+                                                        <td>{{ $marca['titular'] ?? '' }}</td>
+                                                        <td><span class="badge bg-light text-dark">Clase {{ $marca['clase_nice'] ?? '' }}</span></td>
+                                                        <td>{{ isset($marca['fecha_concesion']) ? \Carbon\Carbon::parse($marca['fecha_concesion'])->format('d/m/Y') : 'N/A' }}</td>
+                                                        <td><span class="badge bg-success-subtle text-success">{{ $marca['estatus'] ?? 'REGISTRADA' }}</span></td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($subject->tipo === 'persona_fisica')
+                    <!-- 6. INE FRENTE -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingIneFrente">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIneFrente" aria-expanded="false" aria-controls="collapseIneFrente">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-profile-fill text-primary me-2 align-middle fs-18"></i> Identificación INE Frente (OCR)
+                                    </div>
+                                    <div>
+                                        @if(!$ineFrenteQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($ineFrenteQuery->status === 'pending' || $ineFrenteQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($ineFrenteQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($ineFrenteQuery->status === 'completed')
+                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseIneFrente" class="accordion-collapse collapse" aria-labelledby="headingIneFrente" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$ineFrenteQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La consulta del OCR para la parte frontal del INE aún no se ha iniciado o requiere imágenes válidas.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }} {{ empty($subject->ine_front_path) ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Frente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($ineFrenteQuery->status === 'pending' || $ineFrenteQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Extrayendo datos de la credencial. Espere...</span>
+                                    </div>
+                                @elseif($ineFrenteQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $ineFrenteQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Procesar</button>
+                                        </form>
+                                    </div>
+                                @elseif($ineFrenteQuery->status === 'completed' && $ineFrenteQuery->result)
+                                    @php $frenteData = $ineFrenteQuery->result->processed_data; @endphp
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <table class="table table-bordered align-middle mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light" style="width: 40%">Nombre:</td>
+                                                        <td class="text-dark fw-medium">{{ $frenteData['nombre'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Apellido Paterno:</td>
+                                                        <td class="text-dark fw-medium">{{ $frenteData['apellido_paterno'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Apellido Materno:</td>
+                                                        <td class="text-dark fw-medium">{{ $frenteData['apellido_materno'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">CURP:</td>
+                                                        <td><code>{{ $frenteData['curp'] ?? 'N/A' }}</code></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Clave Elector:</td>
+                                                        <td><code>{{ $frenteData['clave_elector'] ?? 'N/A' }}</code></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <table class="table table-bordered align-middle mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light" style="width: 40%">Número Emisión:</td>
+                                                        <td><code>{{ $frenteData['numero_emision'] ?? 'N/A' }}</code></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Sección Electoral:</td>
+                                                        <td><span class="badge bg-light text-dark fs-12">{{ $frenteData['seccion'] ?? 'N/A' }}</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Fecha de Nacimiento:</td>
+                                                        <td>{{ $frenteData['fecha_nacimiento'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Sexo:</td>
+                                                        <td>{{ $frenteData['sexo'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Vigencia:</td>
+                                                        <td><span class="badge bg-success-subtle text-success fs-12">{{ $frenteData['vigencia'] ?? 'N/A' }}</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="card border border-dashed p-3 mb-0 mt-3 bg-light-subtle">
+                                    <h6 class="fs-12 text-uppercase fw-semibold mb-2 text-primary"><i class="ri-upload-cloud-2-line align-middle me-1"></i> Sustituir Imagen Frente / Re-Consultar</h6>
+                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="input-group">
+                                            <input type="file" name="ine_front" class="form-control" accept="image/*" required>
+                                            <button type="submit" class="btn btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                Subir y Procesar OCR
+                                            </button>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block">Suba una nueva imagen para reemplazar la actual. Se iniciará el OCR de forma inmediata.</small>
+                                    </form>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. INE REVERSO -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingIneReverso">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIneReverso" aria-expanded="false" aria-controls="collapseIneReverso">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-pages-fill text-primary me-2 align-middle fs-18"></i> Identificación INE Reverso (OCR)
+                                    </div>
+                                    <div>
+                                        @if(!$ineReversoQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($ineReversoQuery->status === 'pending' || $ineReversoQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($ineReversoQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($ineReversoQuery->status === 'completed')
+                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseIneReverso" class="accordion-collapse collapse" aria-labelledby="headingIneReverso" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$ineReversoQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La consulta del OCR para la parte trasera del INE aún no se ha iniciado o requiere imágenes válidas.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_reverso']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }} {{ empty($subject->ine_back_path) ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Reverso
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($ineReversoQuery->status === 'pending' || $ineReversoQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Extrayendo códigos y datos del reverso. Espere...</span>
+                                    </div>
+                                @elseif($ineReversoQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $ineReversoQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_reverso']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Procesar</button>
+                                        </form>
+                                    </div>
+                                @elseif($ineReversoQuery->status === 'completed' && $ineReversoQuery->result)
+                                    @php $reversoData = $ineReversoQuery->result->processed_data; @endphp
+                                    <table class="table table-bordered align-middle mb-0">
                                         <tbody>
                                             <tr>
-                                                <td class="fw-semibold bg-light" style="width: 30%">Estatus 69-B:</td>
-                                                <td><span class="badge bg-warning text-dark">{{ $listData['estatus_69b'] ?? 'Presunto' }}</span></td>
+                                                <td class="fw-semibold bg-light" style="width: 30%">Código CIC:</td>
+                                                <td class="text-dark fw-medium"><code>{{ $reversoData['cic'] ?? 'N/A' }}</code></td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-semibold bg-light">Número de Oficio:</td>
-                                                <td><code>{{ $listData['oficio_oficial'] ?? 'N/A' }}</code></td>
+                                                <td class="fw-semibold bg-light">Código OCR (MRZ):</td>
+                                                <td><code style="word-break: break-all;">{{ $reversoData['codigo_ocr'] ?? 'N/A' }}</code></td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-semibold bg-light">Publicación DOF:</td>
-                                                <td>{{ $listData['fecha_publicacion'] ?? 'N/A' }}</td>
+                                                <td class="fw-semibold bg-light">Número Identificador de Credencial:</td>
+                                                <td><code>{{ $reversoData['numero_identificador'] ?? 'N/A' }}</code></td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                @endif
+
+                                <div class="card border border-dashed p-3 mb-0 mt-3 bg-light-subtle">
+                                    <h6 class="fs-12 text-uppercase fw-semibold mb-2 text-primary"><i class="ri-upload-cloud-2-line align-middle me-1"></i> Sustituir Imagen Reverso / Re-Consultar</h6>
+                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_reverso']) }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="input-group">
+                                            <input type="file" name="ine_back" class="form-control" accept="image/*" required>
+                                            <button type="submit" class="btn btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                Subir y Procesar OCR
+                                            </button>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block">Suba una nueva imagen para reemplazar la actual. Se iniciará el OCR de forma inmediata.</small>
+                                    </form>
                                 </div>
                             </div>
-                            @endif
-                        @endif
+                        </div>
                     </div>
-                    
-                    <!-- IMPI TAB -->
-                    <div class="tab-pane" id="impi-tab" role="tabpanel">
-                        @if(!$marcasQuery)
-                            <div class="text-center py-4">
-                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px"></lord-icon>
-                                <h5 class="mt-4">Propiedad Industrial (IMPI)</h5>
-                                <p class="text-muted">La búsqueda de marcas o patentes registradas a nombre de este sujeto aún no se ha iniciado.</p>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST" class="mt-3">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-play-circle-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                        @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
-                            <div class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                                <h5 class="mt-4">Procesando consulta...</h5>
-                                <p class="text-muted">Buscando registros marcarios y denominaciones comerciales en las bases de datos del IMPI. Espere...</p>
-                            </div>
-                        @elseif($marcasQuery->status === 'failed')
-                            <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="alert-heading text-danger fw-semibold">Error al consultar la fuente</h6>
-                                    <p class="mb-0">{{ $marcasQuery->error_message }}</p>
+                    @endif
+
+                    <!-- 8. LISTAS DE SANCIONES Y PEPS -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingSanciones">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSanciones" aria-expanded="false" aria-controls="collapseSanciones">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-shield-user-fill text-primary me-2 align-middle fs-18"></i> Cumplimiento e Historial de Sanciones (PEPs / OFAC)
+                                    </div>
+                                    <div>
+                                        @if(!$sancionesQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($sancionesQuery->status === 'pending' || $sancionesQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($sancionesQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($sancionesQuery->status === 'completed')
+                                            @if($hasSancionesAlert)
+                                                <span class="badge bg-danger text-white py-1 px-2 blink-effect"><i class="ri-alert-fill me-1"></i> RIESGO DE CUMPLIMIENTO (PEPs/OFAC)</span>
+                                            @else
+                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Coincidencias</span>
+                                            @endif
+                                        @endif
+                                    </div>
                                 </div>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST" class="flex-shrink-0">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
+                            </button>
+                        </h2>
+                        <div id="collapseSanciones" class="accordion-collapse collapse" aria-labelledby="headingSanciones" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$sancionesQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La búsqueda en listas de sanciones, terrorismo y PEPs internacionales aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sanciones']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($sancionesQuery->status === 'pending' || $sancionesQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando en bases de cumplimiento nacionales e internacionales. Espere...</span>
+                                    </div>
+                                @elseif($sancionesQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $sancionesQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sanciones']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($sancionesQuery->status === 'completed' && $sancionesQuery->result)
+                                    @php $sancData = $sancionesQuery->result->processed_data; @endphp
+                                    @if(empty($sancData['hits'] ?? []))
+                                        <div class="alert alert-success border-0 mb-0">
+                                            <h6 class="alert-heading text-success fw-semibold"><i class="ri-checkbox-circle-line me-1"></i> Sin Reportes</h6>
+                                            <p class="mb-0">No se detectaron coincidencias en listas de sanciones de la OFAC, Interpol, ONU, ni en listados oficiales de Personas Expuestas Políticamente (PEPs) en México.</p>
+                                        </div>
+                                    @else
+                                        <div class="alert alert-danger border-0 mb-3">
+                                            <h6 class="alert-heading text-danger fw-semibold"><i class="ri-error-warning-fill me-1"></i> Coincidencia Detectada</h6>
+                                            <p class="mb-0">Se han localizado registros relacionados con el nombre del sujeto en las siguientes listas de vigilancia y cumplimiento:</p>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Lista</th>
+                                                        <th>Nombre Detectado</th>
+                                                        <th>Entidad / País</th>
+                                                        <th>Tipo</th>
+                                                        <th>Fecha Publicación</th>
+                                                        <th>Detalles / Comentarios</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($sancData['hits'] as $hit)
+                                                    <tr>
+                                                        <td class="fw-semibold text-danger">{{ $hit['lista'] ?? 'N/A' }}</td>
+                                                        <td class="fw-medium text-dark">{{ $hit['nombre_encontrado'] ?? 'N/A' }}</td>
+                                                        <td>{{ $hit['entidad_pais'] ?? 'N/A' }}</td>
+                                                        <td><span class="badge bg-danger-subtle text-danger">{{ $hit['tipo_lista'] ?? 'Sanción' }}</span></td>
+                                                        <td>{{ $hit['fecha_publicacion'] ?? 'N/A' }}</td>
+                                                        <td class="text-muted fs-12">{{ $hit['comentarios'] ?? '' }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+                                @endif
                             </div>
-                        @elseif($marcasQuery->status === 'completed' && $marcasQuery->result)
-                            @php $marcas = $marcasQuery->result->processed_data['marcas'] ?? []; @endphp
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="text-primary mb-0 fw-semibold">Marcas Registradas / Solicitudes a su Nombre</h6>
-                                <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-soft-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                        <i class="ri-refresh-line align-bottom me-1"></i> Re-Consultar
-                                    </button>
-                                </form>
-                            </div>
-                            @if(empty($marcas))
-                                <div class="text-center text-muted py-3">No se detectaron patentes o marcas comerciales registradas ante el IMPI para este titular.</div>
-                            @else
-                                <div class="table-responsive">
-                                    <table class="table table-striped align-middle">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Registro</th>
-                                                <th>Expediente</th>
-                                                <th>Denominación</th>
-                                                <th>Titular</th>
-                                                <th>Clase Nice</th>
-                                                <th>Concesión</th>
-                                                <th>Estatus</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($marcas as $marca)
-                                            <tr>
-                                                <td><code>{{ $marca['numero_registro'] ?? 'N/A' }}</code></td>
-                                                <td><code>{{ $marca['numero_expediente'] ?? 'N/A' }}</code></td>
-                                                <td class="fw-semibold text-dark">{{ $marca['denominacion'] ?? '' }}</td>
-                                                <td>{{ $marca['titular'] ?? '' }}</td>
-                                                <td><span class="badge bg-light text-dark">Clase {{ $marca['clase_nice'] ?? '' }}</span></td>
-                                                <td>{{ isset($marca['fecha_concesion']) ? \Carbon\Carbon::parse($marca['fecha_concesion'])->format('d/m/Y') : 'N/A' }}</td>
-                                                <td><span class="badge bg-success-subtle text-success">{{ $marca['estatus'] ?? 'REGISTRADA' }}</span></td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @endif
-                        @endif
+                        </div>
                     </div>
-                    
+
+                    <!-- 9. HISTORIAL DE LITIGIOS -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingLitigios">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLitigios" aria-expanded="false" aria-controls="collapseLitigios">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-folders-fill text-primary me-2 align-middle fs-18"></i> Búsqueda de Litigios y Juicios (Historial Legal)
+                                    </div>
+                                    <div>
+                                        @if(!$litigiosQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($litigiosQuery->status === 'pending' || $litigiosQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($litigiosQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($litigiosQuery->status === 'completed')
+                                            @if($hasLitigiosAlert)
+                                                <span class="badge bg-warning text-dark py-1 px-2"><i class="ri-folders-fill me-1"></i> LITIGIOS ENCONTRADOS</span>
+                                            @else
+                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Juicios</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseLitigios" class="accordion-collapse collapse" aria-labelledby="headingLitigios" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$litigiosQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La búsqueda de demandas y expedientes judiciales a nombre del sujeto en juzgados de México aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'litigios']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($litigiosQuery->status === 'pending' || $litigiosQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando registros de demandas y juicios legales. Espere...</span>
+                                    </div>
+                                @elseif($litigiosQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $litigiosQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'litigios']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($litigiosQuery->status === 'completed' && $litigiosQuery->result)
+                                    @php $litigData = $litigiosQuery->result->processed_data; @endphp
+                                    @if(empty($litigData['juicios'] ?? []))
+                                        <div class="alert alert-success border-0 mb-0">
+                                            <h6 class="alert-heading text-success fw-semibold"><i class="ri-checkbox-circle-line me-1"></i> Historial Limpio</h6>
+                                            <p class="mb-0">No se encontraron expedientes judiciales, demandas o litigios civiles, mercantiles, laborales o penales vinculados a este nombre en juzgados estatales o federales.</p>
+                                        </div>
+                                    @else
+                                        <div class="alert alert-warning border-0 mb-3">
+                                            <h6 class="alert-heading text-warning fw-semibold"><i class="ri-alert-fill me-1"></i> Litigios Registrados</h6>
+                                            <p class="mb-0">Se han localizado los siguientes expedientes y procesos judiciales vinculados al sujeto:</p>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Expediente</th>
+                                                        <th>Juzgado / Tribunal</th>
+                                                        <th>Fuero</th>
+                                                        <th>Materia / Acción</th>
+                                                        <th>Actor / Demandante</th>
+                                                        <th>Demandado</th>
+                                                        <th>Fecha de Publicación</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($litigData['juicios'] as $juicio)
+                                                    <tr>
+                                                        <td><code>{{ $juicio['expediente'] ?? 'N/A' }}</code></td>
+                                                        <td class="fw-semibold text-dark">{{ $juicio['juzgado'] ?? 'N/A' }}</td>
+                                                        <td><span class="badge bg-light text-dark fs-12">{{ $juicio['fuero'] ?? 'Local' }}</span></td>
+                                                        <td><span class="badge bg-warning-subtle text-warning fs-12">{{ $juicio['materia'] ?? 'Civil' }}</span></td>
+                                                        <td>{{ $juicio['actor'] ?? 'N/A' }}</td>
+                                                        <td>{{ $juicio['demandado'] ?? 'N/A' }}</td>
+                                                        <td>{{ isset($juicio['fecha']) ? \Carbon\Carbon::parse($juicio['fecha'])->format('d/m/Y') : 'N/A' }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
+{{-- ═══════════════════════════════════════════════════════════════════════
+     TARJETAS TIER 2 — CURP / DOMICILIO / NSS / SCORE CREDITICIO
+     Se muestran en una fila de 2 columnas por par para mayor densidad.
+     ═══════════════════════════════════════════════════════════════════════ --}}
+@php
+    $curpQuery       = $queries->firstWhere('source_type', 'curp');
+    $curpData        = $curpQuery?->result?->processed_data ?? [];
+    $domicilioQuery  = $queries->firstWhere('source_type', 'comprobante_domicilio');
+    $domicilioData   = $domicilioQuery?->result?->processed_data ?? [];
+    $nssQuery        = $queries->firstWhere('source_type', 'nss_imss');
+    $nssData         = $nssQuery?->result?->processed_data ?? [];
+    $scoreQuery      = $queries->firstWhere('source_type', 'score_crediticio');
+    $scoreData       = $scoreQuery?->result?->processed_data ?? [];
+
+    // Score color map
+    $scoreColores = [
+        'Excelente' => 'success',
+        'Bueno'     => 'primary',
+        'Regular'   => 'warning',
+        'Malo'      => 'danger',
+    ];
+    $scoreColor = $scoreColores[$scoreData['rango_score'] ?? ''] ?? 'secondary';
+@endphp
+
+@if($curpQuery || $domicilioQuery || $nssQuery || $scoreQuery)
+<div class="row mt-3 g-3">
+
+    {{-- ── CURP / RENAPO ─────────────────────────────────────────────── --}}
+    @if($curpQuery)
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center border-0 pb-0">
+                <i class="ri-fingerprint-line me-2 text-primary fs-18"></i>
+                <h6 class="card-title mb-0 fw-bold flex-grow-1">Validación CURP / RENAPO</h6>
+                @if($curpQuery->status === 'completed')
+                    <span class="badge {{ ($curpData['valida'] ?? false) ? 'bg-success' : 'bg-danger' }} fs-11">
+                        {{ ($curpData['valida'] ?? false) ? '✓ Válida' : '✗ Inválida' }}
+                    </span>
+                @elseif(in_array($curpQuery->status, ['pending','processing']))
+                    <span class="badge bg-info-subtle text-info fs-11"><span class="spinner-border spinner-border-sm" style="width:10px;height:10px;"></span></span>
+                @else
+                    <span class="badge bg-danger-subtle text-danger fs-11">Error</span>
+                @endif
+            </div>
+            <div class="card-body pt-2 fs-13">
+                @if($curpQuery->status === 'completed' && !empty($curpData))
+                    <div class="row g-2">
+                        <div class="col-6"><span class="text-muted d-block fs-11">CURP</span><code class="fs-12">{{ $curpData['curp'] ?? $subject->curp }}</code></div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Estatus RENAPO</span><strong>{{ $curpData['estatus_curp'] ?? '—' }}</strong></div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Nombre</span>{{ trim(($curpData['nombre'] ?? '') . ' ' . ($curpData['primer_apellido'] ?? '') . ' ' . ($curpData['segundo_apellido'] ?? '')) ?: '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Fecha Nac.</span>{{ $curpData['fecha_nacimiento'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Sexo</span>{{ $curpData['sexo'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Entidad Nac.</span>{{ $curpData['estado_nacimiento'] ?? '—' }}</div>
+                    </div>
+                @elseif($curpQuery->status === 'failed')
+                    <p class="text-danger mb-0 fs-12"><i class="ri-error-warning-line me-1"></i>Error al consultar RENAPO.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ── Comprobante de Domicilio ───────────────────────────────────── --}}
+    @if($domicilioQuery)
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center border-0 pb-0">
+                <i class="ri-home-4-line me-2 text-info fs-18"></i>
+                <h6 class="card-title mb-0 fw-bold flex-grow-1">Comprobante de Domicilio (OCR)</h6>
+                @if($domicilioQuery->status === 'completed')
+                    <span class="badge {{ ($domicilioData['valido'] ?? false) ? 'bg-success' : 'bg-warning' }} fs-11">
+                        {{ ($domicilioData['valido'] ?? false) ? '✓ Válido' : '⚠ Revisar' }}
+                    </span>
+                @elseif(in_array($domicilioQuery->status, ['pending','processing']))
+                    <span class="badge bg-info-subtle text-info fs-11"><span class="spinner-border spinner-border-sm" style="width:10px;height:10px;"></span></span>
+                @else
+                    <span class="badge bg-danger-subtle text-danger fs-11">Error</span>
+                @endif
+            </div>
+            <div class="card-body pt-2 fs-13">
+                @if($domicilioQuery->status === 'completed' && !empty($domicilioData))
+                    <div class="row g-2">
+                        <div class="col-6"><span class="text-muted d-block fs-11">Tipo</span>{{ $domicilioData['tipo_comprobante'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Titular</span>{{ $domicilioData['titular'] ?? '—' }}</div>
+                        <div class="col-12"><span class="text-muted d-block fs-11">Domicilio extraído</span>
+                            {{ collect([$domicilioData['calle'] ?? null, $domicilioData['num_exterior'] ?? null, $domicilioData['colonia'] ?? null, $domicilioData['municipio'] ?? null, $domicilioData['estado'] ?? null])->filter()->implode(', ') ?: '—' }}
+                            @if(!empty($domicilioData['codigo_postal'])) · C.P. {{ $domicilioData['codigo_postal'] }} @endif
+                        </div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Emisión</span>{{ $domicilioData['periodo_facturado'] ?? $domicilioData['fecha_emision'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Coincide con sujeto</span>
+                            @if(isset($domicilioData['coincide_con_sujeto']))
+                                <span class="badge {{ $domicilioData['coincide_con_sujeto'] ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} fs-11">
+                                    {{ $domicilioData['coincide_con_sujeto'] ? '✓ Sí' : '✗ No' }}
+                                </span>
+                            @else —
+                            @endif
+                        </div>
+                    </div>
+                @elseif($domicilioQuery->status === 'failed')
+                    <p class="text-danger mb-0 fs-12"><i class="ri-error-warning-line me-1"></i>Error en OCR del comprobante.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ── NSS / IMSS ────────────────────────────────────────────────── --}}
+    @if($nssQuery)
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center border-0 pb-0">
+                <i class="ri-hospital-line me-2 text-warning fs-18"></i>
+                <h6 class="card-title mb-0 fw-bold flex-grow-1">Historial Laboral IMSS (NSS)</h6>
+                @if($nssQuery->status === 'completed')
+                    <span class="badge {{ ($nssData['activo_actualmente'] ?? false) ? 'bg-success' : 'bg-secondary' }} fs-11">
+                        {{ ($nssData['activo_actualmente'] ?? false) ? 'Activo IMSS' : 'Baja IMSS' }}
+                    </span>
+                @elseif(in_array($nssQuery->status, ['pending','processing']))
+                    <span class="badge bg-info-subtle text-info fs-11"><span class="spinner-border spinner-border-sm" style="width:10px;height:10px;"></span></span>
+                @else
+                    <span class="badge bg-danger-subtle text-danger fs-11">Error</span>
+                @endif
+            </div>
+            <div class="card-body pt-2 fs-13">
+                @if($nssQuery->status === 'completed' && !empty($nssData))
+                    <div class="row g-2 mb-2">
+                        <div class="col-6"><span class="text-muted d-block fs-11">NSS</span><code class="fs-12">{{ $nssData['nss'] ?? '—' }}</code></div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Semanas cotizadas</span><strong class="text-primary">{{ $nssData['semanas_cotizadas'] ?? '—' }}</strong></div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Último patrón</span>{{ $nssData['ultimo_patron'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Últ. cotización</span>{{ $nssData['fecha_ultima_cotizacion'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Total empleadores</span>{{ $nssData['total_patrones'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">SBC</span>${{ number_format($nssData['salario_base_cotizacion'] ?? 0, 2) }}/día</div>
+                    </div>
+                    @if(!empty($nssData['historial_empleos']))
+                    <div class="table-responsive mt-2">
+                        <table class="table table-xs table-hover fs-12 mb-0">
+                            <thead class="table-light"><tr><th>Patrón</th><th>Inicio</th><th>Baja</th><th>Sem.</th></tr></thead>
+                            <tbody>
+                                @foreach(array_slice($nssData['historial_empleos'], 0, 4) as $emp)
+                                <tr>
+                                    <td>{{ $emp['patron'] ?? '—' }}<br><small class="text-muted">{{ $emp['tipo_movimiento'] ?? '' }}</small></td>
+                                    <td>{{ $emp['fecha_inicio'] ?? '—' }}</td>
+                                    <td>{{ $emp['fecha_baja'] ?? 'Vigente' }}</td>
+                                    <td class="text-center fw-semibold">{{ $emp['semanas'] ?? '—' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+                @elseif($nssQuery->status === 'failed')
+                    <p class="text-danger mb-0 fs-12"><i class="ri-error-warning-line me-1"></i>Error al consultar IMSS.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ── Score Crediticio / Buró ────────────────────────────────────── --}}
+    @if($scoreQuery)
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center border-0 pb-0">
+                <i class="ri-bank-card-line me-2 text-success fs-18"></i>
+                <h6 class="card-title mb-0 fw-bold flex-grow-1">Score Crediticio / Buró de Crédito</h6>
+                @if($scoreQuery->status === 'completed' && !empty($scoreData['rango_score']))
+                    <span class="badge bg-{{ $scoreColor }} fs-11">{{ $scoreData['rango_score'] }}</span>
+                @elseif(in_array($scoreQuery->status, ['pending','processing']))
+                    <span class="badge bg-info-subtle text-info fs-11"><span class="spinner-border spinner-border-sm" style="width:10px;height:10px;"></span></span>
+                @elseif($scoreQuery->status === 'failed')
+                    <span class="badge bg-danger-subtle text-danger fs-11">Error</span>
+                @endif
+            </div>
+            <div class="card-body pt-2 fs-13">
+                @if($scoreQuery->status === 'completed' && !empty($scoreData))
+                    <div class="text-center mb-3">
+                        <span class="display-6 fw-bold text-{{ $scoreColor }}">{{ $scoreData['score_buro'] ?? '—' }}</span>
+                        <small class="text-muted d-block fs-12">Score {{ $scoreData['buro'] ?? 'Buró de Crédito' }}</small>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6"><span class="text-muted d-block fs-11">Nivel de riesgo</span><strong>{{ $scoreData['nivel_riesgo'] ?? '—' }}</strong></div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Cuentas activas</span>{{ $scoreData['cuentas_activas'] ?? '—' }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">En mora</span>
+                            <span class="badge {{ ($scoreData['cuentas_en_mora'] ?? 0) > 0 ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                {{ $scoreData['cuentas_en_mora'] ?? 0 }}
+                            </span>
+                        </div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Monto vencido</span>${{ number_format($scoreData['monto_vencido'] ?? 0, 2) }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Deuda total</span>${{ number_format($scoreData['monto_total_deuda'] ?? 0, 2) }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Consultas recientes</span>{{ $scoreData['consultas_recientes'] ?? '—' }}</div>
+                    </div>
+                    @if(!empty($scoreData['aviso_legal']))
+                    <div class="alert alert-warning border-0 bg-warning-subtle mt-3 mb-0 py-2 px-3 fs-11">
+                        <i class="ri-shield-check-line me-1"></i>{{ $scoreData['aviso_legal'] }}
+                    </div>
+                    @endif
+                @elseif($scoreQuery->status === 'failed')
+                    <p class="text-danger mb-0 fs-12"><i class="ri-error-warning-line me-1"></i>Error al consultar Buró.</p>
+                @elseif(!$subject->credit_consent_granted)
+                    <div class="text-center text-muted py-3 fs-12">
+                        <i class="ri-lock-line fs-20 d-block mb-2"></i>
+                        El investigado no otorgó consentimiento para consultar su historial crediticio.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+</div>
+@endif
+
+{{-- ─────────── TARJETA OSINT: Presencia Digital y Huella en Redes ─────────── --}}
+
+@php
+    $osintQuery = $queries->firstWhere('source_type', 'presencia_en_linea');
+    $osintData  = $osintQuery?->result?->processed_data ?? [];
+    $nivelColores = [
+        'alto'    => ['badge' => 'bg-danger',   'text' => 'text-danger',   'emoji' => '🔴'],
+        'medio'   => ['badge' => 'bg-warning',  'text' => 'text-warning',  'emoji' => '🟡'],
+        'bajo'    => ['badge' => 'bg-success',  'text' => 'text-success',  'emoji' => '🟢'],
+        'ninguno' => ['badge' => 'bg-secondary','text' => 'text-muted',    'emoji' => '⚪'],
+    ];
+    $nivel = $osintData['nivel_exposicion'] ?? 'ninguno';
+    $nivelColor = $nivelColores[$nivel] ?? $nivelColores['ninguno'];
+@endphp
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header align-items-center d-flex border-0 pb-0">
+                <div class="flex-grow-1">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="ri-global-line me-2 text-info"></i>
+                        Presencia Digital y Huella en Redes (OSINT)
+                    </h5>
+                    <p class="text-muted fs-12 mb-0 mt-1">
+                        Búsqueda en +300 plataformas públicas vía Sherlock + Social Analyzer.
+                        Los resultados son <strong>indicativos</strong> y requieren revisión humana.
+                    </p>
+                </div>
+                <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                    @if($osintQuery)
+                        @if($osintQuery->status === 'completed')
+                            <span class="badge {{ $nivelColor['badge'] }} fs-11">
+                                {{ $nivelColor['emoji'] }} Exposición {{ ucfirst($nivel) }}
+                            </span>
+                            <span class="badge bg-light text-dark fs-11">
+                                {{ $osintData['total_coincidencias'] ?? 0 }} coincidencias
+                            </span>
+                        @elseif($osintQuery->status === 'processing' || $osintQuery->status === 'pending')
+                            <span class="badge bg-info-subtle text-info fs-11">
+                                <span class="spinner-border spinner-border-sm me-1" style="width:10px;height:10px;"></span> Procesando…
+                            </span>
+                        @elseif($osintQuery->status === 'failed')
+                            <span class="badge bg-danger-subtle text-danger fs-11">Error</span>
+                        @endif
+                    @else
+                        <span class="badge bg-light text-muted fs-11">Pendiente de ejecución</span>
+                    @endif
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if($osintQuery && $osintQuery->status === 'completed' && !empty($osintData))
+                    {{-- Username buscado --}}
+                    @if(!empty($osintData['username_buscado']))
+                    <div class="mb-3">
+                        <span class="text-muted fs-12 fw-semibold">Username buscado:</span>
+                        <code class="fs-13 ms-2">{{ $osintData['username_buscado'] }}</code>
+                    </div>
+                    @endif
+
+                    @php
+                        $plataformas = $osintData['plataformas_encontradas'] ?? [];
+                        $perfiles    = $osintData['perfiles_correlacionados'] ?? [];
+                        $todos       = array_merge($plataformas, $perfiles);
+                    @endphp
+
+                    @if(count($todos) > 0)
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle fs-13">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plataforma</th>
+                                    <th>URL</th>
+                                    <th>Fuente</th>
+                                    <th>Confianza</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($plataformas as $p)
+                                <tr>
+                                    <td><span class="fw-semibold">{{ $p['plataforma'] }}</span></td>
+                                    <td>
+                                        <a href="{{ $p['url'] }}" target="_blank" rel="noopener noreferrer" class="text-primary text-truncate d-inline-block" style="max-width:280px;">
+                                            {{ $p['url'] }}
+                                        </a>
+                                    </td>
+                                    <td><span class="badge bg-primary-subtle text-primary fs-11">Sherlock</span></td>
+                                    <td>
+                                        <span class="badge {{ $p['confianza'] === 'alta' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} fs-11">
+                                            {{ ucfirst($p['confianza'] ?? 'media') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @foreach($perfiles as $p)
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold">{{ $p['plataforma'] }}</span>
+                                        @if(!empty($p['nombre_detectado']))
+                                        <br><small class="text-muted">{{ $p['nombre_detectado'] }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ $p['url'] }}" target="_blank" rel="noopener noreferrer" class="text-primary text-truncate d-inline-block" style="max-width:280px;">
+                                            {{ $p['url'] }}
+                                        </a>
+                                    </td>
+                                    <td><span class="badge bg-info-subtle text-info fs-11">Social Analyzer</span></td>
+                                    <td>
+                                        <span class="badge bg-warning-subtle text-warning fs-11">
+                                            {{ ucfirst($p['confianza'] ?? 'media') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @else
+                    <div class="text-center py-4 text-muted">
+                        <i class="ri-search-line fs-24 d-block mb-2"></i>
+                        No se encontraron perfiles públicos asociados al investigado.
+                    </div>
+                    @endif
+
+                    {{-- Disclaimer obligatorio --}}
+                    <div class="alert alert-warning border-0 bg-warning-subtle mt-3 mb-0 py-2 px-3 fs-12" role="alert">
+                        <i class="ri-alert-line me-1"></i>
+                        <strong>Nota legal:</strong> {{ $osintData['disclaimer'] ?? 'Esta información proviene de fuentes públicas y es de carácter indicativo. Requiere revisión humana antes de utilizarse en cualquier decisión.' }}
+                    </div>
+
+                @elseif($osintQuery && $osintQuery->status === 'failed')
+                    <div class="alert alert-danger border-0 fs-13">
+                        <i class="ri-error-warning-line me-1"></i>
+                        Error al ejecutar la búsqueda OSINT.
+                        @if(!empty($osintData['error']))<br><small class="text-muted">{{ $osintData['error'] }}</small>@endif
+                    </div>
+                @elseif(!$osintQuery)
+                    <div class="text-center text-muted py-4 fs-13">
+                        <i class="ri-global-line fs-24 d-block mb-2 text-muted"></i>
+                        La búsqueda OSINT se ejecutará al iniciar la investigación del sujeto.
+                        @if(empty($subject->username))
+                        <br><small>Agrega un <strong>username</strong> en la ficha del sujeto para mejorar los resultados de Sherlock.</small>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ─────────── TARJETA DENUE: Directorio Empresarial INEGI ─────────── --}}
+@php
+    $denueQuery = $queries->firstWhere('source_type', 'denue');
+    $denueData  = $denueQuery?->result?->processed_data ?? [];
+    $denueEstabs = $denueData['establecimientos'] ?? [];
+@endphp
+
+<div class="row mt-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header align-items-center d-flex border-0 pb-0">
+                <div class="flex-grow-1">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="ri-store-2-line me-2 text-success"></i>
+                        Directorio Empresarial DENUE (INEGI)
+                    </h5>
+                    <p class="text-muted fs-12 mb-0 mt-1">
+                        Registro oficial de establecimientos económicos de México.
+                        Fuente: <a href="https://www.inegi.org.mx/app/mapa/denue/" target="_blank" rel="noopener" class="text-muted">INEGI DENUE</a>
+                        · <span class="text-success fw-semibold">$0 por consulta</span>
+                    </p>
+                </div>
+                <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                    @if($denueQuery)
+                        @if($denueQuery->status === 'completed')
+                            <span class="badge bg-success fs-11">
+                                <i class="ri-store-2-line me-1"></i>
+                                {{ $denueData['total_encontrados'] ?? 0 }} registro(s) encontrado(s)
+                            </span>
+                        @elseif(in_array($denueQuery->status, ['processing','pending']))
+                            <span class="badge bg-info-subtle text-info fs-11">
+                                <span class="spinner-border spinner-border-sm me-1" style="width:10px;height:10px;"></span> Consultando DENUE…
+                            </span>
+                        @elseif($denueQuery->status === 'failed')
+                            <span class="badge bg-danger-subtle text-danger fs-11">Error</span>
+                        @endif
+                    @else
+                        <span class="badge bg-light text-muted fs-11">Pendiente de ejecución</span>
+                    @endif
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if($denueQuery && $denueQuery->status === 'completed' && count($denueEstabs) > 0)
+                    @if(!empty($denueData['mensaje']) && str_contains($denueData['mensaje'], '[MOCK]'))
+                        <div class="alert alert-info border-0 fs-12 py-2 mb-3">
+                            <i class="ri-information-line me-1"></i>
+                            {{ $denueData['mensaje'] }}
+                        </div>
+                    @endif
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle fs-13">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre / Razón Social</th>
+                                    <th>Actividad (SCIAN)</th>
+                                    <th>Personal</th>
+                                    <th>Domicilio</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($denueEstabs as $e)
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold d-block">{{ $e['nombre_estab'] ?? '—' }}</span>
+                                        @if(!empty($e['razon_social']) && $e['razon_social'] !== $e['nombre_estab'])
+                                            <small class="text-muted">{{ $e['razon_social'] }}</small>
+                                        @endif
+                                        @if(!empty($e['id_denue']))
+                                            <small class="text-muted d-block">ID DENUE: {{ $e['id_denue'] }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if(!empty($e['codigo_act']))
+                                            <span class="badge bg-secondary-subtle text-secondary fs-11 me-1">{{ $e['codigo_act'] }}</span>
+                                        @endif
+                                        <span class="fs-12">{{ $e['actividad'] ?? '—' }}</span>
+                                    </td>
+                                    <td>
+                                        @if(!empty($e['personal_ocupado']))
+                                            <span class="badge bg-primary-subtle text-primary fs-11">
+                                                <i class="ri-group-line me-1"></i>{{ $e['personal_ocupado'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="fs-12">
+                                        @php
+                                            $dir = collect([
+                                                $e['calle'] ?? null,
+                                                $e['num_exterior'] ?? null,
+                                                $e['colonia'] ?? null,
+                                                $e['municipio'] ?? null,
+                                                $e['entidad'] ?? null,
+                                            ])->filter()->implode(', ');
+                                        @endphp
+                                        {{ $dir ?: '—' }}
+                                        @if(!empty($e['codigo_postal']))
+                                            <br><small class="text-muted">C.P. {{ $e['codigo_postal'] }}</small>
+                                        @endif
+                                        @if(!empty($e['telefono']))
+                                            <br><small><i class="ri-phone-line me-1 text-muted"></i>{{ $e['telefono'] }}</small>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if(!empty($e['latitud']) && !empty($e['longitud']))
+                                            <a href="https://www.google.com/maps?q={{ $e['latitud'] }},{{ $e['longitud'] }}"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="btn btn-soft-success btn-sm"
+                                               title="Ver en Google Maps">
+                                                <i class="ri-map-pin-2-line"></i>
+                                            </a>
+                                        @endif
+                                        @if(!empty($e['sitio_web']))
+                                            <a href="{{ $e['sitio_web'] }}" target="_blank" rel="noopener noreferrer"
+                                               class="btn btn-soft-info btn-sm ms-1" title="Sitio web">
+                                                <i class="ri-external-link-line"></i>
+                                            </a>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if(($denueData['total_encontrados'] ?? 0) > count($denueEstabs))
+                        <p class="text-muted fs-12 text-end mt-2 mb-0">
+                            <i class="ri-information-line me-1"></i>
+                            Mostrando {{ count($denueEstabs) }} de {{ $denueData['total_encontrados'] }} registros encontrados.
+                        </p>
+                    @endif
+
+                @elseif($denueQuery && $denueQuery->status === 'completed' && count($denueEstabs) === 0)
+                    <div class="text-center py-4 text-muted">
+                        <i class="ri-store-2-line fs-24 d-block mb-2"></i>
+                        No se encontraron registros en el DENUE para este sujeto.
+                        <br><small>{{ $denueData['mensaje'] ?? '' }}</small>
+                    </div>
+
+                @elseif($denueQuery && $denueQuery->status === 'failed')
+                    <div class="alert alert-danger border-0 fs-13">
+                        <i class="ri-error-warning-line me-1"></i>
+                        Error al consultar el DENUE.
+                    </div>
+
+                @elseif(!$denueQuery)
+                    <div class="text-center text-muted py-4 fs-13">
+                        <i class="ri-store-2-line fs-24 d-block mb-2 text-muted"></i>
+                        La consulta al DENUE se ejecutará al iniciar la investigación del sujeto.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+
 
 @if($isProcessing)
 @section('script')
@@ -678,3 +1772,23 @@
 </script>
 @endsection
 @endif
+
+<script>
+function copyEnrollUrl() {
+    const input = document.getElementById('enrollUrlInput');
+    if (!input) return;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value).then(function () {
+        const btn = document.getElementById('btnCopyEnroll');
+        if (btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="ri-check-line text-success"></i>';
+            setTimeout(() => { btn.innerHTML = original; }, 2000);
+        }
+    }).catch(function () {
+        // Fallback para navegadores sin Clipboard API
+        document.execCommand('copy');
+    });
+}
+</script>

@@ -46,10 +46,31 @@ class InvestigationController extends Controller
     /**
      * Start single background check query for the given subject and source type.
      */
-    public function investigateSource($id, $sourceType)
+    public function investigateSource(Request $request, $id, $sourceType)
     {
         try {
             $subject = Subject::findOrFail($id);
+
+            // Handle uploading new file if provided
+            if ($sourceType === 'ine_frente' && $request->hasFile('ine_front')) {
+                $request->validate([
+                    'ine_front' => 'required|image|mimes:jpg,jpeg,png|max:5120',
+                ]);
+                if ($subject->ine_front_path) {
+                    \Illuminate\Support\Facades\Storage::delete($subject->ine_front_path);
+                }
+                $subject->ine_front_path = $request->file('ine_front')->store('ine_documents');
+                $subject->save();
+            } elseif ($sourceType === 'ine_reverso' && $request->hasFile('ine_back')) {
+                $request->validate([
+                    'ine_back' => 'required|image|mimes:jpg,jpeg,png|max:5120',
+                ]);
+                if ($subject->ine_back_path) {
+                    \Illuminate\Support\Facades\Storage::delete($subject->ine_back_path);
+                }
+                $subject->ine_back_path = $request->file('ine_back')->store('ine_documents');
+                $subject->save();
+            }
 
             // Execute investigation runner for a single source
             $runner = new InvestigationRunner();

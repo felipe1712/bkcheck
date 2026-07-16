@@ -11,6 +11,17 @@ use App\Services\BackgroundCheck\Nufi\NufiCsdConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSigerConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSatListasConnector;
 use App\Services\BackgroundCheck\Nufi\NufiMarcasConnector;
+use App\Services\BackgroundCheck\Nufi\NufiIneFrenteConnector;
+use App\Services\BackgroundCheck\Nufi\NufiIneReversoConnector;
+use App\Services\BackgroundCheck\Nufi\NufiSancionesConnector;
+use App\Services\BackgroundCheck\Nufi\NufiLitigiosConnector;
+use App\Services\BackgroundCheck\Nufi\NufiSelfieConnector;
+use App\Services\BackgroundCheck\Nufi\NufiCurpConnector;
+use App\Services\BackgroundCheck\Nufi\NufiDomicilioConnector;
+use App\Services\BackgroundCheck\Nufi\NufiNssConnector;
+use App\Services\BackgroundCheck\Nufi\NufiFinancialConnector;
+use App\Services\BackgroundCheck\PresenciaEnLineaConnector;
+use App\Services\BackgroundCheck\Inegi\DenueConnector;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -50,11 +61,22 @@ class ProcessConnectorQuery implements ShouldQueue
 
             // Instantiate corresponding connector
             $connector = match ($type) {
-                'rfc' => new NufiRfcConnector(),
-                'csd' => new NufiCsdConnector(),
-                'siger' => new NufiSigerConnector(),
-                'sat_listas' => new NufiSatListasConnector(),
-                'marcas' => new NufiMarcasConnector(),
+                'rfc'              => new NufiRfcConnector(),
+                'csd'              => new NufiCsdConnector(),
+                'siger'            => new NufiSigerConnector(),
+                'sat_listas'       => new NufiSatListasConnector(),
+                'marcas'           => new NufiMarcasConnector(),
+                'ine_frente'       => new NufiIneFrenteConnector(),
+                'ine_reverso'      => new NufiIneReversoConnector(),
+                'sanciones'        => new NufiSancionesConnector(),
+                'litigios'         => new NufiLitigiosConnector(),
+                'selfie'               => new NufiSelfieConnector(),
+                'curp'                 => new NufiCurpConnector(),
+                'comprobante_domicilio'=> new NufiDomicilioConnector(),
+                'nss_imss'             => new NufiNssConnector(),
+                'score_crediticio'     => new NufiFinancialConnector(),
+                'presencia_en_linea'   => new PresenciaEnLineaConnector(),
+                'denue'                => new DenueConnector(),
                 default => throw new \Exception("Conector no soportado: {$type}"),
             };
 

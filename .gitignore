@@ -21,3 +21,22 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+
+# Vistas compiladas (se regeneran en producción)
+storage/framework/views/
+storage/framework/cache/
+storage/framework/sessions/
+storage/logs/
+
+# Archivos de documentos subidos por usuarios (nunca al repo)
+storage/app/ine_documents/
+storage/app/consent_documents/
+storage/app/enrollment_documents/
+storage/app/proof_of_address_documents/
+storage/app/selfie_documents/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -30,6 +30,16 @@ abstract class NufiConnector extends BaseSourceConnector
     }
 
     /**
+     * Get the request body for mock logs.
+     */
+    protected function getMockBody(Subject $subject): array
+    {
+        return [
+            'rfc' => $subject->rfc,
+        ];
+    }
+
+    /**
      * Execute the connector logic.
      */
     public function execute(Subject $subject): array
@@ -46,9 +56,7 @@ abstract class NufiConnector extends BaseSourceConnector
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ],
-                'body' => [
-                    'rfc' => $subject->rfc,
-                ],
+                'body' => $this->getMockBody($subject),
                 'response' => [
                     'status' => 200,
                     'body' => $mockData,

@@ -92,6 +92,25 @@
                             </div>
                         </div>
 
+                        <div class="row mb-3" id="ineGroup" style="display: none;">
+                            <div class="col-md-6">
+                                <label for="ine_front" class="form-label">Identificación INE Frente (Imagen)</label>
+                                <input type="file" class="form-control @error('ine_front') is-invalid @enderror" id="ine_front" name="ine_front" accept="image/*">
+                                <small class="text-muted">Imagen frontal de la credencial (Max 5MB).</small>
+                                @error('ine_front')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ine_back" class="form-label">Identificación INE Reverso (Imagen)</label>
+                                <input type="file" class="form-control @error('ine_back') is-invalid @enderror" id="ine_back" name="ine_back" accept="image/*">
+                                <small class="text-muted">Imagen trasera de la credencial (Max 5MB).</small>
+                                @error('ine_back')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
                         <div class="mb-4">
                             <label for="address" class="form-label">Dirección Fiscal / Domicilio</label>
                             <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="2" placeholder="Calle, Número, Colonia, C.P., Ciudad y Estado...">{{ old('address') }}</textarea>
@@ -99,6 +118,90 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        <div class="mb-4" id="usernameGroup" style="display:none;">
+                            <label for="username" class="form-label">
+                                <i class="ri-at-line me-1 text-muted"></i>
+                                Username / Alias en Redes Sociales
+                                <span class="badge bg-info-subtle text-info fs-10 ms-1">OSINT</span>
+                            </label>
+                            <input type="text"
+                                class="form-control @error('username') is-invalid @enderror"
+                                id="username" name="username"
+                                value="{{ old('username') }}"
+                                placeholder="ej: jperez (sin el @)"
+                                maxlength="100">
+                            <div class="form-text text-muted">
+                                <i class="ri-information-line me-1"></i>
+                                Opcional. Si se proporciona, se usará para buscar la presencia digital del investigado en más de 300 plataformas.
+                            </div>
+                            @error('username')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- ─── Tier 2: NSS, Comprobante de Domicilio, Score Crediticio ─── --}}
+                        <div id="tier2Group" style="display:none;">
+                            <div class="d-flex align-items-center mb-3 mt-2 border-bottom pb-2">
+                                <i class="ri-shield-check-line me-2 text-success fs-16"></i>
+                                <span class="fw-semibold text-muted fs-13">Datos adicionales de verificación (Tier 2)</span>
+                            </div>
+
+                            <div class="row mb-3">
+                                {{-- NSS --}}
+                                <div class="col-md-6">
+                                    <label for="nss" class="form-label">
+                                        Número de Seguridad Social (NSS/IMSS)
+                                    </label>
+                                    <input type="text"
+                                        class="form-control @error('nss') is-invalid @enderror"
+                                        id="nss" name="nss"
+                                        value="{{ old('nss') }}"
+                                        placeholder="Ej: 12345678901"
+                                        maxlength="11">
+                                    <div class="form-text text-muted fs-12">Opcional. Permite consultar historial laboral IMSS. Se almacena encriptado.</div>
+                                    @error('nss')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                {{-- Comprobante de domicilio --}}
+                                <div class="col-md-6">
+                                    <label for="proof_of_address" class="form-label">
+                                        Comprobante de Domicilio (CFE, Telmex, agua…)
+                                    </label>
+                                    <input type="file"
+                                        class="form-control @error('proof_of_address') is-invalid @enderror"
+                                        id="proof_of_address" name="proof_of_address"
+                                        accept="image/*,application/pdf">
+                                    <div class="form-text text-muted fs-12">Opcional. Imagen o PDF (máx 5 MB). Se extrae el domicilio vía OCR.</div>
+                                    @error('proof_of_address')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Consentimiento explícito Buró de Crédito --}}
+                            <div class="card border border-warning-subtle bg-warning-subtle mb-3 p-3" id="creditConsentGroup" style="display:none;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                        id="credit_consent_granted"
+                                        name="credit_consent_granted"
+                                        value="1"
+                                        {{ old('credit_consent_granted') ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="credit_consent_granted">
+                                        <i class="ri-bank-card-line me-1 text-warning"></i>
+                                        El investigado autorizó expresamente la consulta de su historial crediticio al Buró de Crédito (LRSIC Art. 28).
+                                    </label>
+                                </div>
+                                <div class="form-text text-muted fs-12 mt-1">
+                                    <i class="ri-alert-line me-1 text-warning"></i>
+                                    La Ley para Regular las Sociedades de Información Crediticia exige autorización expresa y específica.
+                                    Sin este check, el conector de score crediticio no se ejecutará.
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Step 2: Consentimiento Legal Obligatorio -->
@@ -162,10 +265,16 @@
         var curpGroup = document.getElementById('curpGroup');
         var curpInput = document.getElementById('curp');
         var nameLabel = document.getElementById('nameLabel');
+        var ineGroup = document.getElementById('ineGroup');
+        var usernameGroup = document.getElementById('usernameGroup');
+        var tier2Group = document.getElementById('tier2Group');
 
         if (tipo === 'persona_fisica') {
             curpGroup.style.display = 'block';
             curpInput.setAttribute('required', 'required');
+            ineGroup.style.display = 'flex';
+            if (usernameGroup) usernameGroup.style.display = 'block';
+            if (tier2Group) tier2Group.style.display = 'block';
             nameLabel.innerText = 'Nombre Completo (Persona Física)';
             document.getElementById('name_or_company').placeholder = 'Ej: Juan Pérez López';
             document.getElementById('rfc').placeholder = 'Ej: PELJ900101XYZ';
@@ -173,11 +282,30 @@
             curpGroup.style.display = 'none';
             curpInput.removeAttribute('required');
             curpInput.value = '';
+            ineGroup.style.display = 'none';
+            if (usernameGroup) usernameGroup.style.display = 'none';
+            if (tier2Group) tier2Group.style.display = 'none';
             nameLabel.innerText = 'Razón Social / Nombre Legal';
             document.getElementById('name_or_company').placeholder = 'Ej: Aceros de México S.A. de C.V.';
             document.getElementById('rfc').placeholder = 'Ej: AME120304XYZ';
         }
     }
+
+    // Mostrar el consentimiento crediticio solo cuando la base legal es crédito
+    var legalBasisSelect = document.getElementById('consent_legal_basis');
+    if (legalBasisSelect) {
+        legalBasisSelect.addEventListener('change', function() {
+            var creditGroup = document.getElementById('creditConsentGroup');
+            if (creditGroup) {
+                creditGroup.style.display =
+                    this.value.toLowerCase().includes('crédito') ||
+                    this.value.toLowerCase().includes('credito') ||
+                    this.value.toLowerCase().includes('financiamiento')
+                    ? 'block' : 'none';
+            }
+        });
+    }
+
 
     // Call on load to set fields
     document.addEventListener("DOMContentLoaded", function() {

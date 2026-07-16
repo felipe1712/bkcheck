@@ -84,4 +84,11 @@ class NufiMarcasConnector extends NufiConnector
             ]
         ];
     }
+
+    protected function getMockBody(Subject $subject): array
+    {
+        return [
+            'name' => $subject->name_or_company,
+        ];
+    }
 }

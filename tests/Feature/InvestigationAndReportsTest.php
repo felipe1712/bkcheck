@@ -47,8 +47,9 @@ class InvestigationAndReportsTest extends TestCase
 
         // Confirm that the source queries were created in database
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        // Since it is persona_fisica, it dispatches 4 queries (rfc, csd, sat_listas, marcas)
-        $this->assertCount(4, $queries);
+        // Since it is persona_fisica, it dispatches 8 queries:
+        // rfc, csd, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue
+        $this->assertCount(8, $queries);
     }
 
     /**
@@ -76,7 +77,8 @@ class InvestigationAndReportsTest extends TestCase
 
         // Fetch completed queries
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(5, $queries);
+        // persona_moral: rfc, csd, siger, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue = 9
+        $this->assertCount(9, $queries);
 
         // Send request to report download route
         $response = $this->get(route('tenant.subjects.report', $subject->id));

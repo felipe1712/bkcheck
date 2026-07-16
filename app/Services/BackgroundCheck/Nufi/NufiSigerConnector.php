@@ -122,4 +122,11 @@ class NufiSigerConnector extends NufiConnector
             ]
         ];
     }
+
+    protected function getMockBody(Subject $subject): array
+    {
+        return [
+            'socio' => $subject->name_or_company,
+        ];
+    }
 }
