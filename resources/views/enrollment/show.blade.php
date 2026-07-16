@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function previewPhoto(slot, file) {
         if (!file) return;
         const url = URL.createObjectURL(file);
-        slot.innerHTML = `<img src="${url" alt="Previsualización"><span class="slot-badge">✓ Listo</span>`;
+        slot.innerHTML = `<img src="${url}" alt="Previsualización"><span class="slot-badge">✓ Listo</span>`;
         slot.classList.add('has-photo');
     }
 
