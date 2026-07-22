@@ -216,33 +216,66 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!fileReverso) { showError('reversoError'); return; }
         if (!fileSelfie)  { showError('selfieError');  return; }
 
+        // Pre-validar tamaño total (límite 20 MB)
+        const MAX_BYTES = 20 * 1024 * 1024;
+        const totalSize = fileFrente.size + fileReverso.size + fileSelfie.size;
+        if (totalSize > MAX_BYTES) {
+            const el = document.getElementById('uploadError');
+            el.textContent = `Las imágenes son demasiado grandes en total (${(totalSize/1024/1024).toFixed(1)} MB). El límite es 20 MB. Por favor toma fotos con menor resolución.`;
+            showError('uploadError');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('ine_front', fileFrente);
         formData.append('ine_back',  fileReverso);
         formData.append('selfie',    fileSelfie);
         formData.append('_token',    CSRF);
 
-        EnrollApp.showLoader('Enviando tus documentos de forma segura…');
+        EnrollApp.showLoader('Enviando tus documentos de forma segura… (puede tardar unos segundos)');
 
+        let res, rawText;
         try {
-            const res = await fetch(`/enroll/${TOKEN}/upload`, {
-                method: 'POST',
+            res = await fetch(`/enroll/${TOKEN}/upload`, {
+                method:  'POST',
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                body: formData
+                body:    formData
             });
-
-            const data = await res.json();
+            rawText = await res.text();          // Siempre leer como texto primero
+        } catch (networkErr) {
             EnrollApp.hideLoader();
+            const el = document.getElementById('uploadError');
+            el.textContent = 'Error de conexión. Verifica tu internet y vuelve a intentarlo.';
+            showError('uploadError');
+            return;
+        }
 
-            if (res.ok && data.status === 'ok') {
-                window.location.href = data.redirect;
+        EnrollApp.hideLoader();
+
+        // Intentar parsear como JSON
+        let data = null;
+        try {
+            data = JSON.parse(rawText);
+        } catch (_) {
+            // El servidor devolvió HTML (error 500, 419 CSRF, etc.)
+            const el = document.getElementById('uploadError');
+            if (res.status === 419) {
+                el.textContent = 'Tu sesión expiró. Por favor recarga la página y vuelve a intentarlo.';
+            } else if (res.status === 413) {
+                el.textContent = 'Las imágenes son demasiado grandes para el servidor. Intenta con fotos de menor resolución.';
             } else {
-                document.getElementById('uploadError').textContent =
-                    data.error || 'Ocurrió un error. Por favor intenta de nuevo.';
-                showError('uploadError');
+                el.textContent = `Error del servidor (${res.status}). Por favor intenta de nuevo o contacta soporte.`;
             }
-        } catch (e) {
-            EnrollApp.hideLoader();
+            showError('uploadError');
+            return;
+        }
+
+        if (res.ok && data.status === 'ok') {
+            EnrollApp.showLoader('¡Listo! Redirigiendo…');
+            window.location.href = data.redirect;
+        } else {
+            const el = document.getElementById('uploadError');
+            el.textContent = data.error || 'Ocurrió un error al procesar tu información. Por favor intenta de nuevo.';
             showError('uploadError');
         }
     });
