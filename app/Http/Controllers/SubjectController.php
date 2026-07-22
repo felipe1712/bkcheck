@@ -139,6 +139,40 @@ class SubjectController extends Controller
     }
 
     /**
+     * Sirve de forma segura un documento privado del sujeto.
+     * Solo accesible para usuarios autenticados del mismo tenant.
+     */
+    public function serveDocument($id, string $type)
+    {
+        $subject = Subject::findOrFail($id);
+
+        $pathMap = [
+            'ine_front'        => $subject->ine_front_path,
+            'ine_back'         => $subject->ine_back_path,
+            'selfie'           => $subject->selfie_path,
+            'consent'          => $subject->consent_document_path,
+            'proof_of_address' => $subject->proof_of_address_path,
+        ];
+
+        $path = $pathMap[$type] ?? null;
+
+        if (!$path || !Storage::exists($path)) {
+            abort(404, 'Documento no encontrado.');
+        }
+
+        $mime = Storage::mimeType($path) ?: 'application/octet-stream';
+
+        return response()->stream(function () use ($path) {
+            echo Storage::get($path);
+        }, 200, [
+            'Content-Type'           => $mime,
+            'Content-Disposition'    => 'inline',
+            'Cache-Control'          => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
      * Show the form for editing the specified subject.
      */
     public function edit($id)

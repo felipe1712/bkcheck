@@ -98,19 +98,51 @@
 @endsection
 
 @section('scripts')
+{{-- Cropper.js CDN --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+{{-- Modal de recorte --}}
+<div id="cropModal" style="
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.92); flex-direction:column;
+    align-items:center; justify-content:center; padding:16px;">
+    <div style="width:100%; max-width:480px; background:#1a1f2e; border-radius:16px; overflow:hidden;">
+        <div style="padding:14px 18px; border-bottom:1px solid #2e3550; display:flex; justify-content:space-between; align-items:center;">
+            <span id="cropModalTitle" style="color:#e8eaf0; font-weight:600; font-size:15px;"></span>
+            <span style="color:#8892a4; font-size:12px;">Ajusta el recuadre y toca Confirmar</span>
+        </div>
+        <div style="background:#0f1117; max-height:55vh; overflow:hidden; position:relative;">
+            <img id="cropImg" style="max-width:100%; display:block;">
+        </div>
+        <div style="padding:14px 18px; display:flex; gap:10px;">
+            <button id="btnCropCancel" style="
+                flex:1; padding:14px; background:transparent; border:1px solid #2e3550;
+                border-radius:10px; color:#8892a4; font-size:14px; font-weight:600; cursor:pointer;">
+                Cancelar
+            </button>
+            <button id="btnCropConfirm" style="
+                flex:2; padding:14px;
+                background:linear-gradient(135deg,#4f6ef7,#3a55e0);
+                border:none; border-radius:10px; color:#fff;
+                font-size:15px; font-weight:600; cursor:pointer;">
+                ✂️ Confirmar recorte
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const TOKEN   = @json($token);
-    const CSRF    = document.querySelector('meta[name="csrf-token"]').content;
-    const TOTAL_STEPS = 5; // TC, Frente, Reverso, Selfie, Done
+    const TOKEN       = @json($token);
+    const CSRF        = document.querySelector('meta[name="csrf-token"]').content;
+    const TOTAL_STEPS = 5;
 
-    let currentStep   = 0;
-    let fileFrente    = null;
-    let fileReverso   = null;
-    let fileSelfie    = null;
-    let tcAccepted    = false;
+    let currentStep = 0;
+    let fileFrente  = null;
+    let fileReverso = null;
+    let fileSelfie  = null;
 
-    // Render initial progress
     EnrollApp.renderProgress(0, TOTAL_STEPS);
 
     // ── Helpers ─────────────────────────────────────────────────────────────
@@ -122,13 +154,13 @@ document.addEventListener('DOMContentLoaded', function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function hideError(id) {
-        document.getElementById(id)?.classList.remove('show');
-    }
-
     function showError(id) {
         const el = document.getElementById(id);
-        if (el) { el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 4000); }
+        if (el) { el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 5000); }
+    }
+
+    function hideError(id) {
+        document.getElementById(id)?.classList.remove('show');
     }
 
     function previewPhoto(slot, file) {
@@ -137,6 +169,59 @@ document.addEventListener('DOMContentLoaded', function () {
         slot.innerHTML = `<img src="${url}" alt="Previsualización"><span class="slot-badge">✓ Listo</span>`;
         slot.classList.add('has-photo');
     }
+
+    // ── Cropper.js helper ───────────────────────────────────────────────────
+    let cropperInstance = null;
+    let cropCallback    = null;
+
+    function openCropper(file, title, aspectRatio, callback) {
+        const modal   = document.getElementById('cropModal');
+        const cropImg = document.getElementById('cropImg');
+        document.getElementById('cropModalTitle').textContent = title;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            cropImg.src = e.target.result;
+            modal.style.display = 'flex';
+
+            // Destruir instancia previa
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+
+            cropperInstance = new Cropper(cropImg, {
+                aspectRatio:     aspectRatio,
+                viewMode:        2,
+                dragMode:        'move',
+                autoCropArea:    0.95,
+                restore:         false,
+                guides:          true,
+                center:          true,
+                highlight:       false,
+                cropBoxMovable:  true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        };
+        reader.readAsDataURL(file);
+        cropCallback = callback;
+    }
+
+    document.getElementById('btnCropConfirm').addEventListener('click', () => {
+        if (!cropperInstance || !cropCallback) return;
+        cropperInstance.getCroppedCanvas({ maxWidth: 1200, maxHeight: 900, imageSmoothingQuality: 'high' })
+            .toBlob((blob) => {
+                document.getElementById('cropModal').style.display = 'none';
+                cropperInstance.destroy();
+                cropperInstance = null;
+                cropCallback(blob);
+                cropCallback = null;
+            }, 'image/jpeg', 0.88);
+    });
+
+    document.getElementById('btnCropCancel').addEventListener('click', () => {
+        document.getElementById('cropModal').style.display = 'none';
+        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+        cropCallback = null;
+    });
 
     // ── Pantalla 0: T&C ─────────────────────────────────────────────────────
     document.getElementById('btnAcceptTc').addEventListener('click', async () => {
@@ -148,7 +233,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({})
             });
             if (!res.ok) throw new Error('Error al registrar la autorización.');
-            tcAccepted = true;
             EnrollApp.hideLoader();
             showScreen('screen-ine-frente', 1);
         } catch (e) {
@@ -158,18 +242,22 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('btnRejectTc').addEventListener('click', () => {
-        document.getElementById('tcError').textContent = 'No es posible continuar sin aceptar los términos. Si tienes dudas, contacta a quien te envió este enlace.';
+        document.getElementById('tcError').textContent = 'No es posible continuar sin aceptar los términos.';
         showError('tcError');
     });
 
-    // ── Pantalla 1: INE Frente ───────────────────────────────────────────────
+    // ── Pantalla 1: INE Frente (con recorte) ────────────────────────────────
     document.getElementById('inputFrente').addEventListener('change', function () {
-        fileFrente = this.files[0] || null;
-        if (fileFrente) {
+        const raw = this.files[0];
+        if (!raw) return;
+        // Aspect ratio INE: 85.6mm × 54mm = 1.5852
+        openCropper(raw, '📸 Recorta el frente de tu INE', 85.6 / 54, (croppedBlob) => {
+            fileFrente = new File([croppedBlob], 'ine_frente.jpg', { type: 'image/jpeg' });
             previewPhoto(document.getElementById('slotFrente'), fileFrente);
             document.getElementById('btnFrenteContinuar').disabled = false;
             hideError('frenteError');
-        }
+        });
+        this.value = ''; // reset input para permitir re-selección
     });
 
     document.getElementById('btnFrenteContinuar').addEventListener('click', () => {
@@ -177,14 +265,17 @@ document.addEventListener('DOMContentLoaded', function () {
         showScreen('screen-ine-reverso', 2);
     });
 
-    // ── Pantalla 2: INE Reverso ──────────────────────────────────────────────
+    // ── Pantalla 2: INE Reverso (con recorte) ───────────────────────────────
     document.getElementById('inputReverso').addEventListener('change', function () {
-        fileReverso = this.files[0] || null;
-        if (fileReverso) {
+        const raw = this.files[0];
+        if (!raw) return;
+        openCropper(raw, '🔄 Recorta el reverso de tu INE', 85.6 / 54, (croppedBlob) => {
+            fileReverso = new File([croppedBlob], 'ine_reverso.jpg', { type: 'image/jpeg' });
             previewPhoto(document.getElementById('slotReverso'), fileReverso);
             document.getElementById('btnReversoContinuar').disabled = false;
             hideError('reversoError');
-        }
+        });
+        this.value = '';
     });
 
     document.getElementById('btnReversoContinuar').addEventListener('click', () => {
@@ -196,14 +287,17 @@ document.addEventListener('DOMContentLoaded', function () {
         showScreen('screen-ine-frente', 1);
     });
 
-    // ── Pantalla 3: Selfie ───────────────────────────────────────────────────
+    // ── Pantalla 3: Selfie (recorte libre 1:1) ──────────────────────────────
     document.getElementById('inputSelfie').addEventListener('change', function () {
-        fileSelfie = this.files[0] || null;
-        if (fileSelfie) {
+        const raw = this.files[0];
+        if (!raw) return;
+        openCropper(raw, '🤳 Ajusta tu selfie', 1, (croppedBlob) => {
+            fileSelfie = new File([croppedBlob], 'selfie.jpg', { type: 'image/jpeg' });
             previewPhoto(document.getElementById('slotSelfie'), fileSelfie);
             document.getElementById('btnEnviar').disabled = false;
             hideError('selfieError');
-        }
+        });
+        this.value = '';
     });
 
     document.getElementById('btnSelfieBack').addEventListener('click', () => {
@@ -221,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const totalSize = fileFrente.size + fileReverso.size + fileSelfie.size;
         if (totalSize > MAX_BYTES) {
             const el = document.getElementById('uploadError');
-            el.textContent = `Las imágenes son demasiado grandes en total (${(totalSize/1024/1024).toFixed(1)} MB). El límite es 20 MB. Por favor toma fotos con menor resolución.`;
+            el.textContent = `Las imágenes son demasiado grandes (${(totalSize/1024/1024).toFixed(1)} MB). El límite es 20 MB.`;
             showError('uploadError');
             return;
         }
@@ -241,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                 body:    formData
             });
-            rawText = await res.text();          // Siempre leer como texto primero
+            rawText = await res.text();
         } catch (networkErr) {
             EnrollApp.hideLoader();
             const el = document.getElementById('uploadError');
@@ -252,19 +346,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         EnrollApp.hideLoader();
 
-        // Intentar parsear como JSON
         let data = null;
         try {
             data = JSON.parse(rawText);
         } catch (_) {
-            // El servidor devolvió HTML (error 500, 419 CSRF, etc.)
             const el = document.getElementById('uploadError');
             if (res.status === 419) {
                 el.textContent = 'Tu sesión expiró. Por favor recarga la página y vuelve a intentarlo.';
             } else if (res.status === 413) {
-                el.textContent = 'Las imágenes son demasiado grandes para el servidor. Intenta con fotos de menor resolución.';
+                el.textContent = 'Las imágenes son demasiado grandes para el servidor. Intenta de nuevo.';
             } else {
-                el.textContent = `Error del servidor (${res.status}). Por favor intenta de nuevo o contacta soporte.`;
+                el.textContent = `Error del servidor (${res.status}). Por favor intenta de nuevo.`;
             }
             showError('uploadError');
             return;
@@ -275,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = data.redirect;
         } else {
             const el = document.getElementById('uploadError');
-            el.textContent = data.error || 'Ocurrió un error al procesar tu información. Por favor intenta de nuevo.';
+            el.textContent = data.error || 'Ocurrió un error. Por favor intenta de nuevo.';
             showError('uploadError');
         }
     });

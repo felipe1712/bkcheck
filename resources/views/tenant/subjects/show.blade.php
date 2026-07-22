@@ -1235,6 +1235,144 @@
     </div>
 </div>
 {{-- ═══════════════════════════════════════════════════════════════════════
+     DOCUMENTOS DE IDENTIDAD — Visor seguro INE / Selfie / Comprobante
+     ═══════════════════════════════════════════════════════════════════════ --}}
+@if($subject->ine_front_path || $subject->ine_back_path || $subject->selfie_path || $subject->proof_of_address_path || $subject->consent_document_path)
+<div class="card mt-3">
+    <div class="card-header d-flex align-items-center border-0 pb-0">
+        <i class="ri-folder-image-line me-2 text-primary fs-18"></i>
+        <h6 class="card-title mb-0 fw-bold flex-grow-1">Documentos de Identidad</h6>
+        @if($subject->enrollment_completed_at)
+            <span class="badge bg-success-subtle text-success fs-11">
+                <i class="ri-checkbox-circle-line me-1"></i>
+                Enrolamiento {{ $subject->enrollment_completed_at->diffForHumans() }}
+            </span>
+        @endif
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+
+            {{-- INE Frente --}}
+            @if($subject->ine_front_path)
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="border rounded-3 overflow-hidden bg-body-secondary"
+                     style="aspect-ratio:1.586; cursor:pointer;"
+                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_front']) }}', 'INE — Frente')">
+                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'ine_front']) }}"
+                         alt="INE Frente" class="w-100 h-100" style="object-fit:cover;"
+                         onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 text-muted fs-12\'><i class=\'ri-image-line fs-24\'></i></div>'">
+                </div>
+                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-id-card-line me-1"></i>INE Frente</p>
+            </div>
+            @endif
+
+            {{-- INE Reverso --}}
+            @if($subject->ine_back_path)
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="border rounded-3 overflow-hidden bg-body-secondary"
+                     style="aspect-ratio:1.586; cursor:pointer;"
+                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_back']) }}', 'INE — Reverso')">
+                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'ine_back']) }}"
+                         alt="INE Reverso" class="w-100 h-100" style="object-fit:cover;"
+                         onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 text-muted fs-12\'><i class=\'ri-image-line fs-24\'></i></div>'">
+                </div>
+                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-id-card-line me-1"></i>INE Reverso</p>
+            </div>
+            @endif
+
+            {{-- Selfie --}}
+            @if($subject->selfie_path)
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="border rounded-3 overflow-hidden bg-body-secondary"
+                     style="aspect-ratio:1; cursor:pointer;"
+                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'selfie']) }}', 'Selfie de Verificación')">
+                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'selfie']) }}"
+                         alt="Selfie" class="w-100 h-100" style="object-fit:cover;"
+                         onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 text-muted fs-12\'><i class=\'ri-user-line fs-24\'></i></div>'">
+                </div>
+                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-user-smile-line me-1"></i>Selfie</p>
+            </div>
+            @endif
+
+            {{-- Comprobante de Domicilio --}}
+            @if($subject->proof_of_address_path)
+            <div class="col-6 col-md-4 col-lg-3">
+                @php $extPoa = strtolower(pathinfo($subject->proof_of_address_path, PATHINFO_EXTENSION)); @endphp
+                @if(in_array($extPoa, ['jpg','jpeg','png','webp']))
+                <div class="border rounded-3 overflow-hidden bg-body-secondary"
+                     style="aspect-ratio:1.586; cursor:pointer;"
+                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'proof_of_address']) }}', 'Comprobante de Domicilio')">
+                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'proof_of_address']) }}"
+                         alt="Comprobante" class="w-100 h-100" style="object-fit:cover;">
+                </div>
+                @else
+                <a href="{{ route('tenant.subjects.document', [$subject->id, 'proof_of_address']) }}"
+                   target="_blank"
+                   class="border rounded-3 bg-body-secondary d-flex flex-column align-items-center justify-content-center text-decoration-none"
+                   style="aspect-ratio:1.586;">
+                    <i class="ri-file-pdf-line fs-36 text-danger"></i>
+                    <span class="fs-11 text-muted mt-1">Ver PDF</span>
+                </a>
+                @endif
+                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-home-4-line me-1"></i>Comprobante Domicilio</p>
+            </div>
+            @endif
+
+            {{-- Carta de Consentimiento --}}
+            @if($subject->consent_document_path)
+            <div class="col-6 col-md-4 col-lg-3">
+                @php $extCon = strtolower(pathinfo($subject->consent_document_path, PATHINFO_EXTENSION)); @endphp
+                @if(in_array($extCon, ['jpg','jpeg','png','webp']))
+                <div class="border rounded-3 overflow-hidden bg-body-secondary"
+                     style="aspect-ratio:1.586; cursor:pointer;"
+                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'consent']) }}', 'Carta de Consentimiento')">
+                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'consent']) }}"
+                         alt="Consentimiento" class="w-100 h-100" style="object-fit:cover;">
+                </div>
+                @else
+                <a href="{{ route('tenant.subjects.document', [$subject->id, 'consent']) }}"
+                   target="_blank"
+                   class="border rounded-3 bg-body-secondary d-flex flex-column align-items-center justify-content-center text-decoration-none"
+                   style="aspect-ratio:1.586;">
+                    <i class="ri-file-pdf-line fs-36 text-danger"></i>
+                    <span class="fs-11 text-muted mt-1">Ver PDF</span>
+                </a>
+                @endif
+                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-shield-check-line me-1"></i>Consentimiento</p>
+            </div>
+            @endif
+
+        </div>
+    </div>
+</div>
+
+{{-- Modal visor de imagen --}}
+<div class="modal fade" id="docImageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-header border-0 py-2 px-3">
+                <h6 class="modal-title text-white fs-13" id="docImageModalLabel"></h6>
+                <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-2 text-center">
+                <img id="docImageModalImg" src="" alt="" class="img-fluid rounded" style="max-height:82vh; object-fit:contain;">
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function openDocModal(src, title) {
+    const img = document.getElementById('docImageModalImg');
+    img.src = '';
+    img.src = src;
+    document.getElementById('docImageModalLabel').textContent = title;
+    var modal = new bootstrap.Modal(document.getElementById('docImageModal'));
+    modal.show();
+}
+</script>
+@endif
+
+{{-- ═══════════════════════════════════════════════════════════════════════
      TARJETAS TIER 2 — CURP / DOMICILIO / NSS / SCORE CREDITICIO
      Se muestran en una fila de 2 columnas por par para mayor densidad.
      ═══════════════════════════════════════════════════════════════════════ --}}

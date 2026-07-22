@@ -54,6 +54,11 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
     Route::post('/subjects/{id}/regenerate-enrollment',
         [App\Http\Controllers\SubjectController::class, 'regenerateEnrollment']
     )->name('subjects.regenerate-enrollment');
+
+    // Servir documentos privados del sujeto (INE, selfie, consentimiento, comprobante)
+    Route::get('/subjects/{id}/document/{type}',
+        [App\Http\Controllers\SubjectController::class, 'serveDocument']
+    )->name('subjects.document');
 });
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
