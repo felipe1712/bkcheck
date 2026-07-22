@@ -59,6 +59,16 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
     Route::get('/subjects/{id}/document/{type}',
         [App\Http\Controllers\SubjectController::class, 'serveDocument']
     )->name('subjects.document');
+
+    // Subida manual de documentos desde el panel (reemplaza el archivo existente)
+    Route::post('/subjects/{id}/document/{type}',
+        [App\Http\Controllers\SubjectController::class, 'uploadDocument']
+    )->name('subjects.document.upload');
+
+    // Borrado de documentos (resetea enrolamiento si se borran los 3 principales)
+    Route::delete('/subjects/{id}/document/{type}',
+        [App\Http\Controllers\SubjectController::class, 'deleteDocument']
+    )->name('subjects.document.delete');
 });
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');

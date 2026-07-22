@@ -112,7 +112,7 @@
             <span id="cropModalTitle" style="color:#e8eaf0; font-weight:600; font-size:15px;"></span>
             <span style="color:#8892a4; font-size:12px;">Ajusta el recuadre y toca Confirmar</span>
         </div>
-        <div style="background:#0f1117; max-height:55vh; overflow:hidden; position:relative;">
+        <div style="background:#0f1117; max-height:65vh; overflow:hidden; position:relative;">
             <img id="cropImg" style="max-width:100%; display:block;">
         </div>
         <div style="padding:14px 18px; display:flex; gap:10px;">
@@ -188,16 +188,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
 
             cropperInstance = new Cropper(cropImg, {
-                aspectRatio:     aspectRatio,
-                viewMode:        2,
-                dragMode:        'move',
-                autoCropArea:    0.95,
-                restore:         false,
-                guides:          true,
-                center:          true,
-                highlight:       false,
-                cropBoxMovable:  true,
+                aspectRatio:      aspectRatio,
+                viewMode:         1,        // Permite libre movimiento sin forzar llenado
+                dragMode:         'move',
+                autoCropArea:     1,        // Inicia seleccionando toda la imagen visible
+                restore:          false,
+                guides:           true,
+                center:           true,
+                highlight:        false,
+                cropBoxMovable:   true,
                 cropBoxResizable: true,
+                checkOrientation: true,     // Respeta EXIF de fotos de celular
                 toggleDragModeOnDblclick: false,
             });
         };

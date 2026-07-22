@@ -323,19 +323,20 @@
         <div class="card">
             <div class="card-header border-0 align-items-center d-flex pb-2">
                 <h5 class="card-title mb-0 flex-grow-1 text-dark fw-bold">Fuentes de Verificación de Antecedentes</h5>
-                <div class="flex-shrink-0">
-                    @if($queries->isEmpty() || $isProcessing)
+                <div class="flex-shrink-0 d-flex gap-2 align-items-center">
+                    {{-- Botón re-ejecutar todo (siempre visible) --}}
                     <form action="{{ route('tenant.subjects.investigate', $subject->id) }}" method="POST" id="startInvestigationForm">
                         @csrf
                         <button type="submit" class="btn btn-danger btn-md" id="runInvestigationBtn" {{ $isProcessing ? 'disabled' : '' }}>
                             @if($isProcessing)
                                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Investigando...
+                            @elseif($queries->isEmpty())
+                                <i class="ri-play-circle-line align-bottom me-1"></i> Iniciar Investigación
                             @else
-                                <i class="ri-play-circle-line align-bottom me-1"></i> Iniciar Investigación Completa
+                                <i class="ri-refresh-line align-bottom me-1"></i> Re-ejecutar Todo
                             @endif
                         </button>
                     </form>
-                    @endif
                 </div>
             </div>
             
@@ -524,6 +525,7 @@
                         </div>
                     </div>
 
+                    @if($subject->tipo === 'persona_moral')
                     <!-- 3. REGISTRO PÚBLICO SIGER -->
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingSiger">
@@ -631,6 +633,8 @@
                             </div>
                         </div>
                     </div>
+
+                    @endif {{-- /persona_moral SIGER --}}
 
                     <!-- 4. LISTAS SAT 69/B -->
                     <div class="accordion-item shadow-sm border mb-3">
@@ -742,6 +746,7 @@
                         </div>
                     </div>
 
+                    @if($subject->tipo === 'persona_moral')
                     <!-- 5. PROPUESTA INDUSTRIAL IMPI -->
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingMarcas">
@@ -828,7 +833,7 @@
                         </div>
                     </div>
 
-                    @if($subject->tipo === 'persona_fisica')
+
                     <!-- 6. INE FRENTE -->
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingIneFrente">
@@ -1237,7 +1242,15 @@
 {{-- ═══════════════════════════════════════════════════════════════════════
      DOCUMENTOS DE IDENTIDAD — Visor seguro INE / Selfie / Comprobante
      ═══════════════════════════════════════════════════════════════════════ --}}
-@if($subject->ine_front_path || $subject->ine_back_path || $subject->selfie_path || $subject->proof_of_address_path || $subject->consent_document_path)
+@php
+    $docSlots = [
+        ['type' => 'ine_front',        'label' => 'INE Frente',            'icon' => 'ri-id-card-line',      'path' => $subject->ine_front_path,        'ratio' => '1.586'],
+        ['type' => 'ine_back',         'label' => 'INE Reverso',           'icon' => 'ri-id-card-line',      'path' => $subject->ine_back_path,         'ratio' => '1.586'],
+        ['type' => 'selfie',           'label' => 'Selfie',                'icon' => 'ri-user-smile-line',   'path' => $subject->selfie_path,           'ratio' => '1'],
+        ['type' => 'proof_of_address', 'label' => 'Comprobante Domicilio', 'icon' => 'ri-home-4-line',       'path' => $subject->proof_of_address_path, 'ratio' => '1.586'],
+        ['type' => 'consent',          'label' => 'Consentimiento',        'icon' => 'ri-shield-check-line', 'path' => $subject->consent_document_path, 'ratio' => '1.586'],
+    ];
+@endphp
 <div class="card mt-3">
     <div class="card-header d-flex align-items-center border-0 pb-0">
         <i class="ri-folder-image-line me-2 text-primary fs-18"></i>
@@ -1251,97 +1264,73 @@
     </div>
     <div class="card-body">
         <div class="row g-3">
+            @foreach($docSlots as $slot)
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
 
-            {{-- INE Frente --}}
-            @if($subject->ine_front_path)
-            <div class="col-6 col-md-4 col-lg-3">
-                <div class="border rounded-3 overflow-hidden bg-body-secondary"
-                     style="aspect-ratio:1.586; cursor:pointer;"
-                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_front']) }}', 'INE — Frente')">
-                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'ine_front']) }}"
-                         alt="INE Frente" class="w-100 h-100" style="object-fit:cover;"
-                         onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 text-muted fs-12\'><i class=\'ri-image-line fs-24\'></i></div>'">
+                {{-- Preview --}}
+                <div class="border rounded-3 overflow-hidden bg-body-secondary position-relative"
+                     style="aspect-ratio:{{ $slot['ratio'] }};">
+                    @if($slot['path'])
+                        @php $ext = strtolower(pathinfo($slot['path'], PATHINFO_EXTENSION)); @endphp
+                        @if(in_array($ext, ['jpg','jpeg','png','webp']))
+                            <img src="{{ route('tenant.subjects.document', [$subject->id, $slot['type']]) }}"
+                                 alt="{{ $slot['label'] }}" class="w-100 h-100"
+                                 style="object-fit:cover; cursor:pointer;"
+                                 onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, $slot['type']]) }}','{{ $slot['label'] }}')">
+                        @else
+                            <a href="{{ route('tenant.subjects.document', [$subject->id, $slot['type']]) }}"
+                               target="_blank"
+                               class="d-flex flex-column align-items-center justify-content-center h-100 text-decoration-none">
+                                <i class="ri-file-pdf-line fs-30 text-danger"></i>
+                                <span class="fs-10 text-muted mt-1">Ver PDF</span>
+                            </a>
+                        @endif
+                    @else
+                        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                            <i class="{{ $slot['icon'] }} fs-28 mb-1"></i>
+                            <span class="fs-10">Sin documento</span>
+                        </div>
+                    @endif
                 </div>
-                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-id-card-line me-1"></i>INE Frente</p>
-            </div>
-            @endif
 
-            {{-- INE Reverso --}}
-            @if($subject->ine_back_path)
-            <div class="col-6 col-md-4 col-lg-3">
-                <div class="border rounded-3 overflow-hidden bg-body-secondary"
-                     style="aspect-ratio:1.586; cursor:pointer;"
-                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_back']) }}', 'INE — Reverso')">
-                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'ine_back']) }}"
-                         alt="INE Reverso" class="w-100 h-100" style="object-fit:cover;"
-                         onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 text-muted fs-12\'><i class=\'ri-image-line fs-24\'></i></div>'">
+                {{-- Label --}}
+                <p class="text-center text-muted fs-11 mt-1 mb-1">
+                    <i class="{{ $slot['icon'] }} me-1"></i>{{ $slot['label'] }}
+                </p>
+
+                {{-- Acciones: Subir / Reemplazar + Borrar --}}
+                <div class="d-flex gap-1">
+                    <form action="{{ route('tenant.subjects.document.upload', [$subject->id, $slot['type']]) }}"
+                          method="POST" enctype="multipart/form-data"
+                          class="flex-grow-1" id="upForm_{{ $slot['type'] }}">
+                        @csrf
+                        <input type="file" name="document"
+                               id="upFile_{{ $slot['type'] }}"
+                               accept="image/*,application/pdf"
+                               class="d-none"
+                               onchange="document.getElementById('upForm_{{ $slot['type'] }}').submit()">
+                        <button type="button"
+                                onclick="document.getElementById('upFile_{{ $slot['type'] }}').click()"
+                                class="btn btn-sm btn-outline-primary w-100 py-1 fs-11"
+                                title="{{ $slot['path'] ? 'Reemplazar archivo' : 'Subir archivo' }}">
+                            <i class="ri-upload-2-line me-1"></i>{{ $slot['path'] ? 'Reemplazar' : 'Subir' }}
+                        </button>
+                    </form>
+                    @if($slot['path'])
+                    <form action="{{ route('tenant.subjects.document.delete', [$subject->id, $slot['type']]) }}"
+                          method="POST"
+                          onsubmit="return confirm('¿Borrar {{ $slot['label'] }}? Esta acción no se puede deshacer.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2 fs-11" title="Borrar">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </form>
+                    @endif
                 </div>
-                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-id-card-line me-1"></i>INE Reverso</p>
-            </div>
-            @endif
 
-            {{-- Selfie --}}
-            @if($subject->selfie_path)
-            <div class="col-6 col-md-4 col-lg-3">
-                <div class="border rounded-3 overflow-hidden bg-body-secondary"
-                     style="aspect-ratio:1; cursor:pointer;"
-                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'selfie']) }}', 'Selfie de Verificación')">
-                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'selfie']) }}"
-                         alt="Selfie" class="w-100 h-100" style="object-fit:cover;"
-                         onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 text-muted fs-12\'><i class=\'ri-user-line fs-24\'></i></div>'">
-                </div>
-                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-user-smile-line me-1"></i>Selfie</p>
             </div>
-            @endif
-
-            {{-- Comprobante de Domicilio --}}
-            @if($subject->proof_of_address_path)
-            <div class="col-6 col-md-4 col-lg-3">
-                @php $extPoa = strtolower(pathinfo($subject->proof_of_address_path, PATHINFO_EXTENSION)); @endphp
-                @if(in_array($extPoa, ['jpg','jpeg','png','webp']))
-                <div class="border rounded-3 overflow-hidden bg-body-secondary"
-                     style="aspect-ratio:1.586; cursor:pointer;"
-                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'proof_of_address']) }}', 'Comprobante de Domicilio')">
-                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'proof_of_address']) }}"
-                         alt="Comprobante" class="w-100 h-100" style="object-fit:cover;">
-                </div>
-                @else
-                <a href="{{ route('tenant.subjects.document', [$subject->id, 'proof_of_address']) }}"
-                   target="_blank"
-                   class="border rounded-3 bg-body-secondary d-flex flex-column align-items-center justify-content-center text-decoration-none"
-                   style="aspect-ratio:1.586;">
-                    <i class="ri-file-pdf-line fs-36 text-danger"></i>
-                    <span class="fs-11 text-muted mt-1">Ver PDF</span>
-                </a>
-                @endif
-                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-home-4-line me-1"></i>Comprobante Domicilio</p>
-            </div>
-            @endif
-
-            {{-- Carta de Consentimiento --}}
-            @if($subject->consent_document_path)
-            <div class="col-6 col-md-4 col-lg-3">
-                @php $extCon = strtolower(pathinfo($subject->consent_document_path, PATHINFO_EXTENSION)); @endphp
-                @if(in_array($extCon, ['jpg','jpeg','png','webp']))
-                <div class="border rounded-3 overflow-hidden bg-body-secondary"
-                     style="aspect-ratio:1.586; cursor:pointer;"
-                     onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'consent']) }}', 'Carta de Consentimiento')">
-                    <img src="{{ route('tenant.subjects.document', [$subject->id, 'consent']) }}"
-                         alt="Consentimiento" class="w-100 h-100" style="object-fit:cover;">
-                </div>
-                @else
-                <a href="{{ route('tenant.subjects.document', [$subject->id, 'consent']) }}"
-                   target="_blank"
-                   class="border rounded-3 bg-body-secondary d-flex flex-column align-items-center justify-content-center text-decoration-none"
-                   style="aspect-ratio:1.586;">
-                    <i class="ri-file-pdf-line fs-36 text-danger"></i>
-                    <span class="fs-11 text-muted mt-1">Ver PDF</span>
-                </a>
-                @endif
-                <p class="text-center text-muted fs-11 mt-1 mb-0"><i class="ri-shield-check-line me-1"></i>Consentimiento</p>
-            </div>
-            @endif
-
+            @endforeach
         </div>
     </div>
 </div>
@@ -1363,14 +1352,12 @@
 <script>
 function openDocModal(src, title) {
     const img = document.getElementById('docImageModalImg');
-    img.src = '';
-    img.src = src;
+    img.src = ''; img.src = src;
     document.getElementById('docImageModalLabel').textContent = title;
-    var modal = new bootstrap.Modal(document.getElementById('docImageModal'));
-    modal.show();
+    new bootstrap.Modal(document.getElementById('docImageModal')).show();
 }
 </script>
-@endif
+
 
 {{-- ═══════════════════════════════════════════════════════════════════════
      TARJETAS TIER 2 — CURP / DOMICILIO / NSS / SCORE CREDITICIO
@@ -1737,6 +1724,7 @@ function openDocModal(src, title) {
 </div>
 
 {{-- ─────────── TARJETA DENUE: Directorio Empresarial INEGI ─────────── --}}
+@if($subject->tipo === 'persona_moral')
 @php
     $denueQuery = $queries->firstWhere('source_type', 'denue');
     $denueData  = $denueQuery?->result?->processed_data ?? [];
@@ -1896,6 +1884,7 @@ function openDocModal(src, title) {
         </div>
     </div>
 </div>
+@endif {{-- /persona_moral DENUE --}}
 
 @endsection
 

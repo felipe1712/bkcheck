@@ -173,6 +173,108 @@ class SubjectController extends Controller
     }
 
     /**
+     * Sube manualmente un documento del sujeto desde el panel de administración.
+     * POST /tenant/subjects/{id}/document/{type}
+     */
+    public function uploadDocument($id, string $type, Request $request)
+    {
+        $subject = Subject::findOrFail($id);
+
+        $fieldMap = [
+            'ine_front'        => 'ine_front_path',
+            'ine_back'         => 'ine_back_path',
+            'selfie'           => 'selfie_path',
+            'consent'          => 'consent_document_path',
+            'proof_of_address' => 'proof_of_address_path',
+        ];
+
+        $dirMap = [
+            'ine_front'        => 'ine_documents',
+            'ine_back'         => 'ine_documents',
+            'selfie'           => 'enrollment_selfies',
+            'consent'          => 'consent_documents',
+            'proof_of_address' => 'proof_of_address_documents',
+        ];
+
+        if (!isset($fieldMap[$type])) {
+            return back()->with('error', 'Tipo de documento no válido.');
+        }
+
+        $request->validate([
+            'document' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+        ], [
+            'document.required' => 'Debes seleccionar un archivo.',
+            'document.mimes'    => 'Solo se aceptan imágenes (JPG, PNG, WEBP) o PDF.',
+            'document.max'      => 'El archivo no debe superar 10 MB.',
+        ]);
+
+        $field = $fieldMap[$type];
+
+        // Borrar el archivo anterior si existía
+        if ($subject->$field) {
+            Storage::delete($subject->$field);
+        }
+
+        $path = $request->file('document')->store($dirMap[$type]);
+        $subject->update([$field => $path]);
+
+        activity()
+            ->performedOn($subject)
+            ->causedBy(auth()->user())
+            ->log("Documento '{$type}' subido manualmente por " . auth()->user()->name);
+
+        return back()->with('success', 'Documento subido correctamente.');
+    }
+
+    /**
+     * Borra un documento del sujeto y resetea el enrolamiento si aplica.
+     * DELETE /tenant/subjects/{id}/document/{type}
+     */
+    public function deleteDocument($id, string $type)
+    {
+        $subject = Subject::findOrFail($id);
+
+        $fieldMap = [
+            'ine_front'        => 'ine_front_path',
+            'ine_back'         => 'ine_back_path',
+            'selfie'           => 'selfie_path',
+            'consent'          => 'consent_document_path',
+            'proof_of_address' => 'proof_of_address_path',
+        ];
+
+        if (!isset($fieldMap[$type])) {
+            return back()->with('error', 'Tipo de documento no válido.');
+        }
+
+        $field = $fieldMap[$type];
+
+        if ($subject->$field) {
+            Storage::delete($subject->$field);
+            $subject->update([$field => null]);
+        }
+
+        // Si se borraron los 3 docs de identidad principal → resetear enrolamiento
+        // para permitir un nuevo proceso desde el enlace de enrolamiento.
+        $identityDocs = ['ine_front_path', 'ine_back_path', 'selfie_path'];
+        $subject->refresh();
+        $allGone = collect($identityDocs)->every(fn($f) => empty($subject->$f));
+
+        if ($allGone && $subject->enrollment_completed_at) {
+            $subject->update([
+                'enrollment_completed_at' => null,
+                'enrollment_tc_accepted_at' => null,
+            ]);
+        }
+
+        activity()
+            ->performedOn($subject)
+            ->causedBy(auth()->user())
+            ->log("Documento '{$type}' eliminado por " . auth()->user()->name);
+
+        return back()->with('success', 'Documento eliminado correctamente.');
+    }
+
+    /**
      * Show the form for editing the specified subject.
      */
     public function edit($id)
