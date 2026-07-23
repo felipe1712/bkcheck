@@ -833,6 +833,7 @@
                         </div>
                     </div>
 
+                    @endif {{-- /persona_moral Marcas IMPI --}}
 
                     <!-- 6. INE FRENTE -->
                     <div class="accordion-item shadow-sm border mb-3">

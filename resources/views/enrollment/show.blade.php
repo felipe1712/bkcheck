@@ -106,23 +106,24 @@
 <div id="cropModal" style="
     display:none; position:fixed; inset:0; z-index:9999;
     background:rgba(0,0,0,.92); flex-direction:column;
-    align-items:center; justify-content:center; padding:16px;">
-    <div style="width:100%; max-width:480px; background:#1a1f2e; border-radius:16px; overflow:hidden;">
-        <div style="padding:14px 18px; border-bottom:1px solid #2e3550; display:flex; justify-content:space-between; align-items:center;">
+    align-items:center; justify-content:center; padding:12px;">
+    <div style="width:100%; max-width:520px; background:#1a1f2e; border-radius:16px;">
+        <div style="padding:12px 18px; border-bottom:1px solid #2e3550; display:flex; justify-content:space-between; align-items:center;">
             <span id="cropModalTitle" style="color:#e8eaf0; font-weight:600; font-size:15px;"></span>
-            <span style="color:#8892a4; font-size:12px;">Ajusta el recuadre y toca Confirmar</span>
+            <span style="color:#8892a4; font-size:11px;">Ajusta los bordes y confirma</span>
         </div>
-        <div style="background:#0f1117; max-height:65vh; overflow:hidden; position:relative;">
-            <img id="cropImg" style="max-width:100%; display:block;">
+        {{-- Contenedor del cropper: altura fija, SIN overflow:hidden --}}
+        <div id="cropContainer" style="background:#0f1117; height:55vh; position:relative;">
+            <img id="cropImg" alt="">
         </div>
-        <div style="padding:14px 18px; display:flex; gap:10px;">
+        <div style="padding:12px 18px; display:flex; gap:10px;">
             <button id="btnCropCancel" style="
-                flex:1; padding:14px; background:transparent; border:1px solid #2e3550;
+                flex:1; padding:13px; background:transparent; border:1px solid #2e3550;
                 border-radius:10px; color:#8892a4; font-size:14px; font-weight:600; cursor:pointer;">
                 Cancelar
             </button>
             <button id="btnCropConfirm" style="
-                flex:2; padding:14px;
+                flex:2; padding:13px;
                 background:linear-gradient(135deg,#4f6ef7,#3a55e0);
                 border:none; border-radius:10px; color:#fff;
                 font-size:15px; font-weight:600; cursor:pointer;">
@@ -175,32 +176,46 @@ document.addEventListener('DOMContentLoaded', function () {
     let cropCallback    = null;
 
     function openCropper(file, title, aspectRatio, callback) {
-        const modal   = document.getElementById('cropModal');
-        const cropImg = document.getElementById('cropImg');
+        const modal    = document.getElementById('cropModal');
+        const cropImg  = document.getElementById('cropImg');
+        const container = document.getElementById('cropContainer');
         document.getElementById('cropModalTitle').textContent = title;
+
+        // Destruir instancia previa antes de limpiar el src
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+        cropImg.src = '';
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            cropImg.src = e.target.result;
+            // Mostrar el modal ANTES de inicializar el cropper
+            // para que el contenedor tenga dimensiones reales en el DOM
             modal.style.display = 'flex';
 
-            // Destruir instancia previa
-            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-
-            cropperInstance = new Cropper(cropImg, {
-                aspectRatio:      aspectRatio,
-                viewMode:         1,        // Permite libre movimiento sin forzar llenado
-                dragMode:         'move',
-                autoCropArea:     1,        // Inicia seleccionando toda la imagen visible
-                restore:          false,
-                guides:           true,
-                center:           true,
-                highlight:        false,
-                cropBoxMovable:   true,
-                cropBoxResizable: true,
-                checkOrientation: true,     // Respeta EXIF de fotos de celular
-                toggleDragModeOnDblclick: false,
-            });
+            cropImg.onload = () => {
+                // Inicializar SOLO cuando la imagen ya está cargada y el modal visible
+                cropperInstance = new Cropper(cropImg, {
+                    aspectRatio:       aspectRatio,
+                    viewMode:          1,
+                    dragMode:          'move',
+                    autoCropArea:      1,
+                    restore:           false,
+                    guides:            true,
+                    center:            true,
+                    highlight:         false,
+                    cropBoxMovable:    true,
+                    cropBoxResizable:  true,
+                    checkOrientation:  true,
+                    // Altura fija para que Cropper no desborde
+                    minContainerHeight: container.offsetHeight,
+                    maxContainerHeight: container.offsetHeight,
+                    toggleDragModeOnDblclick: false,
+                });
+                cropImg.onload = null; // evitar doble disparo
+            };
+            cropImg.src = e.target.result;
         };
         reader.readAsDataURL(file);
         cropCallback = callback;
