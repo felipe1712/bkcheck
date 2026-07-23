@@ -1041,7 +1041,6 @@
                             </div>
                         </div>
                     </div>
-                    @endif
 
                     <!-- 8. LISTAS DE SANCIONES Y PEPS -->
                     <div class="accordion-item shadow-sm border mb-3">
