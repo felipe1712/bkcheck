@@ -579,8 +579,6 @@
                         </div>
                     </div>
 
-                    @endif {{-- /persona_moral SIGER --}}
-
 
 
                     <!-- 4. LISTAS SAT 69/B -->

@@ -39,6 +39,11 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (Throwable $e, $request) {
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface || 
+                $e instanceof \Illuminate\Auth\AuthenticationException || 
+                $e instanceof \Illuminate\Validation\ValidationException) {
+                return null;
+            }
             if ($request->is('tenant/*') || $request->is('superadmin/*')) {
                 return response('<div style="padding:20px;font-family:sans-serif;background:#fff0f0;border:2px solid red;border-radius:8px;margin:20px;"><h2>Diagnóstico de Error (500)</h2><p><strong>Excepción:</strong> ' . e(get_class($e)) . '</p><p><strong>Mensaje:</strong> ' . e($e->getMessage()) . '</p><p><strong>Archivo:</strong> ' . e($e->getFile()) . ' (Línea ' . $e->getLine() . ')</p><pre style="background:#222;color:#fff;padding:15px;overflow:auto;max-height:400px;font-size:12px;">' . e($e->getTraceAsString()) . '</pre></div>', 500);
             }
