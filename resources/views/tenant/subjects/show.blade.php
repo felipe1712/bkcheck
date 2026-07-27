@@ -52,18 +52,18 @@
 
     // Check alerts
     $hasSatAlert = false;
-    if ($satListasQuery && $satListasQuery->status === 'completed' && isset($satListasQuery->result->processed_data['en_lista_69b'])) {
-        $hasSatAlert = (bool) $satListasQuery->result->processed_data['en_lista_69b'];
+    if ($satListasQuery && $satListasQuery->status === 'completed') {
+        $hasSatAlert = !empty($satListasQuery->result?->processed_data['en_lista_69b']);
     }
 
     $hasSancionesAlert = false;
-    if ($sancionesQuery && $sancionesQuery->status === 'completed' && isset($sancionesQuery->result->processed_data['encontrado'])) {
-        $hasSancionesAlert = (bool) $sancionesQuery->result->processed_data['encontrado'];
+    if ($sancionesQuery && $sancionesQuery->status === 'completed') {
+        $hasSancionesAlert = !empty($sancionesQuery->result?->processed_data['encontrado']);
     }
 
     $hasLitigiosAlert = false;
-    if ($litigiosQuery && $litigiosQuery->status === 'completed' && isset($litigiosQuery->result->processed_data['tiene_juicios'])) {
-        $hasLitigiosAlert = (bool) $litigiosQuery->result->processed_data['tiene_juicios'];
+    if ($litigiosQuery && $litigiosQuery->status === 'completed') {
+        $hasLitigiosAlert = !empty($litigiosQuery->result?->processed_data['tiene_juicios']);
     }
 @endphp
 
@@ -75,7 +75,7 @@
         </div>
         <div class="flex-grow-1">
             <h5 class="alert-heading text-danger fw-semibold">¡ALERTA DE RIESGO FISCAL CRÍTICO!</h5>
-            <p class="mb-0 fs-13">El sujeto ha sido encontrado en las listas del SAT del artículo <strong>69-B (Facturación Simulada - EFOS/EDOS)</strong> con estatus de <strong>{{ $satListasQuery->result->processed_data['estatus_69b'] ?? 'Presunto' }}</strong>. Revise los detalles abajo.</p>
+            <p class="mb-0 fs-13">El sujeto ha sido encontrado en las listas del SAT del artículo <strong>69-B (Facturación Simulada - EFOS/EDOS)</strong> con estatus de <strong>{{ $satListasQuery->result?->processed_data['estatus_69b'] ?? 'Presunto' }}</strong>. Revise los detalles abajo.</p>
         </div>
     </div>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -498,7 +498,7 @@
                                         @elseif($rfcQuery->status === 'failed')
                                             <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
                                         @elseif($rfcQuery->status === 'completed')
-                                            @if($rfcQuery->result && isset($rfcQuery->result->processed_data['valido']) && $rfcQuery->result->processed_data['valido'])
+                                            @if(!empty($rfcQuery->result?->processed_data['valido']))
                                                 <span class="badge bg-success text-white py-1 px-2">Completed - RFC Válido</span>
                                             @else
                                                 <span class="badge bg-danger text-white py-1 px-2">Completed - RFC Inválido</span>
@@ -533,8 +533,8 @@
                                             <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
                                         </form>
                                     </div>
-                                @elseif($rfcQuery->status === 'completed' && $rfcQuery->result)
-                                    @php $rfcData = $rfcQuery->result->processed_data; @endphp
+                                @elseif($rfcQuery->status === 'completed')
+                                    @php $rfcData = $rfcQuery->result?->processed_data ?? []; @endphp
                                     <div class="table-responsive">
                                         <table class="table table-bordered align-middle mb-0">
                                             <tbody>
@@ -632,8 +632,8 @@
                                             <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
                                         </form>
                                     </div>
-                                @elseif($satListasQuery->status === 'completed' && $satListasQuery->result)
-                                    @php $listData = $satListasQuery->result->processed_data; @endphp
+                                @elseif($satListasQuery->status === 'completed')
+                                    @php $listData = $satListasQuery->result?->processed_data ?? []; @endphp
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <div class="card border mb-0">
@@ -760,8 +760,8 @@
                                             <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Procesar</button>
                                         </form>
                                     </div>
-                                @elseif($ineFrenteQuery->status === 'completed' && $ineFrenteQuery->result)
-                                    @php $frenteData = $ineFrenteQuery->result->processed_data; @endphp
+                                @elseif($ineFrenteQuery->status === 'completed')
+                                    @php $frenteData = $ineFrenteQuery->result?->processed_data ?? []; @endphp
                                     <div class="row">
                                         <div class="col-md-6">
                                             <table class="table table-bordered align-middle mb-0">
@@ -903,8 +903,8 @@
                                             <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Procesar</button>
                                         </form>
                                     </div>
-                                @elseif($ineReversoQuery->status === 'completed' && $ineReversoQuery->result)
-                                    @php $reversoData = $ineReversoQuery->result->processed_data; @endphp
+                                @elseif($ineReversoQuery->status === 'completed')
+                                    @php $reversoData = $ineReversoQuery->result?->processed_data ?? []; @endphp
                                     <table class="table table-bordered align-middle mb-0">
                                         <tbody>
                                             <tr>
@@ -991,8 +991,8 @@
                                             <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
                                         </form>
                                     </div>
-                                @elseif($sancionesQuery->status === 'completed' && $sancionesQuery->result)
-                                    @php $sancData = $sancionesQuery->result->processed_data; @endphp
+                                @elseif($sancionesQuery->status === 'completed')
+                                    @php $sancData = $sancionesQuery->result?->processed_data ?? []; @endphp
                                     @if(empty($sancData['hits'] ?? []))
                                         <div class="alert alert-success border-0 mb-0">
                                             <h6 class="alert-heading text-success fw-semibold"><i class="ri-checkbox-circle-line me-1"></i> Sin Reportes</h6>
@@ -1171,8 +1171,8 @@
                                             <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
                                         </form>
                                     </div>
-                                @elseif($litigiosQuery->status === 'completed' && $litigiosQuery->result)
-                                    @php $litigData = $litigiosQuery->result->processed_data; @endphp
+                                @elseif($litigiosQuery->status === 'completed')
+                                    @php $litigData = $litigiosQuery->result?->processed_data ?? []; @endphp
                                     @if(empty($litigData['juicios'] ?? []))
                                         <div class="alert alert-success border-0 mb-0">
                                             <h6 class="alert-heading text-success fw-semibold"><i class="ri-checkbox-circle-line me-1"></i> Historial Limpio</h6>
@@ -1270,8 +1270,8 @@
                                                 <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
                                             </form>
                                         </div>
-                                    @elseif($marcasQuery->status === 'completed' && $marcasQuery->result)
-                                        @php $marcas = $marcasQuery->result->processed_data['marcas'] ?? []; @endphp
+                                    @elseif($marcasQuery->status === 'completed')
+                                        @php $marcas = $marcasQuery->result?->processed_data['marcas'] ?? []; @endphp
                                         @if(empty($marcas))
                                             <div class="text-center text-muted py-3">No se detectaron marcas o solicitudes registradas a nombre del titular en el IMPI.</div>
                                         @else
@@ -1356,8 +1356,8 @@
                                                 <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
                                             </form>
                                         </div>
-                                    @elseif($csdQuery->status === 'completed' && $csdQuery->result)
-                                        @php $certs = $csdQuery->result->processed_data['certificados'] ?? []; @endphp
+                                    @elseif($csdQuery->status === 'completed')
+                                        @php $certs = $csdQuery->result?->processed_data['certificados'] ?? []; @endphp
                                         @if(empty($certs))
                                             <div class="text-center text-muted py-3">No se detectaron certificados asociados a este RFC en las bases públicas.</div>
                                         @else
@@ -1458,8 +1458,8 @@
                                                 <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
                                             </form>
                                         </div>
-                                    @elseif($sigerQuery->status === 'completed' && $sigerQuery->result)
-                                        @php $results = $sigerQuery->result->processed_data['resultados'] ?? []; @endphp
+                                    @elseif($sigerQuery->status === 'completed')
+                                        @php $results = $sigerQuery->result?->processed_data['resultados'] ?? []; @endphp
                                         @if(empty($results))
                                             <div class="text-center text-muted py-3">No se localizaron registros comerciales en SIGER vinculados a esta Razón Social.</div>
                                         @else

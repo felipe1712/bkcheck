@@ -55,60 +55,76 @@ class Subject extends Model
     {
         if (empty($value)) return null;
         try {
-            return decrypt($value);
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
         } catch (\Throwable $e) {
-            return $value;
+            try {
+                return decrypt($value);
+            } catch (\Throwable $e2) {
+                return $value;
+            }
         }
     }
 
     public function setRfcAttribute($value)
     {
-        $this->attributes['rfc'] = !empty($value) ? encrypt($value) : null;
+        $this->attributes['rfc'] = !empty($value) ? \Illuminate\Support\Facades\Crypt::encryptString($value) : null;
     }
 
     public function getCurpAttribute($value)
     {
         if (empty($value)) return null;
         try {
-            return decrypt($value);
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
         } catch (\Throwable $e) {
-            return $value;
+            try {
+                return decrypt($value);
+            } catch (\Throwable $e2) {
+                return $value;
+            }
         }
     }
 
     public function setCurpAttribute($value)
     {
-        $this->attributes['curp'] = !empty($value) ? encrypt($value) : null;
+        $this->attributes['curp'] = !empty($value) ? \Illuminate\Support\Facades\Crypt::encryptString($value) : null;
     }
 
     public function getAddressAttribute($value)
     {
         if (empty($value)) return null;
         try {
-            return decrypt($value);
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
         } catch (\Throwable $e) {
-            return $value;
+            try {
+                return decrypt($value);
+            } catch (\Throwable $e2) {
+                return $value;
+            }
         }
     }
 
     public function setAddressAttribute($value)
     {
-        $this->attributes['address'] = !empty($value) ? encrypt($value) : null;
+        $this->attributes['address'] = !empty($value) ? \Illuminate\Support\Facades\Crypt::encryptString($value) : null;
     }
 
     public function getNssAttribute($value)
     {
         if (empty($value)) return null;
         try {
-            return decrypt($value);
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
         } catch (\Throwable $e) {
-            return $value;
+            try {
+                return decrypt($value);
+            } catch (\Throwable $e2) {
+                return $value;
+            }
         }
     }
 
     public function setNssAttribute($value)
     {
-        $this->attributes['nss'] = !empty($value) ? encrypt($value) : null;
+        $this->attributes['nss'] = !empty($value) ? \Illuminate\Support\Facades\Crypt::encryptString($value) : null;
     }
 
     public function getTierLevelAttribute($value)
