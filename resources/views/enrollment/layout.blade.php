@@ -7,23 +7,24 @@
     <title>Verificación de Identidad</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Urbanist:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --primary:     #4f6ef7;
-            --primary-dark:#3a55e0;
+            --primary:     #1877f2;
+            --primary-dark:#0a58ed;
+            --accent-cyan: #00a6ff;
             --success:     #22c55e;
             --warning:     #f59e0b;
             --danger:      #ef4444;
-            --bg:          #0f1117;
-            --surface:     #1a1f2e;
-            --surface2:    #242938;
-            --border:      #2e3550;
-            --text:        #e8eaf0;
-            --muted:       #8892a4;
+            --bg:          #141923;
+            --surface:     #1b2230;
+            --surface2:    #242c3d;
+            --border:      #2e384e;
+            --text:        #f1f3f9;
+            --muted:       #8492a6;
             --radius:      16px;
         }
 
@@ -31,7 +32,7 @@
             min-height: 100vh;
             background: var(--bg);
             color: var(--text);
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Urbanist', system-ui, sans-serif;
             font-size: 16px;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
@@ -55,16 +56,18 @@
         }
 
         .enroll-header .logo-icon {
-            width: 38px; height: 38px;
-            background: linear-gradient(135deg, var(--primary), #7c3aed);
-            border-radius: 10px;
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+            border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(24, 119, 242, 0.35);
         }
 
-        .enroll-header .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
-        .enroll-header .brand { font-size: 15px; font-weight: 600; color: var(--text); }
-        .enroll-header .brand span { color: var(--muted); font-weight: 400; }
+        .enroll-header .logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+        .enroll-header .brand { font-family: 'Rubik', sans-serif; font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+        .enroll-header .brand span { color: var(--primary); font-weight: 800; }
+        .enroll-header .slogan { font-size: 8px; font-weight: 700; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; margin-top: 1px; }
 
         /* Progress bar */
         .progress-bar-wrap {
@@ -82,6 +85,7 @@
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 11px; font-weight: 700;
+            font-family: 'Rubik', sans-serif;
             flex-shrink: 0;
             transition: all .3s;
             background: var(--surface2);
@@ -93,7 +97,7 @@
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(79,110,247,.2);
+            box-shadow: 0 0 0 4px rgba(24,119,242,.25);
         }
 
         .step-dot.done {
@@ -125,6 +129,7 @@
             text-align: center;
             width: 28px;
             line-height: 1.2;
+            font-family: 'Rubik', sans-serif;
         }
 
         .step-label.active { color: var(--primary); font-weight: 600; }
@@ -155,6 +160,7 @@
         }
 
         .screen-title {
+            font-family: 'Rubik', sans-serif;
             font-size: 22px;
             font-weight: 700;
             margin-bottom: 6px;
@@ -193,6 +199,7 @@
             padding: 16px 24px;
             border: none;
             border-radius: 12px;
+            font-family: 'Rubik', sans-serif;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -210,7 +217,7 @@
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: #fff;
-            box-shadow: 0 4px 20px rgba(79,110,247,.35);
+            box-shadow: 0 4px 20px rgba(24,119,242,.35);
         }
 
         .btn-primary:hover { filter: brightness(1.08); }
@@ -284,13 +291,13 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
-            background: rgba(79,110,247,.08);
-            border: 1px solid rgba(79,110,247,.2);
+            background: rgba(24,119,242,.08);
+            border: 1px solid rgba(24,119,242,.2);
             border-radius: 10px;
             padding: 12px 14px;
             margin-bottom: 16px;
             font-size: 13px;
-            color: #a8b8ff;
+            color: #93c5fd;
             line-height: 1.5;
         }
 
@@ -301,7 +308,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15,17,23,.9);
+            background: rgba(20,25,35,.92);
             z-index: 999;
             flex-direction: column;
             align-items: center;
@@ -359,7 +366,8 @@
             <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         </div>
         <div>
-            <div class="brand">Verificación <span>de Identidad</span></div>
+            <div class="brand">Aval <span>ID</span></div>
+            <div class="slogan">LA CONFIANZA DE TU GENTE</div>
         </div>
     </div>
 

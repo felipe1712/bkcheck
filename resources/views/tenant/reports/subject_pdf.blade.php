@@ -14,19 +14,30 @@
         }
         .header {
             margin-bottom: 20px;
-            border-bottom: 2px solid #405189;
-            padding-bottom: 10px;
+            border-bottom: 3px solid #1877f2;
+            padding-bottom: 12px;
         }
         .logo-text {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
-            color: #405189;
+            color: #141923;
+            letter-spacing: -0.02em;
+        }
+        .logo-text span {
+            color: #1877f2;
+        }
+        .logo-slogan {
+            color: #56657e;
+            font-size: 7px;
+            font-weight: bold;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
         }
         .report-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             text-align: right;
-            color: #555555;
+            color: #141923;
             text-transform: uppercase;
         }
         .metadata-table {
@@ -40,13 +51,13 @@
         .section-title {
             font-size: 12px;
             font-weight: bold;
-            background-color: #f3f6f9;
-            color: #405189;
+            background-color: #f1f5f9;
+            color: #141923;
             padding: 6px 10px;
             margin-top: 20px;
             margin-bottom: 10px;
             text-transform: uppercase;
-            border-left: 3px solid #405189;
+            border-left: 4px solid #1877f2;
         }
         .data-table {
             width: 100%;
@@ -54,16 +65,16 @@
             margin-bottom: 15px;
         }
         .data-table th {
-            background-color: #f3f6f9;
-            color: #333333;
+            background-color: #f1f5f9;
+            color: #141923;
             font-weight: bold;
             text-align: left;
             padding: 6px 8px;
-            border: 1px solid #e9ebec;
+            border: 1px solid #e2e8f0;
         }
         .data-table td {
             padding: 6px 8px;
-            border: 1px solid #e9ebec;
+            border: 1px solid #e2e8f0;
             vertical-align: top;
         }
         .badge {
@@ -75,20 +86,20 @@
             text-transform: uppercase;
         }
         .badge-success {
-            background-color: #daf4f0;
-            color: #0ab39c;
+            background-color: #dcfce7;
+            color: #15803d;
         }
         .badge-danger {
-            background-color: #fde8e4;
-            color: #f06548;
+            background-color: #fee2e2;
+            color: #b91c1c;
         }
         .badge-warning {
-            background-color: #fef4e4;
-            color: #f7b84b;
+            background-color: #fef3c7;
+            color: #b45309;
         }
         .badge-info {
-            background-color: #e1f5fe;
-            color: #03a9f4;
+            background-color: #e0f2fe;
+            color: #0369a1;
         }
         .footer {
             position: fixed;
@@ -98,15 +109,15 @@
             height: 30px;
             text-align: center;
             font-size: 8px;
-            color: #888888;
-            border-top: 1px solid #e9ebec;
+            color: #56657e;
+            border-top: 1px solid #e2e8f0;
             padding-top: 5px;
         }
         .page-break {
             page-break-after: always;
         }
         .disclaimer-box {
-            border: 1px solid #f7b84b;
+            border: 1px solid #fef3c7;
             background-color: #fffbeb;
             padding: 10px;
             margin-top: 30px;
@@ -114,7 +125,7 @@
         }
         .disclaimer-title {
             font-weight: bold;
-            color: #b25e00;
+            color: #b45309;
             margin-bottom: 5px;
         }
         .disclaimer-text {
@@ -124,7 +135,7 @@
         }
         code {
             font-family: Courier, monospace;
-            background-color: #f1f1f1;
+            background-color: #f1f5f9;
             padding: 2px 4px;
             border-radius: 3px;
         }
@@ -136,12 +147,12 @@
     <table style="width: 100%;" class="header">
         <tr>
             <td>
-                <span class="logo-text">AvalID</span><br>
-                <span style="color:#777; font-size:9px;">PLATAFORMA DE DUE DILIGENCE</span>
+                <span class="logo-text">Aval <span>ID</span></span><br>
+                <span class="logo-slogan">LA CONFIANZA DE TU GENTE</span>
             </td>
             <td style="text-align: right;">
                 <span class="report-title">Expediente de Validación</span><br>
-                <span style="color:#777; font-size:9px;">Fecha de Generación: {{ now()->format('d/m/Y H:i') }}</span>
+                <span style="color:#56657e; font-size:9px;">Fecha de Generación: {{ now()->format('d/m/Y H:i') }}</span>
             </td>
         </tr>
     </table>

@@ -874,6 +874,26 @@
                         </h2>
                         <div id="collapseIneFrente" class="accordion-collapse collapse" aria-labelledby="headingIneFrente" data-bs-parent="#sourcesAccordion">
                             <div class="accordion-body">
+                                {{-- Vincular documento del enrolamiento --}}
+                                <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ri-id-card-line fs-20 text-primary"></i>
+                                        <div>
+                                            <span class="fs-12 fw-bold text-dark d-block">Documento Origen para OCR:</span>
+                                            @if($subject->ine_front_path)
+                                                <span class="badge bg-success-subtle text-success fs-11"><i class="ri-checkbox-circle-line me-1"></i>Imagen INE Frente vinculada</span>
+                                            @else
+                                                <span class="badge bg-warning-subtle text-warning fs-11"><i class="ri-alert-line me-1"></i>Sin imagen vinculada</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if($subject->ine_front_path)
+                                        <button type="button" class="btn btn-sm btn-outline-primary fs-11" onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_front']) }}', 'INE Frente — Documento Vinculado')">
+                                            <i class="ri-eye-line me-1"></i>Ver Imagen Vinculada
+                                        </button>
+                                    @endif
+                                </div>
+
                                 @if(!$ineFrenteQuery)
                                     <div class="text-center py-3">
                                         <p class="text-muted mb-2">La consulta del OCR para la parte frontal del INE aún no se ha iniciado o requiere imágenes válidas.</p>
@@ -997,6 +1017,26 @@
                         </h2>
                         <div id="collapseIneReverso" class="accordion-collapse collapse" aria-labelledby="headingIneReverso" data-bs-parent="#sourcesAccordion">
                             <div class="accordion-body">
+                                {{-- Vincular documento del enrolamiento --}}
+                                <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ri-id-card-line fs-20 text-primary"></i>
+                                        <div>
+                                            <span class="fs-12 fw-bold text-dark d-block">Documento Origen para OCR:</span>
+                                            @if($subject->ine_back_path)
+                                                <span class="badge bg-success-subtle text-success fs-11"><i class="ri-checkbox-circle-line me-1"></i>Imagen INE Reverso vinculada</span>
+                                            @else
+                                                <span class="badge bg-warning-subtle text-warning fs-11"><i class="ri-alert-line me-1"></i>Sin imagen vinculada</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if($subject->ine_back_path)
+                                        <button type="button" class="btn btn-sm btn-outline-primary fs-11" onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_back']) }}', 'INE Reverso — Documento Vinculado')">
+                                            <i class="ri-eye-line me-1"></i>Ver Imagen Vinculada
+                                        </button>
+                                    @endif
+                                </div>
+
                                 @if(!$ineReversoQuery)
                                     <div class="text-center py-3">
                                         <p class="text-muted mb-2">La consulta del OCR para la parte trasera del INE aún no se ha iniciado o requiere imágenes válidas.</p>
