@@ -113,7 +113,7 @@ class Subject extends Model
 
     public function getTierLevelAttribute($value)
     {
-        return (int) ($value ?? 1);
+        return $value !== null ? (int) $value : 4;
     }
 
     /**
