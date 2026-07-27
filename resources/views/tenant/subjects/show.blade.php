@@ -280,7 +280,7 @@
                         {{-- NIVEL 4 --}}
                         <div class="col-md-6 col-xl-3">
                             @php $isMoral = $subject->tipo === 'persona_moral'; @endphp
-                            <div class="tier-card p-3 rounded-3 border transition-all h-100 {{ $isMoral ? 'cursor-pointer' : 'opacity-50' }} {{ ($subject->tier_level ?? 1) == 4 ? 'border-primary bg-primary-subtle text-dark' : 'border-secondary-subtle bg-dark-subtle text-white-50' }}" {{ $isMoral ? 'onclick=selectTierLevel(4)' : '' }}>
+                            <div class="tier-card p-3 rounded-3 border transition-all h-100 {{ $isMoral ? 'cursor-pointer' : 'opacity-50' }} {{ ($subject->tier_level ?? 1) == 4 ? 'border-primary bg-primary-subtle text-dark' : 'border-secondary-subtle bg-dark-subtle text-white-50' }}" {!! $isMoral ? 'onclick="selectTierLevel(4)"' : '' !!}>
                                 <div class="form-check d-flex align-items-center justify-content-between mb-2">
                                     <label class="form-check-label fw-bold fs-14 text-white" for="tier4">
                                         <i class="ri-building-4-line me-1 text-warning"></i> NIVEL 4
