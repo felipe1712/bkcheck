@@ -4,21 +4,23 @@
             <div class="d-flex">
                 <!-- LOGO -->
                 <div class="navbar-brand-box horizontal-logo">
-                    <a href="{{ route('root') }}" class="logo logo-dark">
+                    <a href="{{ route('root') }}" class="logo logo-dark text-decoration-none">
                         <span class="logo-sm">
-                            <span class="fs-16 fw-bold text-primary">A</span>
+                            <span class="fs-20 fw-bold" style="font-family: 'Rubik', sans-serif; color: #141923;">A<span style="color: #1877f2; font-weight: 800;">ID</span></span>
                         </span>
-                        <span class="logo-lg">
-                            <img src="{{ asset('images/avalid-logo.png') }}" alt="AvalID" style="height:32px;">
+                        <span class="logo-lg text-start py-2 d-inline-block">
+                            <div class="brand-title" style="color: #141923;">Aval <span>ID</span></div>
+                            <div class="brand-slogan">LA CONFIANZA DE TU GENTE</div>
                         </span>
                     </a>
 
-                    <a href="{{ route('root') }}" class="logo logo-light">
+                    <a href="{{ route('root') }}" class="logo logo-light text-decoration-none">
                         <span class="logo-sm">
-                            <span class="fs-16 fw-bold text-white">A</span>
+                            <span class="fs-20 fw-bold text-white" style="font-family: 'Rubik', sans-serif;">A<span style="color: #00a6ff; font-weight: 800;">ID</span></span>
                         </span>
-                        <span class="logo-lg">
-                            <img src="{{ asset('images/avalid-logo.png') }}" alt="AvalID" style="height:32px; filter: brightness(0) invert(1);">
+                        <span class="logo-lg text-start py-2 d-inline-block">
+                            <div class="brand-title text-white">Aval <span style="color: #00a6ff !important;">ID</span></div>
+                            <div class="brand-slogan text-white-50">LA CONFIANZA DE TU GENTE</div>
                         </span>
                     </a>
                 </div>

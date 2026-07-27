@@ -53,4 +53,32 @@
     .text-primary {
         color: #1877f2 !important;
     }
+    .navbar-brand-box {
+        height: 70px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .navbar-brand-box .logo-lg {
+        display: inline-block !important;
+        height: auto !important;
+        line-height: 1.1 !important;
+    }
+    .navbar-brand-box .brand-title {
+        font-size: 26px !important;
+        font-family: 'Rubik', sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1 !important;
+    }
+    .navbar-brand-box .brand-title span {
+        color: #1877f2 !important;
+        font-weight: 800 !important;
+    }
+    .navbar-brand-box .brand-slogan {
+        font-size: 8.5px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.18em !important;
+        color: #56657e !important;
+        margin-top: 3px !important;
+    }
 </style>

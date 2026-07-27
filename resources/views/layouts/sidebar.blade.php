@@ -3,23 +3,23 @@
     <!-- LOGO -->
     <div class="navbar-brand-box">
         <!-- Dark Logo-->
-        <a href="{{ route('root') }}" class="logo logo-dark">
+        <a href="{{ route('root') }}" class="logo logo-dark text-decoration-none">
             <span class="logo-sm">
-                <span class="fs-18 fw-extrabold" style="font-family: 'Rubik', sans-serif; color: #141923;">A<span style="color: #1877f2;">ID</span></span>
+                <span class="fs-20 fw-bold" style="font-family: 'Rubik', sans-serif; color: #141923;">A<span style="color: #1877f2; font-weight: 800;">ID</span></span>
             </span>
-            <span class="logo-lg text-start py-2">
-                <div class="fs-22 fw-bold" style="font-family: 'Rubik', sans-serif; color: #141923; letter-spacing: -0.02em; line-height: 1;">Aval <span style="color: #1877f2; font-weight: 800;">ID</span></div>
-                <div class="brand-slogan" style="font-size: 7px; color: #56657e; letter-spacing: 0.16em; font-family: 'Rubik', sans-serif; margin-top: 3px;">LA CONFIANZA DE TU GENTE</div>
+            <span class="logo-lg text-start py-2 d-inline-block">
+                <div class="brand-title" style="color: #141923;">Aval <span>ID</span></div>
+                <div class="brand-slogan">LA CONFIANZA DE TU GENTE</div>
             </span>
         </a>
         <!-- Light Logo-->
-        <a href="{{ route('root') }}" class="logo logo-light">
+        <a href="{{ route('root') }}" class="logo logo-light text-decoration-none">
             <span class="logo-sm">
-                <span class="fs-18 fw-extrabold text-white" style="font-family: 'Rubik', sans-serif;">A<span style="color: #00a6ff;">ID</span></span>
+                <span class="fs-20 fw-bold text-white" style="font-family: 'Rubik', sans-serif;">A<span style="color: #00a6ff; font-weight: 800;">ID</span></span>
             </span>
-            <span class="logo-lg text-start py-2">
-                <div class="fs-22 fw-bold text-white" style="font-family: 'Rubik', sans-serif; letter-spacing: -0.02em; line-height: 1;">Aval <span style="color: #00a6ff; font-weight: 800;">ID</span></div>
-                <div class="brand-slogan text-white-50" style="font-size: 7px; letter-spacing: 0.16em; font-family: 'Rubik', sans-serif; margin-top: 3px;">LA CONFIANZA DE TU GENTE</div>
+            <span class="logo-lg text-start py-2 d-inline-block">
+                <div class="brand-title text-white">Aval <span style="color: #00a6ff !important;">ID</span></div>
+                <div class="brand-slogan text-white-50">LA CONFIANZA DE TU GENTE</div>
             </span>
         </a>
         <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
