@@ -13,7 +13,12 @@ class NufiCsdConnector extends NufiConnector
 
     public function getName(): string
     {
-        return 'Certificados CSD y FIEL';
+        return 'Certificados de Sello Digital (CSD)';
+    }
+
+    public function getMinTierLevel(): int
+    {
+        return 3;
     }
 
     public function appliesTo(Subject $subject): bool

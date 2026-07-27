@@ -37,9 +37,11 @@ class Subject extends Model
         'nss',
         'credit_consent_granted',
         'credit_consent_at',
+        'tier_level',
     ];
 
     protected $casts = [
+        'tier_level'                => 'integer',
         'consent_granted'           => 'boolean',
         'consent_date'              => 'datetime',
         'enrollment_expires_at'     => 'datetime',

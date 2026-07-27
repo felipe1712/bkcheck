@@ -39,6 +39,7 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
     Route::post('/subjects/{id}/investigate/{source_type}', [App\Http\Controllers\InvestigationController::class, 'investigateSource'])->name('subjects.investigate.source');
     Route::get('/subjects/{id}/report', [App\Http\Controllers\ReportController::class, 'downloadReport'])->name('subjects.report');
     
+    Route::post('/subjects/{id}/tier', [App\Http\Controllers\SubjectController::class, 'updateTierLevel'])->name('subjects.update-tier');
     Route::resource('subjects', App\Http\Controllers\SubjectController::class);
 
     // Tenant User Management & Consumption (exclusively for tenant_admin)

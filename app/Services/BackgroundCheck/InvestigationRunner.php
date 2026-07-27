@@ -69,10 +69,12 @@ class InvestigationRunner
             throw new \Exception("El sujeto no está asociado a un Tenant válido.");
         }
 
-        // 1. Determine which connectors apply to this subject
+        // 1. Determine which connectors apply to this subject and tier level
+        $subjectTier = $subject->tier_level ?? 4;
         $applicableConnectors = [];
         foreach ($this->getConnectors() as $connector) {
-            if ($connector->appliesTo($subject)) {
+            $minTier = method_exists($connector, 'getMinTierLevel') ? $connector->getMinTierLevel() : 1;
+            if ($minTier <= $subjectTier && $connector->appliesTo($subject)) {
                 $applicableConnectors[] = $connector;
             }
         }

@@ -18,6 +18,11 @@ class NufiLitigiosConnector extends NufiConnector
         return 'Búsqueda de Litigios y Juicios';
     }
 
+    public function getMinTierLevel(): int
+    {
+        return 2;
+    }
+
     public function appliesTo(Subject $subject): bool
     {
         // Litigios search applies to all subjects

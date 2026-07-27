@@ -427,4 +427,35 @@ class SubjectController extends Controller
         return redirect()->route('tenant.projects.show', $projectId)
             ->with('success', 'Sujeto eliminado correctamente.');
     }
+    /**
+     * Update the investigation tier level for a subject.
+     */
+    public function updateTierLevel(Request $request, $id)
+    {
+        $request->validate([
+            'tier_level' => 'required|integer|in:1,2,3,4',
+        ]);
+
+        $subject = Subject::findOrFail($id);
+
+        if ($subject->tipo === 'persona_fisica' && (int)$request->tier_level === 4) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'El Nivel 4 (Verificación Corporativa) aplica únicamente para Personas Morales.'], 422);
+            }
+            return redirect()->back()->withErrors(['error' => 'El Nivel 4 (Verificación Corporativa) aplica únicamente para Personas Morales.']);
+        }
+
+        $subject->tier_level = (int) $request->tier_level;
+        $subject->save();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'tier_level' => $subject->tier_level,
+                'message' => "Nivel de Investigación actualizado a Nivel {$subject->tier_level}.",
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Nivel de Investigación actualizado a Nivel {$subject->tier_level}.");
+    }
 }

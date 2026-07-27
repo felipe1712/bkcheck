@@ -192,6 +192,122 @@
     </div>
 </div>
 
+{{-- ─────────── SECCIÓN: NIVEL DE INVESTIGACIÓN (TIER SELECTOR) ─────────── --}}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border border-primary-subtle" style="background: #1b2230; color: #fff;">
+            <div class="card-header bg-transparent border-bottom border-dark-subtle d-flex align-items-center justify-content-between py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ri-shield-star-line fs-20 text-primary"></i>
+                    <h5 class="card-title text-white fw-bold mb-0" style="font-family: 'Rubik', sans-serif;">Nivel de Investigación (TIER)</h5>
+                </div>
+                <span class="badge bg-primary text-white fs-11" id="currentTierBadge">Nivel Actual: TIER {{ $subject->tier_level ?? 1 }}</span>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-white-50 fs-13 mb-3">
+                    Selecciona el alcance de la investigación. Las fuentes de verificación y consultas ejecutadas se adaptarán automáticamente al nivel elegido:
+                </p>
+
+                <form id="tierLevelForm" action="{{ route('tenant.subjects.update-tier', $subject->id) }}" method="POST">
+                    @csrf
+                    <div class="row g-3">
+                        {{-- NIVEL 1 --}}
+                        <div class="col-md-6 col-xl-3">
+                            <div class="tier-card p-3 rounded-3 border transition-all h-100 cursor-pointer {{ ($subject->tier_level ?? 1) == 1 ? 'border-primary bg-primary-subtle text-dark' : 'border-secondary-subtle bg-dark-subtle text-white-50' }}" onclick="selectTierLevel(1)">
+                                <div class="form-check d-flex align-items-center justify-content-between mb-2">
+                                    <label class="form-check-label fw-bold fs-14 text-white" for="tier1">
+                                        <i class="ri-checkbox-circle-line me-1 text-primary"></i> NIVEL 1
+                                    </label>
+                                    <input class="form-check-input" type="radio" name="tier_level" id="tier1" value="1" {{ ($subject->tier_level ?? 1) == 1 ? 'checked' : '' }}>
+                                </div>
+                                <h6 class="fw-semibold fs-13 text-primary mb-1" style="font-family: 'Rubik', sans-serif;">Verificación Básica</h6>
+                                <p class="fs-11 text-muted mb-2">Ideal para personal operativo masivo.</p>
+                                <hr class="border-secondary-subtle my-2">
+                                <ul class="list-unstyled fs-11 mb-0 text-white-50">
+                                    <li><i class="ri-check-line text-success me-1"></i> CURP / RENAPO</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> RFC SAT</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Lista SAT 69/69B</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Listas OFAC y Sanciones</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Biometría y Prueba de Vida</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- NIVEL 2 --}}
+                        <div class="col-md-6 col-xl-3">
+                            <div class="tier-card p-3 rounded-3 border transition-all h-100 cursor-pointer {{ ($subject->tier_level ?? 1) == 2 ? 'border-primary bg-primary-subtle text-dark' : 'border-secondary-subtle bg-dark-subtle text-white-50' }}" onclick="selectTierLevel(2)">
+                                <div class="form-check d-flex align-items-center justify-content-between mb-2">
+                                    <label class="form-check-label fw-bold fs-14 text-white" for="tier2">
+                                        <i class="ri-checkbox-circle-line me-1 text-primary"></i> NIVEL 2
+                                    </label>
+                                    <input class="form-check-input" type="radio" name="tier_level" id="tier2" value="2" {{ ($subject->tier_level ?? 1) == 2 ? 'checked' : '' }}>
+                                </div>
+                                <h6 class="fw-semibold fs-13 text-primary mb-1" style="font-family: 'Rubik', sans-serif;">Verificación Estándar</h6>
+                                <p class="fs-11 text-muted mb-2">Personal administrativo y mandos medios.</p>
+                                <hr class="border-secondary-subtle my-2">
+                                <ul class="list-unstyled fs-11 mb-0 text-white-50">
+                                    <li><i class="ri-check-line text-success me-1"></i> Todo Nivel 1 más:</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Expedientes Judiciales</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Historial Laboral IMSS / NSS</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Validación completa INE OCR</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Enriquecimiento Digital Email</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- NIVEL 3 --}}
+                        <div class="col-md-6 col-xl-3">
+                            <div class="tier-card p-3 rounded-3 border transition-all h-100 cursor-pointer {{ ($subject->tier_level ?? 1) == 3 ? 'border-primary bg-primary-subtle text-dark' : 'border-secondary-subtle bg-dark-subtle text-white-50' }}" onclick="selectTierLevel(3)">
+                                <div class="form-check d-flex align-items-center justify-content-between mb-2">
+                                    <label class="form-check-label fw-bold fs-14 text-white" for="tier3">
+                                        <i class="ri-checkbox-circle-line me-1 text-primary"></i> NIVEL 3
+                                    </label>
+                                    <input class="form-check-input" type="radio" name="tier_level" id="tier3" value="3" {{ ($subject->tier_level ?? 1) == 3 ? 'checked' : '' }}>
+                                </div>
+                                <h6 class="fw-semibold fs-13 text-primary mb-1" style="font-family: 'Rubik', sans-serif;">Verificación Ejecutiva</h6>
+                                <p class="fs-11 text-muted mb-2">Mandos altos y perfiles críticos.</p>
+                                <hr class="border-secondary-subtle my-2">
+                                <ul class="list-unstyled fs-11 mb-0 text-white-50">
+                                    <li><i class="ri-check-line text-success me-1"></i> Todo Nivel 2 más:</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> OSINT / Redes Sociales</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Análisis Perfil Digital</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> IMPI Registro de Marcas</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Validación CSD / CFDI</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- NIVEL 4 --}}
+                        <div class="col-md-6 col-xl-3">
+                            @php $isMoral = $subject->tipo === 'persona_moral'; @endphp
+                            <div class="tier-card p-3 rounded-3 border transition-all h-100 {{ $isMoral ? 'cursor-pointer' : 'opacity-50' }} {{ ($subject->tier_level ?? 1) == 4 ? 'border-primary bg-primary-subtle text-dark' : 'border-secondary-subtle bg-dark-subtle text-white-50' }}" {{ $isMoral ? 'onclick=selectTierLevel(4)' : '' }}>
+                                <div class="form-check d-flex align-items-center justify-content-between mb-2">
+                                    <label class="form-check-label fw-bold fs-14 text-white" for="tier4">
+                                        <i class="ri-building-4-line me-1 text-warning"></i> NIVEL 4
+                                    </label>
+                                    <input class="form-check-input" type="radio" name="tier_level" id="tier4" value="4" {{ ($subject->tier_level ?? 1) == 4 ? 'checked' : '' }} {{ !$isMoral ? 'disabled' : '' }}>
+                                </div>
+                                <h6 class="fw-semibold fs-13 text-warning mb-1" style="font-family: 'Rubik', sans-serif;">Verificación Corporativa</h6>
+                                <p class="fs-11 text-muted mb-2">Due diligence, proveedores, socios.</p>
+                                @if(!$isMoral)
+                                    <span class="badge bg-warning-subtle text-warning fs-10 mb-2 d-block">Solo para Personas Morales</span>
+                                @endif
+                                <hr class="border-secondary-subtle my-2">
+                                <ul class="list-unstyled fs-11 mb-0 text-white-50">
+                                    <li><i class="ri-check-line text-success me-1"></i> Todo Nivel 3 más:</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> SIGER Registro Público</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> Actos Constitutivos</li>
+                                    <li><i class="ri-check-line text-success me-1"></i> DENUE INEGI Empresa</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- ─────────── TARJETA DE ENROLAMIENTO ─────────── --}}
 @php
     $enrollStatus = $subject->enrollmentStatus();
@@ -2058,4 +2174,81 @@ function copyEnrollUrl() {
         document.execCommand('copy');
     });
 }
+
+function selectTierLevel(level) {
+    const radio = document.getElementById('tier' + level);
+    if (!radio || radio.disabled) return;
+
+    radio.checked = true;
+
+    // Update active tier card styles
+    document.querySelectorAll('.tier-card').forEach((card, idx) => {
+        const isCurrent = (idx + 1) === level;
+        if (isCurrent) {
+            card.classList.remove('border-secondary-subtle', 'bg-dark-subtle', 'text-white-50');
+            card.classList.add('border-primary', 'bg-primary-subtle', 'text-dark');
+        } else {
+            card.classList.remove('border-primary', 'bg-primary-subtle', 'text-dark');
+            card.classList.add('border-secondary-subtle', 'bg-dark-subtle', 'text-white-50');
+        }
+    });
+
+    const form = document.getElementById('tierLevelForm');
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.getElementById('currentTierBadge');
+            if (badge) badge.textContent = 'Nivel Actual: TIER ' + level;
+            filterSourcesByTier(level);
+        }
+    })
+    .catch(err => console.error(err));
+}
+
+function filterSourcesByTier(level) {
+    const minTierMap = {
+        'headingRfc': 1,
+        'headingSatListas': 1,
+        'headingSanciones': 1,
+        'headingIneFrente': 1,
+        'headingIneReverso': 1,
+        'headingLitigios': 2,
+        'headingNss': 2,
+        'headingIdentidadDigital': 2,
+        'headingMarcas': 3,
+        'headingCsd': 3,
+        'headingOsint': 3,
+        'headingSiger': 4,
+        'headingDenue': 4,
+    };
+
+    Object.keys(minTierMap).forEach(id => {
+        const header = document.getElementById(id);
+        if (!header) return;
+        const item = header.closest('.accordion-item');
+        if (!item) return;
+
+        const minTier = minTierMap[id];
+        if (level >= minTier) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const currentLevel = parseInt({{ $subject->tier_level ?? 1 }});
+    filterSourcesByTier(currentLevel);
+});
 </script>

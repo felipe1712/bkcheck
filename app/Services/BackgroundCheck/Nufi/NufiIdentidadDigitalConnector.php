@@ -18,6 +18,11 @@ class NufiIdentidadDigitalConnector extends NufiConnector
         return 'Identidad Digital y Búsqueda por Email';
     }
 
+    public function getMinTierLevel(): int
+    {
+        return 2;
+    }
+
     public function appliesTo(Subject $subject): bool
     {
         return !empty($subject->email);

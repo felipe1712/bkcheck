@@ -24,7 +24,12 @@ class NufiNssConnector extends NufiConnector
 
     public function getName(): string
     {
-        return 'Historial Laboral IMSS (NSS)';
+        return 'Semanas Cotizadas IMSS / NSS';
+    }
+
+    public function getMinTierLevel(): int
+    {
+        return 2;
     }
 
     public function appliesTo(Subject $subject): bool

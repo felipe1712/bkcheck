@@ -81,4 +81,8 @@
         color: #56657e !important;
         margin-top: 3px !important;
     }
+    /* Ocultar logo duplicado del sidebar en modo horizontal */
+    [data-layout="horizontal"] .app-menu .navbar-brand-box {
+        display: none !important;
+    }
 </style>

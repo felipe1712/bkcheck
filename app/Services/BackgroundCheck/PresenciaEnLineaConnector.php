@@ -31,7 +31,12 @@ class PresenciaEnLineaConnector extends BaseSourceConnector
 
     public function getName(): string
     {
-        return 'Presencia Digital y Huella en Redes (OSINT)';
+        return 'Presencia en Línea y OSINT';
+    }
+
+    public function getMinTierLevel(): int
+    {
+        return 2;
     }
 
     /**

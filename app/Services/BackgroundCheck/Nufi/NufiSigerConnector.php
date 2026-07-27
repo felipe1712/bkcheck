@@ -16,6 +16,11 @@ class NufiSigerConnector extends NufiConnector
         return 'Registro Público de Comercio (SIGER)';
     }
 
+    public function getMinTierLevel(): int
+    {
+        return 4;
+    }
+
     public function appliesTo(Subject $subject): bool
     {
         // SIGER applies to entities (persona_moral)

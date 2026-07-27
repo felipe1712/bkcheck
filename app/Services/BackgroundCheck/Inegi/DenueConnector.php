@@ -51,6 +51,11 @@ class DenueConnector extends BaseSourceConnector
         return 'Directorio Empresarial DENUE (INEGI)';
     }
 
+    public function getMinTierLevel(): int
+    {
+        return 4;
+    }
+
     /**
      * Aplica a todas las empresas (persona_moral).
      * También aplica a personas físicas con RFC (pueden tener actividad empresarial).

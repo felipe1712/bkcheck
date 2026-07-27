@@ -13,7 +13,12 @@ class NufiMarcasConnector extends NufiConnector
 
     public function getName(): string
     {
-        return 'Búsqueda de Marcas IMPI';
+        return 'Propiedad Industrial e Intelectual (IMPI)';
+    }
+
+    public function getMinTierLevel(): int
+    {
+        return 3;
     }
 
     public function appliesTo(Subject $subject): bool

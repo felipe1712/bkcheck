@@ -7,5 +7,11 @@ use App\Models\Subject;
 
 abstract class BaseSourceConnector implements SourceConnector
 {
-    // Common abstract/base functionalities can be placed here if needed.
+    /**
+     * Get the minimum investigation tier level required for this connector (1 to 4).
+     */
+    public function getMinTierLevel(): int
+    {
+        return 1;
+    }
 }
