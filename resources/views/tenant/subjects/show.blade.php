@@ -309,13 +309,15 @@
                                     <li><i class="ri-check-line text-success me-1"></i> Actos Constitutivos</li>
                                     <li><i class="ri-check-line text-success me-1"></i> DENUE INEGI Empresa</li>
                                 </ul>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top border-secondary-subtle" style="border-color: rgba(255,255,255,0.1) !important;">
+                    <div class="d-flex justify-content-end align-items-center gap-2 mt-4 pt-3 border-top border-secondary-subtle" style="border-color: rgba(255,255,255,0.1) !important;">
                         <button type="button" class="btn btn-outline-light px-3 fw-semibold d-none" id="btnEditTier" onclick="enableTierEdit()">
                             <i class="ri-edit-line me-1"></i> Cambiar selección
                         </button>
-                        <button type="button" class="btn btn-primary px-4 fw-semibold" id="btnSaveTier" onclick="saveTierLevel()">
+                        <button type="button" class="btn btn-primary px-4 fw-semibold shadow" id="btnSaveTier" onclick="saveTierLevel()">
                             <i class="ri-save-3-line me-1"></i> Guardar Nivel de Investigación
                         </button>
                     </div>
