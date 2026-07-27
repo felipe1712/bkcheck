@@ -307,8 +307,15 @@
                                     <li><i class="ri-check-line text-success me-1"></i> Actos Constitutivos</li>
                                     <li><i class="ri-check-line text-success me-1"></i> DENUE INEGI Empresa</li>
                                 </ul>
-                            </div>
-                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top border-secondary-subtle" style="border-color: rgba(255,255,255,0.1) !important;">
+                        <button type="button" class="btn btn-outline-light px-3 fw-semibold d-none" id="btnEditTier" onclick="enableTierEdit()">
+                            <i class="ri-edit-line me-1"></i> Cambiar selección
+                        </button>
+                        <button type="button" class="btn btn-primary px-4 fw-semibold" id="btnSaveTier" onclick="saveTierLevel()">
+                            <i class="ri-save-3-line me-1"></i> Guardar Nivel de Investigación
+                        </button>
                     </div>
                 </form>
             </div>
@@ -468,12 +475,12 @@
             <div class="card-body">
                 <div class="accordion accordion-border-box" id="sourcesAccordion">
 
-                    {{-- SECCIÓN 1: VALIDACIÓN DE IDENTIDAD --}}
-                    <div class="alert alert-primary border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3">
-                        <i class="ri-id-card-fill fs-18 me-2"></i>
-                        <span class="fw-bold fs-13 flex-grow-1 text-uppercase">Sección 1: Validación de Identidad</span>
-                        <span class="badge bg-primary text-white fs-10">API Key General</span>
-                    </div>
+                    {{-- SECCIÓN 1: NIVEL 1 — VERIFICACIÓN BÁSICA --}}
+                    <div class="tier-section" id="tierSection1">
+                        <div class="alert alert-primary border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3">
+                            <i class="ri-shield-check-fill fs-18 me-2"></i>
+                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase">NIVEL 1 — Verificación Básica (Identidad, Listas SAT 69/69B y Sanciones/OFAC)</span>
+                        </div>
 
                     <!-- 1. VALIDACIÓN RFC -->
                     <div class="accordion-item shadow-sm border mb-3">
@@ -565,215 +572,14 @@
                                                 @endif
                                             </tbody>
                                         </table>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. CERTIFICADOS CSD -->
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingCsd">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCsd" aria-expanded="false" aria-controls="collapseCsd">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-key-2-fill text-primary me-2 align-middle fs-18"></i> Certificados CSD y e-Firma (SAT)
-                                    </div>
-                                    <div>
-                                        @if(!$csdQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($csdQuery->status === 'pending' || $csdQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($csdQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($csdQuery->status === 'completed')
-                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseCsd" class="accordion-collapse collapse" aria-labelledby="headingCsd" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                @if(!$csdQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La recuperación de certificados de sellos de este sujeto aún no se ha iniciado.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($csdQuery->status === 'pending' || $csdQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Recuperando historial de sellos SAT. Espere...</span>
-                                    </div>
-                                @elseif($csdQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $csdQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
-                                        </form>
-                                    </div>
-                                @elseif($csdQuery->status === 'completed' && $csdQuery->result)
-                                    @php $certs = $csdQuery->result->processed_data['certificados'] ?? []; @endphp
-                                    @if(empty($certs))
-                                        <div class="text-center text-muted py-3">No se detectaron certificados asociados a este RFC en las bases públicas.</div>
-                                    @else
-                                        <div class="table-responsive">
-                                            <table class="table table-striped align-middle mb-0">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Número de Serie</th>
-                                                        <th>Tipo</th>
-                                                        <th>Estatus</th>
-                                                        <th>Inicio de Vigencia</th>
-                                                        <th>Fin de Vigencia</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($certs as $cert)
-                                                    <tr>
-                                                        <td><code>{{ $cert['numero_serie'] ?? '' }}</code></td>
-                                                        <td><span class="badge bg-secondary-subtle text-secondary">{{ $cert['tipo'] ?? 'CSD' }}</span></td>
-                                                        <td>
-                                                            <span class="badge bg-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}-subtle text-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}">
-                                                                {{ $cert['estado'] ?? 'CADUCO' }}
-                                                            </span>
-                                                        </td>
-                                                        <td>{{ isset($cert['fecha_inicio']) ? \Carbon\Carbon::parse($cert['fecha_inicio'])->format('d/m/Y H:i') : 'N/A' }}</td>
-                                                        <td>{{ isset($cert['fecha_fin']) ? \Carbon\Carbon::parse($cert['fecha_fin'])->format('d/m/Y H:i') : 'N/A' }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @endif
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    @if($subject->tipo === 'persona_moral')
-                    <!-- 3. REGISTRO PÚBLICO SIGER -->
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingSiger">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSiger" aria-expanded="false" aria-controls="collapseSiger">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-bank-fill text-primary me-2 align-middle fs-18"></i> Registro Público de Comercio (SIGER)
-                                    </div>
-                                    <div>
-                                        @if($subject->tipo === 'persona_fisica')
-                                            <span class="badge bg-light text-muted py-1 px-2 text-decoration-line-through">No Aplica</span>
-                                        @elseif(!$sigerQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($sigerQuery->status === 'pending' || $sigerQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($sigerQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($sigerQuery->status === 'completed')
-                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseSiger" class="accordion-collapse collapse" aria-labelledby="headingSiger" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                @if($subject->tipo === 'persona_fisica')
-                                    <div class="alert alert-warning border-0 mb-0">
-                                        <h6 class="alert-heading text-warning fw-semibold mb-1"><i class="ri-alert-line align-middle me-1"></i> Fuente Excluida</h6>
-                                        <p class="mb-0">La consulta del Registro Público de Comercio (SIGER) aplica únicamente para Sociedades Mercantiles (Personas Morales). Ha sido excluida por el tipo de sujeto.</p>
-                                    </div>
-                                @elseif(!$sigerQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La consulta mercantiles y composición de socios en SIGER aún no se ha iniciado.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($sigerQuery->status === 'pending' || $sigerQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Buscando actas constitutivas mercantiles. Espere...</span>
-                                    </div>
-                                @elseif($sigerQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $sigerQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
-                                        </form>
-                                    </div>
-                                @elseif($sigerQuery->status === 'completed' && $sigerQuery->result)
-                                    @php $results = $sigerQuery->result->processed_data['resultados'] ?? []; @endphp
-                                    @if(empty($results))
-                                        <div class="text-center text-muted py-3">No se localizaron registros comerciales en SIGER vinculados a esta Razón Social.</div>
-                                    @else
-                                        @foreach($results as $res)
-                                        <div class="card border border-dashed mb-3">
-                                            <div class="card-header bg-light-subtle align-items-center d-flex pb-2">
-                                                <h6 class="card-title mb-0 flex-grow-1 text-primary">Folio Mercantil Electrónico (FME): #{{ $res['fme'] ?? '' }}</h6>
-                                                <span class="badge bg-success-subtle text-success">{{ $res['entidad_federativa'] ?? 'CDMX' }}</span>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row mb-2">
-                                                    <div class="col-sm-6">
-                                                        <span class="text-muted">Fecha Constitución:</span>
-                                                        <span class="fw-semibold d-block text-dark">{{ isset($res['fecha_constitucion']) ? \Carbon\Carbon::parse($res['fecha_constitucion'])->format('d/m/Y') : 'N/A' }}</span>
-                                                    </div>
-                                                    <div class="col-sm-6">
-                                                        <span class="text-muted">Capital Social de Inicio:</span>
-                                                        <span class="fw-semibold d-block text-dark">${{ number_format($res['capital_social'] ?? 0, 2) }} MXN</span>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <span class="text-muted">Objeto Social Constituido:</span>
-                                                    <p class="text-muted fs-12 mb-0" style="text-align: justify;">{{ $res['objeto_social'] ?? 'N/A' }}</p>
-                                                </div>
-                                                <h6 class="text-uppercase text-muted fs-11 mb-2">Socios y Accionistas Registrados</h6>
-                                                <div class="table-responsive table-card">
-                                                    <table class="table table-sm table-nowrap mb-0">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>Nombre Completo</th>
-                                                                <th>Participación</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach($res['socios'] ?? [] as $socio)
-                                                            <tr>
-                                                                <td class="fw-semibold text-dark">{{ $socio['nombre'] ?? '' }}</td>
-                                                                <td><span class="badge bg-primary-subtle text-primary">{{ $socio['participacion'] ?? '' }}</span></td>
-                                                            </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    @endif
-                                @endif
+                              @endif
                             </div>
                         </div>
                     </div>
 
                     @endif {{-- /persona_moral SIGER --}}
 
-                    {{-- SECCIÓN 2: ENRIQUECIMIENTO DE DATOS Y LISTAS NEGRAS INTERNACIONALES --}}
-                    <div class="alert alert-warning border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
-                        <i class="ri-search-eye-line fs-18 me-2 text-warning-emphasis"></i>
-                        <span class="fw-bold fs-13 flex-grow-1 text-uppercase text-warning-emphasis">Sección 2: Enriquecimiento de Datos y Listas Negras Internacionales</span>
-                        <span class="badge bg-warning text-dark fs-10">API Key Enriquecimiento & OFAC</span>
-                    </div>
+
 
                     <!-- 4. LISTAS SAT 69/B -->
                     <div class="accordion-item shadow-sm border mb-3">
@@ -885,94 +691,7 @@
                         </div>
                     </div>
 
-                    @if($subject->tipo === 'persona_moral')
-                    <!-- 5. PROPUESTA INDUSTRIAL IMPI -->
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingMarcas">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMarcas" aria-expanded="false" aria-controls="collapseMarcas">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-trademark-fill text-primary me-2 align-middle fs-18"></i> Propiedad Industrial e Intelectual (IMPI)
-                                    </div>
-                                    <div>
-                                        @if(!$marcasQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($marcasQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($marcasQuery->status === 'completed')
-                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseMarcas" class="accordion-collapse collapse" aria-labelledby="headingMarcas" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                @if(!$marcasQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La búsqueda de marcas y patentes a nombre del sujeto en las bases del IMPI aún no se ha iniciado.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Buscando marcas registradas. Espere...</span>
-                                    </div>
-                                @elseif($marcasQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $marcasQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
-                                        </form>
-                                    </div>
-                                @elseif($marcasQuery->status === 'completed' && $marcasQuery->result)
-                                    @php $marcas = $marcasQuery->result->processed_data['marcas'] ?? []; @endphp
-                                    @if(empty($marcas))
-                                        <div class="text-center text-muted py-3">No se detectaron marcas o solicitudes registradas a nombre del titular en el IMPI.</div>
-                                    @else
-                                        <div class="table-responsive">
-                                            <table class="table table-striped align-middle mb-0">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Registro</th>
-                                                        <th>Expediente</th>
-                                                        <th>Denominación</th>
-                                                        <th>Titular</th>
-                                                        <th>Clase Nice</th>
-                                                        <th>Concesión</th>
-                                                        <th>Estatus</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($marcas as $marca)
-                                                    <tr>
-                                                        <td><code>{{ $marca['numero_registro'] ?? 'N/A' }}</code></td>
-                                                        <td><code>{{ $marca['numero_expediente'] ?? 'N/A' }}</code></td>
-                                                        <td class="fw-semibold text-dark">{{ $marca['denominacion'] ?? '' }}</td>
-                                                        <td>{{ $marca['titular'] ?? '' }}</td>
-                                                        <td><span class="badge bg-light text-dark">Clase {{ $marca['clase_nice'] ?? '' }}</span></td>
-                                                        <td>{{ isset($marca['fecha_concesion']) ? \Carbon\Carbon::parse($marca['fecha_concesion'])->format('d/m/Y') : 'N/A' }}</td>
-                                                        <td><span class="badge bg-success-subtle text-success">{{ $marca['estatus'] ?? 'REGISTRADA' }}</span></td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @endif
-                                @endif
-                            </div>
-                        </div>
-                    </div>
 
-                    @endif {{-- /persona_moral Marcas IMPI --}}
 
                     <!-- 6. INE FRENTE -->
                     <div class="accordion-item shadow-sm border mb-3">
@@ -1314,9 +1033,14 @@
                                 @endif
                             </div>
                         </div>
-                    </div>
+                    </div> {{-- /tierSection1 --}}
 
-                    <!-- 2.3 IDENTIDAD DIGITAL Y BÚSQUEDA POR EMAIL -->
+                    {{-- SECCIÓN 2: NIVEL 2 — VERIFICACIÓN ESTÁNDAR --}}
+                    <div class="tier-section" id="tierSection2">
+                        <div class="alert alert-info border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
+                            <i class="ri-user-search-fill fs-18 me-2"></i>
+                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase">NIVEL 2 — Verificación Estándar (Judiciales y Enriquecimiento Digital)</span>
+                        </div>
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingIdentidadDigital">
                             <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentidadDigital" aria-expanded="false" aria-controls="collapseIdentidadDigital">
@@ -1394,12 +1118,7 @@
                         </div>
                     </div>
 
-                    {{-- SECCIÓN 3: ANTECEDENTES JUDICIALES --}}
-                    <div class="alert alert-danger border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
-                        <i class="ri-scales-3-line fs-18 me-2"></i>
-                        <span class="fw-bold fs-13 flex-grow-1 text-uppercase">Sección 3: Antecedentes Judiciales</span>
-                        <span class="badge bg-danger text-white fs-10">API Key Judiciales</span>
-                    </div>
+
 
                     <!-- 9. HISTORIAL DE LITIGIOS -->
                     <div class="accordion-item shadow-sm border mb-3">
@@ -1495,8 +1214,305 @@
                                     @endif
                                 @endif
                             </div>
+                    </div> {{-- /tierSection2 --}}
+
+                    {{-- SECCIÓN 3: NIVEL 3 — VERIFICACIÓN EJECUTIVA --}}
+                    <div class="tier-section" id="tierSection3">
+                        <div class="alert alert-warning border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
+                            <i class="ri-award-fill fs-18 me-2 text-warning-emphasis"></i>
+                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase text-warning-emphasis">NIVEL 3 — Verificación Ejecutiva (Marcas IMPI y Certificados CSD)</span>
+                        </div>
+
+                        <!-- 8. REGISTRO DE MARCAS IMPI -->
+                        <div class="accordion-item shadow-sm border mb-3">
+                            <h2 class="accordion-header" id="headingMarcas">
+                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMarcas" aria-expanded="false" aria-controls="collapseMarcas">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <div class="fw-semibold text-dark fs-14">
+                                            <i class="ri-trademark-fill text-primary me-2 align-middle fs-18"></i> Propiedad Industrial e Intelectual (IMPI)
+                                        </div>
+                                        <div>
+                                            @if(!$marcasQuery)
+                                                <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                            @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
+                                                <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                            @elseif($marcasQuery->status === 'failed')
+                                                <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                            @elseif($marcasQuery->status === 'completed')
+                                                <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapseMarcas" class="accordion-collapse collapse" aria-labelledby="headingMarcas" data-bs-parent="#sourcesAccordion">
+                                <div class="accordion-body">
+                                    @if(!$marcasQuery)
+                                        <div class="text-center py-3">
+                                            <p class="text-muted mb-2">La búsqueda de marcas y patentes a nombre del sujeto en las bases del IMPI aún no se ha iniciado.</p>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                    <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                            <span>Buscando marcas registradas. Espere...</span>
+                                        </div>
+                                    @elseif($marcasQuery->status === 'failed')
+                                        <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                            <span><strong>Error:</strong> {{ $marcasQuery->error_message }}</span>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST" class="ms-3">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                            </form>
+                                        </div>
+                                    @elseif($marcasQuery->status === 'completed' && $marcasQuery->result)
+                                        @php $marcas = $marcasQuery->result->processed_data['marcas'] ?? []; @endphp
+                                        @if(empty($marcas))
+                                            <div class="text-center text-muted py-3">No se detectaron marcas o solicitudes registradas a nombre del titular en el IMPI.</div>
+                                        @else
+                                            <div class="table-responsive">
+                                                <table class="table table-striped align-middle mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Registro</th>
+                                                            <th>Expediente</th>
+                                                            <th>Denominación</th>
+                                                            <th>Titular</th>
+                                                            <th>Clase Nice</th>
+                                                            <th>Concesión</th>
+                                                            <th>Estatus</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($marcas as $marca)
+                                                        <tr>
+                                                            <td><code>{{ $marca['numero_registro'] ?? 'N/A' }}</code></td>
+                                                            <td><code>{{ $marca['numero_expediente'] ?? 'N/A' }}</code></td>
+                                                            <td class="fw-semibold text-dark">{{ $marca['denominacion'] ?? '' }}</td>
+                                                            <td>{{ $marca['titular'] ?? '' }}</td>
+                                                            <td><span class="badge bg-light text-dark">Clase {{ $marca['clase_nice'] ?? '' }}</span></td>
+                                                            <td>{{ isset($marca['fecha_concesion']) ? \Carbon\Carbon::parse($marca['fecha_concesion'])->format('d/m/Y') : 'N/A' }}</td>
+                                                            <td><span class="badge bg-success-subtle text-success">{{ $marca['estatus'] ?? 'REGISTRADA' }}</span></td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 9. CERTIFICADOS CSD -->
+                        <div class="accordion-item shadow-sm border mb-3">
+                            <h2 class="accordion-header" id="headingCsd">
+                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCsd" aria-expanded="false" aria-controls="collapseCsd">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <div class="fw-semibold text-dark fs-14">
+                                            <i class="ri-key-2-fill text-primary me-2 align-middle fs-18"></i> Certificados CSD y e-Firma (SAT)
+                                        </div>
+                                        <div>
+                                            @if(!$csdQuery)
+                                                <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                            @elseif($csdQuery->status === 'pending' || $csdQuery->status === 'processing')
+                                                <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                            @elseif($csdQuery->status === 'failed')
+                                                <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                            @elseif($csdQuery->status === 'completed')
+                                                <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapseCsd" class="accordion-collapse collapse" aria-labelledby="headingCsd" data-bs-parent="#sourcesAccordion">
+                                <div class="accordion-body">
+                                    @if(!$csdQuery)
+                                        <div class="text-center py-3">
+                                            <p class="text-muted mb-2">La recuperación de certificados de sellos de este sujeto aún no se ha iniciado.</p>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                    <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($csdQuery->status === 'pending' || $csdQuery->status === 'processing')
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                            <span>Recuperando historial de sellos SAT. Espere...</span>
+                                        </div>
+                                    @elseif($csdQuery->status === 'failed')
+                                        <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                            <span><strong>Error:</strong> {{ $csdQuery->error_message }}</span>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'csd']) }}" method="POST" class="ms-3">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                            </form>
+                                        </div>
+                                    @elseif($csdQuery->status === 'completed' && $csdQuery->result)
+                                        @php $certs = $csdQuery->result->processed_data['certificados'] ?? []; @endphp
+                                        @if(empty($certs))
+                                            <div class="text-center text-muted py-3">No se detectaron certificados asociados a este RFC en las bases públicas.</div>
+                                        @else
+                                            <div class="table-responsive">
+                                                <table class="table table-striped align-middle mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Número de Serie</th>
+                                                            <th>Tipo</th>
+                                                            <th>Estatus</th>
+                                                            <th>Inicio de Vigencia</th>
+                                                            <th>Fin de Vigencia</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($certs as $cert)
+                                                        <tr>
+                                                            <td><code>{{ $cert['numero_serie'] ?? '' }}</code></td>
+                                                            <td><span class="badge bg-secondary-subtle text-secondary">{{ $cert['tipo'] ?? 'CSD' }}</span></td>
+                                                            <td>
+                                                                <span class="badge bg-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}-subtle text-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}">
+                                                                    {{ $cert['estado'] ?? 'CADUCO' }}
+                                                                </span>
+                                                            </td>
+                                                            <td>{{ isset($cert['fecha_inicio']) ? \Carbon\Carbon::parse($cert['fecha_inicio'])->format('d/m/Y H:i') : 'N/A' }}</td>
+                                                            <td>{{ isset($cert['fecha_fin']) ? \Carbon\Carbon::parse($cert['fecha_fin'])->format('d/m/Y H:i') : 'N/A' }}</td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div> {{-- /tierSection3 --}}
+
+                    {{-- SECCIÓN 4: NIVEL 4 — VERIFICACIÓN CORPORATIVA --}}
+                    @if($subject->tipo === 'persona_moral')
+                    <div class="tier-section" id="tierSection4">
+                        <div class="alert alert-dark border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
+                            <i class="ri-building-4-fill fs-18 me-2"></i>
+                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase">NIVEL 4 — Verificación Corporativa (Registro Público SIGER)</span>
+                        </div>
+
+                        <!-- 10. REGISTRO PÚBLICO SIGER -->
+                        <div class="accordion-item shadow-sm border mb-3">
+                            <h2 class="accordion-header" id="headingSiger">
+                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSiger" aria-expanded="false" aria-controls="collapseSiger">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <div class="fw-semibold text-dark fs-14">
+                                            <i class="ri-bank-fill text-primary me-2 align-middle fs-18"></i> Registro Público de Comercio (SIGER)
+                                        </div>
+                                        <div>
+                                            @if($subject->tipo === 'persona_fisica')
+                                                <span class="badge bg-light text-muted py-1 px-2 text-decoration-line-through">No Aplica</span>
+                                            @elseif(!$sigerQuery)
+                                                <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                            @elseif($sigerQuery->status === 'pending' || $sigerQuery->status === 'processing')
+                                                <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                            @elseif($sigerQuery->status === 'failed')
+                                                <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                            @elseif($sigerQuery->status === 'completed')
+                                                <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapseSiger" class="accordion-collapse collapse" aria-labelledby="headingSiger" data-bs-parent="#sourcesAccordion">
+                                <div class="accordion-body">
+                                    @if($subject->tipo === 'persona_fisica')
+                                        <div class="alert alert-warning border-0 mb-0">
+                                            <h6 class="alert-heading text-warning fw-semibold mb-1"><i class="ri-alert-line align-middle me-1"></i> Fuente Excluida</h6>
+                                            <p class="mb-0">La consulta del Registro Público de Comercio (SIGER) aplica únicamente para Sociedades Mercantiles (Personas Morales). Ha sido excluida por el tipo de sujeto.</p>
+                                        </div>
+                                    @elseif(!$sigerQuery)
+                                        <div class="text-center py-3">
+                                            <p class="text-muted mb-2">La consulta mercantiles y composición de socios en SIGER aún no se ha iniciado.</p>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                    <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($sigerQuery->status === 'pending' || $sigerQuery->status === 'processing')
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                            <span>Buscando actas constitutivas mercantiles. Espere...</span>
+                                        </div>
+                                    @elseif($sigerQuery->status === 'failed')
+                                        <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                            <span><strong>Error:</strong> {{ $sigerQuery->error_message }}</span>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'siger']) }}" method="POST" class="ms-3">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                            </form>
+                                        </div>
+                                    @elseif($sigerQuery->status === 'completed' && $sigerQuery->result)
+                                        @php $results = $sigerQuery->result->processed_data['resultados'] ?? []; @endphp
+                                        @if(empty($results))
+                                            <div class="text-center text-muted py-3">No se localizaron registros comerciales en SIGER vinculados a esta Razón Social.</div>
+                                        @else
+                                            @foreach($results as $res)
+                                            <div class="card border border-dashed mb-3">
+                                                <div class="card-header bg-light-subtle align-items-center d-flex pb-2">
+                                                    <h6 class="card-title mb-0 flex-grow-1 text-primary">Folio Mercantil Electrónico (FME): #{{ $res['fme'] ?? '' }}</h6>
+                                                    <span class="badge bg-success-subtle text-success">{{ $res['entidad_federativa'] ?? 'CDMX' }}</span>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-6">
+                                                            <span class="text-muted">Fecha Constitución:</span>
+                                                            <span class="fw-semibold d-block text-dark">{{ isset($res['fecha_constitucion']) ? \Carbon\Carbon::parse($res['fecha_constitucion'])->format('d/m/Y') : 'N/A' }}</span>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <span class="text-muted">Capital Social de Inicio:</span>
+                                                            <span class="fw-semibold d-block text-dark">${{ number_format($res['capital_social'] ?? 0, 2) }} MXN</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <span class="text-muted">Objeto Social Constituido:</span>
+                                                        <p class="text-muted fs-12 mb-0" style="text-align: justify;">{{ $res['objeto_social'] ?? 'N/A' }}</p>
+                                                    </div>
+                                                    <h6 class="text-uppercase text-muted fs-11 mb-2">Socios y Accionistas Registrados</h6>
+                                                    <div class="table-responsive table-card">
+                                                        <table class="table table-sm table-nowrap mb-0">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th>Nombre Completo</th>
+                                                                    <th>Participación</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($res['socios'] ?? [] as $socio)
+                                                                <tr>
+                                                                    <td class="fw-semibold text-dark">{{ $socio['nombre'] ?? '' }}</td>
+                                                                    <td><span class="badge bg-primary-subtle text-primary">{{ $socio['participacion'] ?? '' }}</span></td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    @endif {{-- /tierSection4 --}}
 
                 </div>
             </div>
@@ -2183,6 +2199,8 @@ function copyEnrollUrl() {
     });
 }
 
+let currentSavedTier = parseInt({{ $subject->tier_level ?? 1 }});
+
 function selectTierLevel(level) {
     const radio = document.getElementById('tier' + level);
     if (!radio || radio.disabled) return;
@@ -2203,9 +2221,21 @@ function selectTierLevel(level) {
             card.style.boxShadow = 'none';
         }
     });
+}
 
+function saveTierLevel() {
+    const selectedRadio = document.querySelector('input[name="tier_level"]:checked');
+    if (!selectedRadio) return;
+
+    const level = parseInt(selectedRadio.value);
     const form = document.getElementById('tierLevelForm');
     const formData = new FormData(form);
+
+    const btnSave = document.getElementById('btnSaveTier');
+    if (btnSave) {
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Guardando...';
+    }
 
     fetch(form.action, {
         method: 'POST',
@@ -2217,49 +2247,56 @@ function selectTierLevel(level) {
     })
     .then(r => r.json())
     .then(data => {
+        if (btnSave) {
+            btnSave.disabled = false;
+            btnSave.innerHTML = '<i class="ri-save-3-line me-1"></i> Guardar Nivel de Investigación';
+        }
         if (data.success) {
+            currentSavedTier = level;
             const badge = document.getElementById('currentTierBadge');
-            if (badge) badge.textContent = 'Nivel Actual: TIER ' + level;
+            if (badge) badge.textContent = 'Nivel Guardado: TIER ' + level;
+            
+            // Show edit button, hide save button
+            const btnEdit = document.getElementById('btnEditTier');
+            if (btnEdit) btnEdit.classList.remove('d-none');
+            if (btnSave) btnSave.classList.add('d-none');
+
+            // Apply section filtering
             filterSourcesByTier(level);
         }
     })
-    .catch(err => console.error(err));
-}
-
-function filterSourcesByTier(level) {
-    const minTierMap = {
-        'headingRfc': 1,
-        'headingSatListas': 1,
-        'headingSanciones': 1,
-        'headingIneFrente': 1,
-        'headingIneReverso': 1,
-        'headingLitigios': 2,
-        'headingNss': 2,
-        'headingIdentidadDigital': 2,
-        'headingMarcas': 3,
-        'headingCsd': 3,
-        'headingOsint': 3,
-        'headingSiger': 4,
-        'headingDenue': 4,
-    };
-
-    Object.keys(minTierMap).forEach(id => {
-        const header = document.getElementById(id);
-        if (!header) return;
-        const item = header.closest('.accordion-item');
-        if (!item) return;
-
-        const minTier = minTierMap[id];
-        if (level >= minTier) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
+    .catch(err => {
+        if (btnSave) {
+            btnSave.disabled = false;
+            btnSave.innerHTML = '<i class="ri-save-3-line me-1"></i> Guardar Nivel de Investigación';
         }
+        console.error(err);
     });
 }
 
+function enableTierEdit() {
+    const btnSave = document.getElementById('btnSaveTier');
+    const btnEdit = document.getElementById('btnEditTier');
+    if (btnSave) btnSave.classList.remove('d-none');
+    if (btnEdit) btnEdit.classList.add('d-none');
+}
+
+function filterSourcesByTier(level) {
+    for (let i = 1; i <= 4; i++) {
+        const sec = document.getElementById('tierSection' + i);
+        if (sec) {
+            sec.style.display = (i <= level) ? 'block' : 'none';
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    const currentLevel = parseInt({{ $subject->tier_level ?? 1 }});
-    filterSourcesByTier(currentLevel);
+    filterSourcesByTier(currentSavedTier);
+    if (currentSavedTier > 0) {
+        const btnEdit = document.getElementById('btnEditTier');
+        const btnSave = document.getElementById('btnSaveTier');
+        if (btnEdit) btnEdit.classList.remove('d-none');
+        if (btnSave) btnSave.classList.add('d-none');
+    }
 });
 </script>
