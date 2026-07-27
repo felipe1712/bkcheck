@@ -139,6 +139,8 @@ class SubjectController extends Controller
             return view('tenant.subjects.show', compact('subject', 'queries'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return back()->with('error', 'El expediente especificado no existe o no pertenece a tu organización.');
+        } catch (\Throwable $e) {
+            return response('<div style="padding:20px;font-family:sans-serif;background:#fff0f0;border:2px solid red;border-radius:8px;"><h2>Error al cargar el Expediente (500)</h2><p><strong>Mensaje:</strong> ' . e($e->getMessage()) . '</p><p><strong>Archivo:</strong> ' . e($e->getFile()) . ' (Línea ' . $e->getLine() . ')</p><pre style="background:#222;color:#fff;padding:15px;overflow:auto;max-height:400px;">' . e($e->getTraceAsString()) . '</pre></div>', 500);
         }
     }
 
