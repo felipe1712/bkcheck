@@ -49,11 +49,72 @@ class Subject extends Model
         'enrollment_tc_accepted_at' => 'datetime',
         'credit_consent_granted'    => 'boolean',
         'credit_consent_at'         => 'datetime',
-        'rfc'                       => 'encrypted',
-        'curp'                      => 'encrypted',
-        'address'                   => 'encrypted',
-        'nss'                       => 'encrypted',  // NSS es dato sensible — encriptado en BD
     ];
+
+    public function getRfcAttribute($value)
+    {
+        if (empty($value)) return null;
+        try {
+            return decrypt($value);
+        } catch (\Throwable $e) {
+            return $value;
+        }
+    }
+
+    public function setRfcAttribute($value)
+    {
+        $this->attributes['rfc'] = !empty($value) ? encrypt($value) : null;
+    }
+
+    public function getCurpAttribute($value)
+    {
+        if (empty($value)) return null;
+        try {
+            return decrypt($value);
+        } catch (\Throwable $e) {
+            return $value;
+        }
+    }
+
+    public function setCurpAttribute($value)
+    {
+        $this->attributes['curp'] = !empty($value) ? encrypt($value) : null;
+    }
+
+    public function getAddressAttribute($value)
+    {
+        if (empty($value)) return null;
+        try {
+            return decrypt($value);
+        } catch (\Throwable $e) {
+            return $value;
+        }
+    }
+
+    public function setAddressAttribute($value)
+    {
+        $this->attributes['address'] = !empty($value) ? encrypt($value) : null;
+    }
+
+    public function getNssAttribute($value)
+    {
+        if (empty($value)) return null;
+        try {
+            return decrypt($value);
+        } catch (\Throwable $e) {
+            return $value;
+        }
+    }
+
+    public function setNssAttribute($value)
+    {
+        $this->attributes['nss'] = !empty($value) ? encrypt($value) : null;
+    }
+
+    public function getTierLevelAttribute($value)
+    {
+        return (int) ($value ?? 1);
+    }
 
     /**
      * Get the project that the subject belongs to.
