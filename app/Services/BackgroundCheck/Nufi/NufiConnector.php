@@ -11,13 +11,21 @@ abstract class NufiConnector extends BaseSourceConnector
 {
     protected string $baseUrl;
     protected string $apiKey;
+    protected string $apiKeyCategory = 'general'; // 'general' | 'enrichment' | 'judicial'
     protected bool $isMock;
     protected array $lastLog = [];
 
     public function __construct()
     {
         $this->baseUrl = config('background_check.nufi.base_url', 'https://nufi.azure-api.net');
-        $this->apiKey = config('background_check.nufi.api_key', '');
+        
+        $keyConfigMap = [
+            'general'    => config('background_check.nufi.api_key_general'),
+            'enrichment' => config('background_check.nufi.api_key_enrichment'),
+            'judicial'   => config('background_check.nufi.api_key_judicial'),
+        ];
+
+        $this->apiKey = $keyConfigMap[$this->apiKeyCategory] ?? config('background_check.nufi.api_key', '');
         $this->isMock = config('background_check.nufi.mock', true);
     }
 

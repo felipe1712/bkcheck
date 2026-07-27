@@ -6,6 +6,8 @@ use App\Models\Subject;
 
 class NufiSancionesConnector extends NufiConnector
 {
+    protected string $apiKeyCategory = 'enrichment';
+
     public function getIdentifier(): string
     {
         return 'sanciones';

@@ -20,6 +20,7 @@ use App\Services\BackgroundCheck\Nufi\NufiCurpConnector;
 use App\Services\BackgroundCheck\Nufi\NufiDomicilioConnector;
 use App\Services\BackgroundCheck\Nufi\NufiNssConnector;
 use App\Services\BackgroundCheck\Nufi\NufiFinancialConnector;
+use App\Services\BackgroundCheck\Nufi\NufiIdentidadDigitalConnector;
 use App\Services\BackgroundCheck\PresenciaEnLineaConnector;
 use App\Services\BackgroundCheck\Inegi\DenueConnector;
 use Illuminate\Support\Facades\Auth;
@@ -49,6 +50,7 @@ class InvestigationRunner
             new NufiDomicilioConnector(),
             new NufiNssConnector(),
             new NufiFinancialConnector(),
+            new NufiIdentidadDigitalConnector(),
             new PresenciaEnLineaConnector(),
             new DenueConnector(),
         ];

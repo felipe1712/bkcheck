@@ -45,6 +45,7 @@
     $ineReversoQuery = $queries->firstWhere('source_type', 'ine_reverso');
     $sancionesQuery = $queries->firstWhere('source_type', 'sanciones');
     $litigiosQuery = $queries->firstWhere('source_type', 'litigios');
+    $identidadDigitalQuery = $queries->firstWhere('source_type', 'identidad_digital');
 
     $hasCompletedQueries = $queries->where('status', 'completed')->isNotEmpty();
     $isProcessing = $queries->whereIn('status', ['pending', 'processing'])->isNotEmpty();
@@ -343,6 +344,13 @@
             <div class="card-body">
                 <div class="accordion accordion-border-box" id="sourcesAccordion">
 
+                    {{-- SECCIÓN 1: VALIDACIÓN DE IDENTIDAD --}}
+                    <div class="alert alert-primary border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3">
+                        <i class="ri-id-card-fill fs-18 me-2"></i>
+                        <span class="fw-bold fs-13 flex-grow-1 text-uppercase">Sección 1: Validación de Identidad</span>
+                        <span class="badge bg-primary text-white fs-10">API Key General</span>
+                    </div>
+
                     <!-- 1. VALIDACIÓN RFC -->
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingRfc">
@@ -635,6 +643,13 @@
                     </div>
 
                     @endif {{-- /persona_moral SIGER --}}
+
+                    {{-- SECCIÓN 2: ENRIQUECIMIENTO DE DATOS Y LISTAS NEGRAS INTERNACIONALES --}}
+                    <div class="alert alert-warning border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
+                        <i class="ri-search-eye-line fs-18 me-2 text-warning-emphasis"></i>
+                        <span class="fw-bold fs-13 flex-grow-1 text-uppercase text-warning-emphasis">Sección 2: Enriquecimiento de Datos y Listas Negras Internacionales</span>
+                        <span class="badge bg-warning text-dark fs-10">API Key Enriquecimiento & OFAC</span>
+                    </div>
 
                     <!-- 4. LISTAS SAT 69/B -->
                     <div class="accordion-item shadow-sm border mb-3">
@@ -1135,6 +1150,91 @@
                                 @endif
                             </div>
                         </div>
+                    </div>
+
+                    <!-- 2.3 IDENTIDAD DIGITAL Y BÚSQUEDA POR EMAIL -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingIdentidadDigital">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentidadDigital" aria-expanded="false" aria-controls="collapseIdentidadDigital">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-mail-check-fill text-primary me-2 align-middle fs-18"></i> Identidad Digital y Búsqueda por Email
+                                    </div>
+                                    <div>
+                                        @if(!$identidadDigitalQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($identidadDigitalQuery->status === 'pending' || $identidadDigitalQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($identidadDigitalQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($identidadDigitalQuery->status === 'completed')
+                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseIdentidadDigital" class="accordion-collapse collapse" aria-labelledby="headingIdentidadDigital" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$identidadDigitalQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La búsqueda de perfiles digitales y brechas asociadas al correo aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'identidad_digital']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($identidadDigitalQuery->status === 'pending' || $identidadDigitalQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando presencia digital y análisis de correo...</span>
+                                    </div>
+                                @elseif($identidadDigitalQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $identidadDigitalQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'identidad_digital']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($identidadDigitalQuery->status === 'completed' && $identidadDigitalQuery->result)
+                                    @php $idData = $identidadDigitalQuery->result->processed_data ?? []; @endphp
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-light-subtle">
+                                                <h6 class="fs-12 text-muted text-uppercase mb-2">Presencia en Redes y Plataformas</h6>
+                                                @foreach($idData['presencia_redes'] ?? [] as $red)
+                                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                                        <span class="fs-13 font-semibold">{{ $red['red'] }}</span>
+                                                        <span class="badge bg-{{ $red['encontrado'] ? 'success' : 'secondary' }}-subtle text-{{ $red['encontrado'] ? 'success' : 'secondary' }}">
+                                                            {{ $red['encontrado'] ? 'Verificado' : 'No Encontrado' }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-light-subtle">
+                                                <h6 class="fs-12 text-muted text-uppercase mb-2">Score de Confiabilidad Digital</h6>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div class="fs-24 font-bold text-success">{{ $idData['score_confiabilidad'] ?? 100 }}/100</div>
+                                                    <div class="fs-12 text-muted">{{ $idData['brechas_seguridad']['detalles'] ?? 'Sin brechas detectadas.' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- SECCIÓN 3: ANTECEDENTES JUDICIALES --}}
+                    <div class="alert alert-danger border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
+                        <i class="ri-scales-3-line fs-18 me-2"></i>
+                        <span class="fw-bold fs-13 flex-grow-1 text-uppercase">Sección 3: Antecedentes Judiciales</span>
+                        <span class="badge bg-danger text-white fs-10">API Key Judiciales</span>
                     </div>
 
                     <!-- 9. HISTORIAL DE LITIGIOS -->

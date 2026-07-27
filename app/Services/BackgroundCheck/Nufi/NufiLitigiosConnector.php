@@ -6,6 +6,8 @@ use App\Models\Subject;
 
 class NufiLitigiosConnector extends NufiConnector
 {
+    protected string $apiKeyCategory = 'judicial';
+
     public function getIdentifier(): string
     {
         return 'litigios';

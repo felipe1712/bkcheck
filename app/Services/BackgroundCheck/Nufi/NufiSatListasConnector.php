@@ -6,6 +6,8 @@ use App\Models\Subject;
 
 class NufiSatListasConnector extends NufiConnector
 {
+    protected string $apiKeyCategory = 'enrichment';
+
     public function getIdentifier(): string
     {
         return 'sat_listas';
