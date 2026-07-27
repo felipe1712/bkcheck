@@ -9,7 +9,9 @@
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('tenant.dashboard') }}">Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('tenant.projects.show', $subject->project_id) }}">Proyecto</a></li>
+                    @if($subject->project_id)
+                        <li class="breadcrumb-item"><a href="{{ route('tenant.projects.show', $subject->project_id) }}">Proyecto</a></li>
+                    @endif
                     <li class="breadcrumb-item active">Expediente</li>
                 </ol>
             </div>

@@ -128,14 +128,18 @@ class SubjectController extends Controller
      */
     public function show($id)
     {
-        $subject = Subject::findOrFail($id);
-        
-        // Retrieve associated source queries and their results
-        $queries = \Illuminate\Support\Facades\Schema::hasTable('source_queries') 
-            ? \App\Models\SourceQuery::where('subject_id', $subject->id)->with('result')->get()
-            : collect();
+        try {
+            $subject = Subject::findOrFail($id);
+            
+            // Retrieve associated source queries and their results
+            $queries = \Illuminate\Support\Facades\Schema::hasTable('source_queries') 
+                ? \App\Models\SourceQuery::where('subject_id', $subject->id)->with('result')->get()
+                : collect();
 
-        return view('tenant.subjects.show', compact('subject', 'queries'));
+            return view('tenant.subjects.show', compact('subject', 'queries'));
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return back()->with('error', 'El expediente especificado no existe o no pertenece a tu organización.');
+        }
     }
 
     /**

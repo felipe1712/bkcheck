@@ -163,7 +163,7 @@ class Subject extends Model
         if ($this->enrollment_completed_at) {
             return false;
         }
-        if ($this->enrollment_expires_at && $this->enrollment_expires_at->isPast()) {
+        if ($this->enrollment_expires_at && \Carbon\Carbon::parse($this->enrollment_expires_at)->isPast()) {
             return false;
         }
         return true;
@@ -180,7 +180,7 @@ class Subject extends Model
         if ($this->enrollment_completed_at) {
             return 'completado';
         }
-        if ($this->enrollment_expires_at && $this->enrollment_expires_at->isPast()) {
+        if ($this->enrollment_expires_at && \Carbon\Carbon::parse($this->enrollment_expires_at)->isPast()) {
             return 'expirado';
         }
         if ($this->enrollment_tc_accepted_at) {
