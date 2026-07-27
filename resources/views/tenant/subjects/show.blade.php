@@ -2231,6 +2231,7 @@ function saveTierLevel() {
 
     const level = parseInt(selectedRadio.value);
     const form = document.getElementById('tierLevelForm');
+    if (!form) return;
     const formData = new FormData(form);
 
     const btnSave = document.getElementById('btnSaveTier');
@@ -2239,21 +2240,25 @@ function saveTierLevel() {
         btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Guardando...';
     }
 
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content 
+                   || document.querySelector('input[name="_token"]')?.value 
+                   || '{{ csrf_token() }}';
+
     fetch(form.action, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
         },
         body: formData
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(async r => {
+        const data = await r.json().catch(() => ({}));
         if (btnSave) {
             btnSave.disabled = false;
             btnSave.innerHTML = '<i class="ri-save-3-line me-1"></i> Guardar Nivel de Investigación';
         }
-        if (data.success) {
+        if (r.ok && data.success) {
             currentSavedTier = level;
             const badge = document.getElementById('currentTierBadge');
             if (badge) badge.textContent = 'Nivel Guardado: TIER ' + level;
@@ -2265,6 +2270,8 @@ function saveTierLevel() {
 
             // Apply section filtering
             filterSourcesByTier(level);
+        } else {
+            alert(data.error || data.message || 'No se pudo guardar el nivel de investigación.');
         }
     })
     .catch(err => {
@@ -2273,6 +2280,7 @@ function saveTierLevel() {
             btnSave.innerHTML = '<i class="ri-save-3-line me-1"></i> Guardar Nivel de Investigación';
         }
         console.error(err);
+        alert('Error de conexión al guardar el Nivel de Investigación.');
     });
 }
 

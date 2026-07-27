@@ -1,3 +1,4 @@
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @yield('css')
 <!-- Google Fonts: Rubik & Urbanist (Manual de Identidad AvalID) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
