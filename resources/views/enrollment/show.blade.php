@@ -66,8 +66,8 @@
 
 {{-- ──────────────────────── PANTALLA 3: LIVENESS / SELFIE ─────────────────────────── --}}
 <div class="screen" id="screen-selfie">
-    <div class="screen-title">📹 Prueba de Vida y Verificación Biometria</div>
-    <div class="screen-sub">Inicia la verificación biométrica facial en tiempo real para confirmar tu identidad mediante la plataforma oficial de NuFi.</div>
+    <div class="screen-title">📹 Prueba de Vida y Verificación Biométrica</div>
+    <div class="screen-sub">Inicia la verificación biométrica facial en tiempo real para confirmar tu identidad.</div>
 
     <div class="instruction-chip">
         <span class="ic-icon">ℹ️</span>
@@ -75,7 +75,7 @@
     </div>
 
     <button class="btn btn-primary" id="btnIniciarLiveness" style="width:100%; padding:15px; font-size:16px; font-weight:bold; background:linear-gradient(135deg,#0066cc,#004499); border:none; margin-bottom:15px;">
-        <span>📹</span> Iniciar Prueba de Vida en Vivo (NuFi Liveness)
+        <span>📹</span> Iniciar Prueba de Vida en Vivo
     </button>
 
     <div style="text-align:center; margin:15px 0; color:#8892a4; font-size:12px;">— O bien, subir fotografía de selfie de respaldo —</div>
@@ -144,12 +144,14 @@
     </div>
 </div>
 
-{{-- Modal Overlay para NuFi Liveness Session --}}
+{{-- Modal Overlay para Liveness Session --}}
 <div id="livenessModal" style="
     display:none; position:fixed; inset:0; z-index:10000;
     background:#0f1117; flex-direction:column;">
     <div style="padding:12px 20px; background:#1a1f2e; border-bottom:1px solid #2e3550; display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:#fff; font-weight:bold; font-size:15px;">📹 NuFi Liveness — Prueba de Vida</span>
+        <span style="color:#fff; font-weight:bold; font-size:15px;">📹 Prueba de Vida en Vivo</span>
+        <button id="btnCloseLivenessModal" style="background:transparent; border:none; color:#8892a4; font-size:20px; cursor:pointer;">✕</button>
+    </div>
         <button id="btnCloseLivenessModal" style="background:transparent; border:none; color:#8892a4; font-size:20px; cursor:pointer;">✕</button>
     </div>
     <iframe id="livenessIframe" src="" style="width:100%; height:100%; border:none;"></iframe>
@@ -382,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // 2. Iniciar sesión Liveness con NuFi API POST /liveness/V1/alta_consulta
-        EnrollApp.showLoader('Iniciando sesión biométrica con NuFi Liveness…');
+        EnrollApp.showLoader('Iniciando sesión biométrica…');
 
         try {
             const livenessRes = await fetch(`/enroll/${TOKEN}/liveness-session`, {

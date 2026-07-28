@@ -95,7 +95,7 @@ abstract class NufiConnector extends BaseSourceConnector
     /**
      * Helper to perform a standard HTTP POST request to NuFi with headers.
      */
-    protected function postRequest(string $endpoint, array $body): array
+    public function postRequest(string $endpoint, array $body): array
     {
         if (empty($this->apiKey)) {
             $this->apiKey = config('background_check.nufi.api_key_general', '7ab9fd7a3bec4c88b08455fd0f1b9405');

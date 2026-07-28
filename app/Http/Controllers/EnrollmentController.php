@@ -182,7 +182,7 @@ class EnrollmentController extends Controller
         } catch (\Throwable $e) {
             Log::error("Error iniciando Liveness para token {$token}: " . $e->getMessage());
             return response()->json([
-                'error' => 'No se pudo iniciar la sesión de Prueba de Vida con NuFi: ' . $e->getMessage(),
+                'error' => 'No se pudo iniciar la sesión de Prueba de Vida: ' . $e->getMessage(),
             ], 500);
         }
     }

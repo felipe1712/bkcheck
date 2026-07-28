@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="screen active">
-    <div class="screen-title">📹 Prueba de Vida en Vivo (NuFi Liveness)</div>
+    <div class="screen-title">📹 Prueba de Vida en Vivo</div>
     <div class="screen-sub">Sesión Biométrica de Verificación Facial en Tiempo Real</div>
 
     <div style="background:#1a1f2e; border:1px solid #2e3550; border-radius:16px; p-3 text-center overflow:hidden; margin-bottom:20px; position:relative; min-height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff;">
