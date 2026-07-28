@@ -104,11 +104,11 @@ class NufiConnectorsTest extends TestCase
         }
 
         $auditLogs = AuditLog::where('tenant_id', $user->tenant_id)->get();
-        $this->assertCount(9, $auditLogs);
+        $this->assertCount(10, $auditLogs);
 
         // Verify api_usage totals
         $usageCount = ApiUsage::where('tenant_id', $user->tenant_id)->sum('conteo');
-        $this->assertEquals(9, $usageCount);
+        $this->assertEquals(10, $usageCount);
     }
 
     /**
