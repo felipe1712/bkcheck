@@ -19,7 +19,7 @@ class NufiIneReversoConnector extends NufiConnector
 
     public function getMinTierLevel(): int
     {
-        return 1;
+        return 2;
     }
 
     public function appliesTo(Subject $subject): bool

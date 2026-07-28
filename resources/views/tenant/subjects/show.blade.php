@@ -679,7 +679,221 @@
                         </div>
                     </div>
 
-                    <!-- 3. IDENTIFICACIÓN INE (FRENTE Y REVERSO) -->
+                    <!-- 3. LISTAS SAT 69/B -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingSatListas">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSatListas" aria-expanded="false" aria-controls="collapseSatListas">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-file-warning-fill text-primary me-2 align-middle fs-18"></i> Listas SAT 69 y 69-B (Cumplimiento Fiscal)
+                                    </div>
+                                    <div>
+                                        @if(!$satListasQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($satListasQuery->status === 'pending' || $satListasQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($satListasQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($satListasQuery->status === 'completed')
+                                            @if($hasSatAlert)
+                                                <span class="badge bg-danger text-white py-1 px-2"><i class="ri-error-warning-fill me-1"></i> RIESGO DETECTADO (69-B)</span>
+                                            @else
+                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Incidencias</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseSatListas" class="accordion-collapse collapse" aria-labelledby="headingSatListas" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$satListasQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La revisión de listados negros de contribuyentes no localizados o simuladores ante el SAT aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($satListasQuery->status === 'pending' || $satListasQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando reportes negativos en boletines oficiales del SAT. Espere...</span>
+                                    </div>
+                                @elseif($satListasQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $satListasQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($satListasQuery->status === 'completed')
+                                    @php $listData = $satListasQuery->result?->processed_data ?? []; @endphp
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border mb-0">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69 (Exceptuados/Incumplidos)</h6>
+                                                    @if($listData['en_lista_69'] ?? false)
+                                                        <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-error-warning-line me-1"></i> Contribuyente Exceptuado</span>
+                                                    @else
+                                                        <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border mb-0">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69-B (EFOS - Simulación de Operaciones)</h6>
+                                                    @if($listData['en_lista_69b'] ?? false)
+                                                        <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-alert-line me-1"></i> Boletinado Simulador</span>
+                                                    @else
+                                                        <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if($listData['en_lista_69b'] ?? false)
+                                    <div class="card border border-danger border-dashed mb-0 mt-3">
+                                        <div class="card-header bg-danger-subtle text-danger pb-2">
+                                            <h6 class="card-title mb-0 text-danger fw-semibold"><i class="ri-error-warning-fill me-1 align-middle"></i> Detalles del Boletín Oficial 69-B</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-sm mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light" style="width: 30%">Estatus 69-B:</td>
+                                                        <td><span class="badge bg-warning text-dark">{{ $listData['estatus_69b'] ?? 'Presunto' }}</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Número de Oficio:</td>
+                                                        <td><code>{{ $listData['oficio_oficial'] ?? 'N/A' }}</code></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold bg-light">Publicación DOF:</td>
+                                                        <td>{{ $listData['fecha_publicacion'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- 5. LISTAS DE SANCIONES Y PEPS -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingSanciones">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSanciones" aria-expanded="false" aria-controls="collapseSanciones">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-shield-user-fill text-primary me-2 align-middle fs-18"></i> Cumplimiento e Historial de Sanciones (PEPs / OFAC)
+                                    </div>
+                                    <div>
+                                        @if(!$sancionesQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($sancionesQuery->status === 'pending' || $sancionesQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($sancionesQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($sancionesQuery->status === 'completed')
+                                            @if($hasSancionesAlert)
+                                                <span class="badge bg-danger text-white py-1 px-2 blink-effect"><i class="ri-alert-fill me-1"></i> RIESGO DE CUMPLIMIENTO (PEPs/OFAC)</span>
+                                            @else
+                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Coincidencias</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseSanciones" class="accordion-collapse collapse" aria-labelledby="headingSanciones" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$sancionesQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La búsqueda en listas de sanciones, terrorismo y PEPs internacionales aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sanciones']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($sancionesQuery->status === 'pending' || $sancionesQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Buscando en bases de cumplimiento nacionales e internacionales. Espere...</span>
+                                    </div>
+                                @elseif($sancionesQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $sancionesQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sanciones']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($sancionesQuery->status === 'completed')
+                                    @php $sancData = $sancionesQuery->result?->processed_data ?? []; @endphp
+                                    @if(empty($sancData['hits'] ?? []))
+                                        <div class="alert alert-success border-0 mb-0">
+                                            <h6 class="alert-heading text-success fw-semibold"><i class="ri-checkbox-circle-line me-1"></i> Sin Reportes</h6>
+                                            <p class="mb-0">No se detectaron coincidencias en listas de sanciones de la OFAC, Interpol, ONU, ni en listados oficiales de Personas Expuestas Políticamente (PEPs) en México.</p>
+                                        </div>
+                                    @else
+                                        <div class="alert alert-danger border-0 mb-3">
+                                            <h6 class="alert-heading text-danger fw-semibold"><i class="ri-error-warning-fill me-1"></i> Coincidencia Detectada</h6>
+                                            <p class="mb-0">Se han localizado registros relacionados con el nombre del sujeto en las siguientes listas de vigilancia y cumplimiento:</p>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Lista</th>
+                                                        <th>Nombre Detectado</th>
+                                                        <th>Entidad / País</th>
+                                                        <th>Tipo</th>
+                                                        <th>Fecha Publicación</th>
+                                                        <th>Detalles / Comentarios</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($sancData['hits'] as $hit)
+                                                    <tr>
+                                                        <td class="fw-semibold text-danger">{{ $hit['lista'] ?? 'N/A' }}</td>
+                                                        <td class="fw-medium text-dark">{{ $hit['nombre_encontrado'] ?? 'N/A' }}</td>
+                                                        <td>{{ $hit['entidad_pais'] ?? 'N/A' }}</td>
+                                                        <td><span class="badge bg-danger-subtle text-danger">{{ $hit['tipo_lista'] ?? 'Sanción' }}</span></td>
+                                                        <td>{{ $hit['fecha_publicacion'] ?? 'N/A' }}</td>
+                                                        <td class="text-muted fs-12">{{ $hit['comentarios'] ?? '' }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div> {{-- /tierSection1 --}}
+
+                    {{-- SECCIÓN 2: NIVEL 2 — VERIFICACIÓN ESTÁNDAR --}}
+                    <div class="tier-section" id="tierSection2">
+                        <div class="alert alert-info border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
+                            <i class="ri-user-search-fill fs-18 me-2"></i>
+                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase">NIVEL 2 — Verificación Estándar (INE OCR, Judiciales y Historial Laboral)</span>
+                        </div>
+
+                    <!-- 1. IDENTIFICACIÓN INE (FRENTE Y REVERSO) -->
                     @if($subject->tipo === 'persona_fisica')
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingIne">
@@ -905,219 +1119,6 @@
                     </div>
                     @endif
 
-                    <!-- 4. LISTAS SAT 69/B -->
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingSatListas">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSatListas" aria-expanded="false" aria-controls="collapseSatListas">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-file-warning-fill text-primary me-2 align-middle fs-18"></i> Listas SAT 69 y 69-B (Cumplimiento Fiscal)
-                                    </div>
-                                    <div>
-                                        @if(!$satListasQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($satListasQuery->status === 'pending' || $satListasQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($satListasQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($satListasQuery->status === 'completed')
-                                            @if($hasSatAlert)
-                                                <span class="badge bg-danger text-white py-1 px-2"><i class="ri-error-warning-fill me-1"></i> RIESGO DETECTADO (69-B)</span>
-                                            @else
-                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Incidencias</span>
-                                            @endif
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseSatListas" class="accordion-collapse collapse" aria-labelledby="headingSatListas" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                @if(!$satListasQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La revisión de listados negros de contribuyentes no localizados o simuladores ante el SAT aún no se ha iniciado.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($satListasQuery->status === 'pending' || $satListasQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Buscando reportes negativos en boletines oficiales del SAT. Espere...</span>
-                                    </div>
-                                @elseif($satListasQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $satListasQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sat_listas']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
-                                        </form>
-                                    </div>
-                                @elseif($satListasQuery->status === 'completed')
-                                    @php $listData = $satListasQuery->result?->processed_data ?? []; @endphp
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card border mb-0">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69 (Exceptuados/Incumplidos)</h6>
-                                                    @if($listData['en_lista_69'] ?? false)
-                                                        <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-error-warning-line me-1"></i> Contribuyente Exceptuado</span>
-                                                    @else
-                                                        <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card border mb-0">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted mb-2 text-uppercase fs-11">Lista 69-B (EFOS - Simulación de Operaciones)</h6>
-                                                    @if($listData['en_lista_69b'] ?? false)
-                                                        <span class="badge bg-danger-subtle text-danger fs-12 p-2 w-100 text-center"><i class="ri-alert-line me-1"></i> Boletinado Simulador</span>
-                                                    @else
-                                                        <span class="badge bg-success-subtle text-success fs-12 p-2 w-100 text-center"><i class="ri-checkbox-circle-line me-1"></i> Sin Incidencias Registradas</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    @if($listData['en_lista_69b'] ?? false)
-                                    <div class="card border border-danger border-dashed mb-0 mt-3">
-                                        <div class="card-header bg-danger-subtle text-danger pb-2">
-                                            <h6 class="card-title mb-0 text-danger fw-semibold"><i class="ri-error-warning-fill me-1 align-middle"></i> Detalles del Boletín Oficial 69-B</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <table class="table table-sm mb-0">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light" style="width: 30%">Estatus 69-B:</td>
-                                                        <td><span class="badge bg-warning text-dark">{{ $listData['estatus_69b'] ?? 'Presunto' }}</span></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Número de Oficio:</td>
-                                                        <td><code>{{ $listData['oficio_oficial'] ?? 'N/A' }}</code></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Publicación DOF:</td>
-                                                        <td>{{ $listData['fecha_publicacion'] ?? 'N/A' }}</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    @endif
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
-
-
-                    <!-- 5. LISTAS DE SANCIONES Y PEPS -->
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingSanciones">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSanciones" aria-expanded="false" aria-controls="collapseSanciones">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-shield-user-fill text-primary me-2 align-middle fs-18"></i> Cumplimiento e Historial de Sanciones (PEPs / OFAC)
-                                    </div>
-                                    <div>
-                                        @if(!$sancionesQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($sancionesQuery->status === 'pending' || $sancionesQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($sancionesQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($sancionesQuery->status === 'completed')
-                                            @if($hasSancionesAlert)
-                                                <span class="badge bg-danger text-white py-1 px-2 blink-effect"><i class="ri-alert-fill me-1"></i> RIESGO DE CUMPLIMIENTO (PEPs/OFAC)</span>
-                                            @else
-                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Coincidencias</span>
-                                            @endif
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseSanciones" class="accordion-collapse collapse" aria-labelledby="headingSanciones" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                @if(!$sancionesQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La búsqueda en listas de sanciones, terrorismo y PEPs internacionales aún no se ha iniciado.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sanciones']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($sancionesQuery->status === 'pending' || $sancionesQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Buscando en bases de cumplimiento nacionales e internacionales. Espere...</span>
-                                    </div>
-                                @elseif($sancionesQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $sancionesQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'sanciones']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
-                                        </form>
-                                    </div>
-                                @elseif($sancionesQuery->status === 'completed')
-                                    @php $sancData = $sancionesQuery->result?->processed_data ?? []; @endphp
-                                    @if(empty($sancData['hits'] ?? []))
-                                        <div class="alert alert-success border-0 mb-0">
-                                            <h6 class="alert-heading text-success fw-semibold"><i class="ri-checkbox-circle-line me-1"></i> Sin Reportes</h6>
-                                            <p class="mb-0">No se detectaron coincidencias en listas de sanciones de la OFAC, Interpol, ONU, ni en listados oficiales de Personas Expuestas Políticamente (PEPs) en México.</p>
-                                        </div>
-                                    @else
-                                        <div class="alert alert-danger border-0 mb-3">
-                                            <h6 class="alert-heading text-danger fw-semibold"><i class="ri-error-warning-fill me-1"></i> Coincidencia Detectada</h6>
-                                            <p class="mb-0">Se han localizado registros relacionados con el nombre del sujeto en las siguientes listas de vigilancia y cumplimiento:</p>
-                                        </div>
-                                        <div class="table-responsive">
-                                            <table class="table table-striped align-middle mb-0">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Lista</th>
-                                                        <th>Nombre Detectado</th>
-                                                        <th>Entidad / País</th>
-                                                        <th>Tipo</th>
-                                                        <th>Fecha Publicación</th>
-                                                        <th>Detalles / Comentarios</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($sancData['hits'] as $hit)
-                                                    <tr>
-                                                        <td class="fw-semibold text-danger">{{ $hit['lista'] ?? 'N/A' }}</td>
-                                                        <td class="fw-medium text-dark">{{ $hit['nombre_encontrado'] ?? 'N/A' }}</td>
-                                                        <td>{{ $hit['entidad_pais'] ?? 'N/A' }}</td>
-                                                        <td><span class="badge bg-danger-subtle text-danger">{{ $hit['tipo_lista'] ?? 'Sanción' }}</span></td>
-                                                        <td>{{ $hit['fecha_publicacion'] ?? 'N/A' }}</td>
-                                                        <td class="text-muted fs-12">{{ $hit['comentarios'] ?? '' }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @endif
-                                @endif
-                            </div>
-                        </div>
-                    </div> {{-- /tierSection1 --}}
-
-                    {{-- SECCIÓN 2: NIVEL 2 — VERIFICACIÓN ESTÁNDAR --}}
-                    <div class="tier-section" id="tierSection2">
-                        <div class="alert alert-info border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
-                            <i class="ri-user-search-fill fs-18 me-2"></i>
-                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase">NIVEL 2 — Verificación Estándar (Judiciales y Enriquecimiento Digital)</span>
-                        </div>
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingIdentidadDigital">
                             <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentidadDigital" aria-expanded="false" aria-controls="collapseIdentidadDigital">
