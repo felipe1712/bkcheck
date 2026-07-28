@@ -129,6 +129,28 @@ abstract class NufiConnector extends BaseSourceConnector
             ];
 
             if ($response->failed()) {
+                // Si retorna 401 (Denegado) con la llave de categoría, intentar fallback con la API Key General
+                if ($response->status() === 401) {
+                    $fallbackKey = config('background_check.nufi.api_key_general');
+                    if (!empty($fallbackKey) && $fallbackKey !== $this->apiKey) {
+                        Log::warning("NuFi API 401 con llave {$this->apiKeyCategory}. Reintentando con API Key General.");
+                        $retryResponse = Http::timeout(45)->withHeaders([
+                            'Ocp-Apim-Subscription-Key' => $fallbackKey,
+                            'NUFI-API-KEY'              => $fallbackKey,
+                            'Accept'                    => 'application/json',
+                            'Content-Type'              => 'application/json',
+                        ])->withoutVerifying()->post($url, $body);
+
+                        if ($retryResponse->successful()) {
+                            $this->lastLog['response'] = [
+                                'status' => $retryResponse->status(),
+                                'body'   => $retryResponse->json() ?? $retryResponse->body(),
+                            ];
+                            return $retryResponse->json();
+                        }
+                    }
+                }
+
                 Log::error("Error en NuFi API [{$endpoint}]: " . $response->body());
                 throw new \Exception("NuFi API retornó código " . $response->status() . ": " . $response->body());
             }

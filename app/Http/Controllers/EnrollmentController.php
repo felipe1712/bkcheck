@@ -181,8 +181,16 @@ class EnrollmentController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error("Error iniciando Liveness para token {$token}: " . $e->getMessage());
+
+            $msg = 'No fue posible iniciar la sesión de Prueba de Vida en vivo.';
+            if (str_contains($e->getMessage(), '401') || str_contains($e->getMessage(), 'API Key')) {
+                $msg .= ' La clave API de NuFi requiere activación o suscripción válida en el servidor. Puedes subir tu selfie manualmente a continuación.';
+            } else {
+                $msg .= ' ' . $e->getMessage();
+            }
+
             return response()->json([
-                'error' => 'No se pudo iniciar la sesión de Prueba de Vida: ' . $e->getMessage(),
+                'error' => $msg,
             ], 500);
         }
     }
