@@ -99,16 +99,16 @@ class NufiSancionesConnector extends NufiConnector
 
         // 2. CONSULTA ESPECÍFICA OFAC SANCIONADOS (/v1/sancionados_ofac/consultar)
         $ofacPayload = [
-            'tipo'                  => 'All',
+            'tipo'                  => 'ALL',
             'nombre'                => $fullNameClean,
             'id'                    => '',
-            'programa'              => 'All',
+            'programa'              => 'ALL',
             'puntaje_minimo_nombre' => 90,
             'direccion'             => '',
             'ciudad'                => '',
             'estado'                => '',
-            'pais'                  => 'All',
-            'lista'                 => 'All',
+            'pais'                  => 'ALL',
+            'lista'                 => 'ALL',
         ];
 
         try {
@@ -167,16 +167,16 @@ class NufiSancionesConnector extends NufiConnector
     {
         $fullNameClean = $this->cleanString($subject->name_or_company);
         return [
-            'tipo'                  => 'All',
+            'tipo'                  => 'ALL',
             'nombre'                => $fullNameClean,
             'id'                    => '',
-            'programa'              => 'All',
+            'programa'              => 'ALL',
             'puntaje_minimo_nombre' => 90,
             'direccion'             => '',
             'ciudad'                => '',
             'estado'                => '',
-            'pais'                  => 'All',
-            'lista'                 => 'All',
+            'pais'                  => 'ALL',
+            'lista'                 => 'ALL',
         ];
     }
 }
