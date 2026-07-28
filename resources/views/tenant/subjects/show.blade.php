@@ -1331,7 +1331,7 @@
                             <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLitigios" aria-expanded="false" aria-controls="collapseLitigios">
                                 <div class="d-flex justify-content-between align-items-center w-100 me-3">
                                     <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-folders-fill text-primary me-2 align-middle fs-18"></i> Búsqueda de Litigios y Juicios (Historial Legal)
+                                        <i class="ri-scales-3-fill text-primary me-2 align-middle fs-18"></i> Antecedentes Judiciales y Litigios
                                     </div>
                                     <div>
                                         @if(!$litigiosQuery)
@@ -1344,7 +1344,7 @@
                                             @if($hasLitigiosAlert)
                                                 <span class="badge bg-warning text-dark py-1 px-2"><i class="ri-folders-fill me-1"></i> LITIGIOS ENCONTRADOS</span>
                                             @else
-                                                <span class="badge bg-success text-white py-1 px-2">Completed - Sin Juicios</span>
+                                                <span class="badge bg-success text-white py-1 px-2"><i class="ri-checkbox-circle-fill me-1"></i> Sin Expedientes Judiciales</span>
                                             @endif
                                         @endif
                                     </div>
