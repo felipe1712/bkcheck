@@ -13,7 +13,7 @@ use App\Models\Subject;
  */
 class NufiSelfieConnector extends NufiConnector
 {
-    protected string $apiKeyCategory = 'enrichment';
+    protected string $apiKeyCategory = 'general';
 
     public function getIdentifier(): string
     {
