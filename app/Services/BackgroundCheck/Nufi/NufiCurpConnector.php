@@ -10,8 +10,7 @@ use App\Models\Subject;
  * Verifica que la CURP del sujeto sea válida y coincida con los registros
  * del Registro Nacional de Población (RENAPO) a través de la API de NuFi.
  *
- * Aplica únicamente a personas físicas con CURP registrada.
- * Endpoint NuFi esperado: POST /curp/valida o equivalente.
+ * Endpoint Oficial NuFi: POST /curp/v1/consulta
  */
 class NufiCurpConnector extends NufiConnector
 {
@@ -25,16 +24,38 @@ class NufiCurpConnector extends NufiConnector
         return 'Validación CURP / RENAPO';
     }
 
+    public function getMinTierLevel(): int
+    {
+        return 1;
+    }
+
     public function appliesTo(Subject $subject): bool
     {
-        return $subject->tipo === 'persona_fisica' && !empty($subject->curp);
+        return $subject->tipo === 'persona_fisica' && (!empty($subject->curp) || !empty($subject->name_or_company));
     }
 
     protected function callApi(Subject $subject): array
     {
-        $response = $this->postRequest('/curp/valida', [
-            'curp' => strtoupper($subject->curp),
-        ]);
+        if (!empty($subject->curp)) {
+            $payload = [
+                'tipo_busqueda' => 'curp',
+                'curp'          => strtoupper(trim($subject->curp)),
+            ];
+        } else {
+            $payload = [
+                'tipo_busqueda'    => 'datos',
+                'nombres'          => $subject->name_or_company,
+                'primer_apellido'  => '',
+                'segundo_apellido' => '',
+                'dia_nacimiento'   => '',
+                'mes_nacimiento'   => '',
+                'anio_nacimiento'  => '',
+                'sexo'             => 'H',
+                'clave_entidad'    => 'MN',
+            ];
+        }
+
+        $response = $this->postRequest('/curp/v1/consulta', $payload);
 
         return $this->normalizar($response, $subject);
     }
@@ -45,7 +66,7 @@ class NufiCurpConnector extends NufiConnector
         return [
             'curp'              => $curp,
             'valida'            => true,
-            'nombre'            => 'JUAN',
+            'nombre'            => $subject->name_or_company ?? 'JUAN',
             'primer_apellido'   => 'PÉREZ',
             'segundo_apellido'  => 'GARCÍA',
             'fecha_nacimiento'  => '1990-01-15',
@@ -59,23 +80,32 @@ class NufiCurpConnector extends NufiConnector
 
     protected function getMockBody(Subject $subject): array
     {
-        return ['curp' => strtoupper($subject->curp ?? '')];
+        if (!empty($subject->curp)) {
+            return [
+                'tipo_busqueda' => 'curp',
+                'curp'          => strtoupper(trim($subject->curp)),
+            ];
+        }
+        return [
+            'tipo_busqueda' => 'datos',
+            'nombres'       => $subject->name_or_company,
+        ];
     }
 
     private function normalizar(array $response, Subject $subject): array
     {
         return [
-            'curp'              => $response['curp']             ?? $subject->curp,
-            'valida'            => $response['valida']           ?? ($response['estatus'] === 'AN'),
-            'nombre'            => $response['nombre']           ?? null,
-            'primer_apellido'   => $response['primer_apellido']  ?? null,
-            'segundo_apellido'  => $response['segundo_apellido'] ?? null,
-            'fecha_nacimiento'  => $response['fecha_nacimiento'] ?? null,
-            'sexo'              => $response['sexo']             ?? null,
-            'estado_nacimiento' => $response['entidad_nacimiento'] ?? $response['estado_nacimiento'] ?? null,
-            'nacionalidad'      => $response['nacionalidad']     ?? null,
-            'estatus_curp'      => $response['estatus_curp']     ?? $response['estatus'] ?? null,
-            'mensaje'           => $response['mensaje']          ?? null,
+            'curp'              => $response['curp']             ?? $response['data']['curp'] ?? $subject->curp,
+            'valida'            => $response['valida']           ?? ($response['estatus'] === 'AN' || ($response['status'] ?? null) === 'success'),
+            'nombre'            => $response['nombre']           ?? $response['data']['nombres'] ?? null,
+            'primer_apellido'   => $response['primer_apellido']  ?? $response['data']['primer_apellido'] ?? null,
+            'segundo_apellido'  => $response['segundo_apellido'] ?? $response['data']['segundo_apellido'] ?? null,
+            'fecha_nacimiento'  => $response['fecha_nacimiento']  ?? $response['data']['fecha_nacimiento'] ?? null,
+            'sexo'              => $response['sexo']             ?? $response['data']['sexo'] ?? null,
+            'estado_nacimiento' => $response['entidad_nacimiento'] ?? $response['estado_nacimiento'] ?? $response['data']['estado_nacimiento'] ?? null,
+            'nacionalidad'      => $response['nacionalidad']     ?? $response['data']['nacionalidad'] ?? null,
+            'estatus_curp'      => $response['estatus_curp']     ?? $response['estatus'] ?? $response['data']['estatus_curp'] ?? null,
+            'mensaje'           => $response['mensaje']          ?? $response['message'] ?? null,
         ];
     }
 }

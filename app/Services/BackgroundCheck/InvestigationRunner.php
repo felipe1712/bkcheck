@@ -36,6 +36,7 @@ class InvestigationRunner
     public function getConnectors(): array
     {
         return [
+            new NufiCurpConnector(),
             new NufiRfcConnector(),
             new NufiCsdConnector(),
             new NufiSigerConnector(),
@@ -46,7 +47,6 @@ class InvestigationRunner
             new NufiSancionesConnector(),
             new NufiLitigiosConnector(),
             new NufiSelfieConnector(),
-            new NufiCurpConnector(),
             new NufiDomicilioConnector(),
             new NufiNssConnector(),
             new NufiFinancialConnector(),
