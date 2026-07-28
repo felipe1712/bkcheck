@@ -36,7 +36,7 @@ class PresenciaEnLineaConnector extends BaseSourceConnector
 
     public function getMinTierLevel(): int
     {
-        return 2;
+        return 3;
     }
 
     /**

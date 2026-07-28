@@ -51,6 +51,7 @@
     $litigiosQuery = $queries->firstWhere('source_type', 'litigios');
     $identidadDigitalQuery = $queries->firstWhere('source_type', 'identidad_digital');
     $nssQuery = $queries->firstWhere('source_type', 'nss_imss');
+    $osintQuery = $queries->firstWhere('source_type', 'presencia_en_linea');
 
     $hasCompletedQueries = $queries->where('status', 'completed')->isNotEmpty();
     $isProcessing = $queries->whereIn('status', ['pending', 'processing'])->isNotEmpty();
@@ -1731,6 +1732,91 @@
                                                 </table>
                                             </div>
                                         @endif
+                                    @endif
+                            </div>
+                        </div>
+
+                        <!-- 10. PRESENCIA DIGITAL Y HUELLA EN REDES (OSINT) -->
+                        <div class="accordion-item shadow-sm border mb-3">
+                            <h2 class="accordion-header" id="headingOsint">
+                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOsint" aria-expanded="false" aria-controls="collapseOsint">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <div class="fw-semibold text-dark fs-14">
+                                            <i class="ri-global-line text-primary me-2 align-middle fs-18"></i> Presencia Digital y Huella en Redes (OSINT)
+                                        </div>
+                                        <div>
+                                            @if(!$osintQuery)
+                                                <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                            @elseif($osintQuery->status === 'pending' || $osintQuery->status === 'processing')
+                                                <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                            @elseif($osintQuery->status === 'failed')
+                                                <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                            @elseif($osintQuery->status === 'completed')
+                                                @php $oData = $osintQuery->result?->processed_data ?? []; @endphp
+                                                <span class="badge bg-success text-white py-1 px-2">
+                                                    <i class="ri-checkbox-circle-fill me-1"></i> {{ count($oData['plataformas_encontradas'] ?? $oData['profiles'] ?? []) }} Perfiles Encontrados
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapseOsint" class="accordion-collapse collapse" aria-labelledby="headingOsint" data-bs-parent="#sourcesAccordion">
+                                <div class="accordion-body">
+                                    @if(!$osintQuery)
+                                        <div class="text-center py-3">
+                                            <p class="text-muted mb-2">El rastreo de huella digital y presencia en redes públicas (OSINT) aún no se ha iniciado.</p>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'presencia_en_linea']) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                    <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($osintQuery->status === 'pending' || $osintQuery->status === 'processing')
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                            <span>Realizando búsqueda OSINT en redes y plataformas públicas...</span>
+                                        </div>
+                                    @elseif($osintQuery->status === 'failed')
+                                        <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                            <span><strong>Error:</strong> {{ $osintQuery->error_message }}</span>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'presencia_en_linea']) }}" method="POST" class="ms-3">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                            </form>
+                                        </div>
+                                    @elseif($osintQuery->status === 'completed')
+                                        @php
+                                            $oData = $osintQuery->result?->processed_data ?? [];
+                                            $perfiles = $oData['plataformas_encontradas'] ?? $oData['profiles'] ?? [];
+                                        @endphp
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="border rounded p-3 bg-light-subtle h-100">
+                                                    <h6 class="fs-12 text-muted text-uppercase mb-2">Resumen de Coincidencias OSINT</h6>
+                                                    <div class="mb-2"><strong>Perfiles Localizados:</strong> <span class="badge bg-primary fs-12">{{ count($perfiles) }}</span></div>
+                                                    <div class="mb-1 text-muted fs-12"><strong>Nivel de Confianza:</strong> Alta</div>
+                                                    <div class="text-muted fs-12"><strong>Base Legal:</strong> Interés Legítimo / Fuentes Públicas</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="border rounded p-3 bg-light-subtle h-100">
+                                                    <h6 class="fs-12 text-muted text-uppercase mb-2">Plataformas y Redes Detectadas</h6>
+                                                    @if(!empty($perfiles))
+                                                        <div class="d-flex flex-wrap gap-1">
+                                                            @foreach($perfiles as $perf)
+                                                                <span class="badge bg-info-subtle text-info fs-11 p-2">
+                                                                    <i class="ri-link me-1"></i> {{ is_array($perf) ? ($perf['platform'] ?? $perf['site'] ?? 'Plataforma') : $perf }}
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                    @else
+                                                        <p class="text-muted fs-12 mb-0">Sin perfiles públicos correlacionados.</p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
