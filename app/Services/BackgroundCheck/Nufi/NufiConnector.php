@@ -116,7 +116,7 @@ abstract class NufiConnector extends BaseSourceConnector
         ];
 
         try {
-            $response = Http::withHeaders([
+            $response = Http::timeout(45)->withHeaders([
                 'Ocp-Apim-Subscription-Key' => $this->apiKey,
                 'NUFI-API-KEY' => $this->apiKey,
                 'Accept' => 'application/json',
@@ -134,6 +134,13 @@ abstract class NufiConnector extends BaseSourceConnector
             }
 
             return $response->json();
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $errorMsg = "El servicio de consulta (SAT / NuFi) agotó el tiempo de respuesta (Timeout de 45s). El portal del SAT puede estar saturado o fuera de servicio temporalmente.";
+            $this->lastLog['response'] = [
+                'status' => 504,
+                'body' => $errorMsg . " Detalles: " . $e->getMessage(),
+            ];
+            throw new \Exception($errorMsg, 504, $e);
         } catch (\Throwable $e) {
             if (!isset($this->lastLog['response'])) {
                 $this->lastLog['response'] = [
