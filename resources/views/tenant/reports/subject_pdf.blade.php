@@ -404,17 +404,27 @@
                     </td>
                 </tr>
                 @if($listData['en_lista_69b'] ?? false)
+                @php
+                    $estatusVal = $listData['estatus_69b'] ?? 'Presunto';
+                    $sitDetalle = \App\Services\BackgroundCheck\Nufi\NufiSatListasConnector::getSituacionDetalle($estatusVal);
+                @endphp
                 <tr>
-                    <td style="font-weight: bold;">Estatus 69-B:</td>
-                    <td><span class="badge badge-warning">{{ $listData['estatus_69b'] ?? 'Presunto' }}</span></td>
+                    <td style="font-weight: bold;">Estatus Legal 69-B:</td>
+                    <td><span class="badge badge-warning">{{ strtoupper($estatusVal) }}</span></td>
                 </tr>
                 <tr>
                     <td style="font-weight: bold;">Número de Oficio SAT:</td>
                     <td><code>{{ $listData['oficio_oficial'] ?? 'N/A' }}</code></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: bold;">Fecha de Publicación DOF:</td>
+                    <td style="font-weight: bold;">Fecha Publicación DOF:</td>
                     <td>{{ $listData['fecha_publicacion'] ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Alcance / Explicación Legal:</td>
+                    <td style="font-size: 8pt; color: #444; line-height: 1.3;">
+                        {{ $listData['situacion_descripcion'] ?? $sitDetalle['descripcion'] }}
+                    </td>
                 </tr>
                 @endif
             </table>

@@ -760,16 +760,21 @@
                                     </div>
 
                                     @if($listData['en_lista_69b'] ?? false)
+                                    @php
+                                        $estatusVal = $listData['estatus_69b'] ?? 'Presunto';
+                                        $sitDetalle = \App\Services\BackgroundCheck\Nufi\NufiSatListasConnector::getSituacionDetalle($estatusVal);
+                                    @endphp
                                     <div class="card border border-danger border-dashed mb-0 mt-3">
-                                        <div class="card-header bg-danger-subtle text-danger pb-2">
+                                        <div class="card-header bg-danger-subtle text-danger pb-2 d-flex justify-content-between align-items-center">
                                             <h6 class="card-title mb-0 text-danger fw-semibold"><i class="ri-error-warning-fill me-1 align-middle"></i> Detalles del Boletín Oficial 69-B</h6>
+                                            <span class="badge bg-{{ $sitDetalle['badge_class'] ?? 'danger' }} fs-11 px-2 py-1">{{ strtoupper($estatusVal) }}</span>
                                         </div>
                                         <div class="card-body">
-                                            <table class="table table-sm mb-0">
+                                            <table class="table table-sm mb-3">
                                                 <tbody>
                                                     <tr>
-                                                        <td class="fw-semibold bg-light" style="width: 30%">Estatus 69-B:</td>
-                                                        <td><span class="badge bg-warning text-dark">{{ $listData['estatus_69b'] ?? 'Presunto' }}</span></td>
+                                                        <td class="fw-semibold bg-light" style="width: 30%">Estatus Legal SAT:</td>
+                                                        <td><span class="badge bg-{{ $sitDetalle['badge_class'] ?? 'warning' }} px-2 py-1 fs-12">{{ strtoupper($estatusVal) }}</span></td>
                                                     </tr>
                                                     <tr>
                                                         <td class="fw-semibold bg-light">Número de Oficio:</td>
@@ -781,6 +786,10 @@
                                                     </tr>
                                                 </tbody>
                                             </table>
+                                            <div class="alert alert-warning-subtle text-dark border-0 fs-12 mb-0">
+                                                <i class="ri-information-line me-1 fw-bold text-primary"></i> <strong>Explicación Legal del Estatus:</strong><br>
+                                                {{ $listData['situacion_descripcion'] ?? $sitDetalle['descripcion'] }}
+                                            </div>
                                         </div>
                                     </div>
                                     @endif
