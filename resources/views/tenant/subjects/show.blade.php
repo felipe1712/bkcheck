@@ -797,7 +797,7 @@
                             <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSanciones" aria-expanded="false" aria-controls="collapseSanciones">
                                 <div class="d-flex justify-content-between align-items-center w-100 me-3">
                                     <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-shield-user-fill text-primary me-2 align-middle fs-18"></i> Cumplimiento e Historial de Sanciones (PEPs / OFAC)
+                                        <i class="ri-global-line text-primary me-2 align-middle fs-18"></i> Listas Negras Internacionales (AML / PEPs / OFAC)
                                     </div>
                                     <div>
                                         @if(!$sancionesQuery)
