@@ -679,7 +679,231 @@
                         </div>
                     </div>
 
+                    <!-- 3. IDENTIFICACIÓN INE (FRENTE Y REVERSO) -->
+                    @if($subject->tipo === 'persona_fisica')
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingIne">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIne" aria-expanded="false" aria-controls="collapseIne">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-id-card-fill text-primary me-2 align-middle fs-18"></i> Identificación INE (Frente y Reverso - OCR)
+                                    </div>
+                                    <div>
+                                        @php
+                                            $frenteDone = $ineFrenteQuery && $ineFrenteQuery->status === 'completed';
+                                            $reversoDone = $ineReversoQuery && $ineReversoQuery->status === 'completed';
+                                            $ineProc = ($ineFrenteQuery && in_array($ineFrenteQuery->status, ['pending', 'processing'])) || ($ineReversoQuery && in_array($ineReversoQuery->status, ['pending', 'processing']));
+                                            $ineFail = ($ineFrenteQuery && $ineFrenteQuery->status === 'failed') || ($ineReversoQuery && $ineReversoQuery->status === 'failed');
+                                        @endphp
+                                        @if($frenteDone && $reversoDone)
+                                            <span class="badge bg-success text-white py-1 px-2">✓ INE Validada (Frente y Reverso)</span>
+                                        @elseif($frenteDone || $reversoDone)
+                                            <span class="badge bg-info text-white py-1 px-2">Validación Parcial ({{ $frenteDone ? 'Frente' : 'Reverso' }})</span>
+                                        @elseif($ineProc)
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando OCR</span>
+                                        @elseif($ineFail)
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseIne" class="accordion-collapse collapse" aria-labelledby="headingIne" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
 
+                                {{-- Documentos del Enrolamiento --}}
+                                <div class="card border bg-light-subtle mb-4">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold text-dark fs-13 mb-3">
+                                            <i class="ri-image-line text-primary me-1"></i> Imágenes de la Credencial (Cargadas en Enrolamiento)
+                                        </h6>
+                                        <div class="row g-3">
+                                            {{-- Imagen Frente --}}
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="ri-id-card-line fs-24 text-primary"></i>
+                                                        <div>
+                                                            <span class="fs-12 fw-bold text-dark d-block">INE Frente</span>
+                                                            @if($subject->ine_front_path)
+                                                                <span class="badge bg-success-subtle text-success fs-10"><i class="ri-checkbox-circle-line me-1"></i>Imagen disponible</span>
+                                                            @else
+                                                                <span class="badge bg-warning-subtle text-warning fs-10"><i class="ri-alert-line me-1"></i>Sin imagen</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    @if($subject->ine_front_path)
+                                                        <button type="button" class="btn btn-sm btn-outline-primary fs-11" onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_front']) }}', 'INE Frente — Documento Vinculado')">
+                                                            <i class="ri-eye-line me-1"></i>Ver Imagen
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            {{-- Imagen Reverso --}}
+                                            <div class="col-md-6">
+                                                <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="ri-id-card-line fs-24 text-primary"></i>
+                                                        <div>
+                                                            <span class="fs-12 fw-bold text-dark d-block">INE Reverso</span>
+                                                            @if($subject->ine_back_path)
+                                                                <span class="badge bg-success-subtle text-success fs-10"><i class="ri-checkbox-circle-line me-1"></i>Imagen disponible</span>
+                                                            @else
+                                                                <span class="badge bg-warning-subtle text-warning fs-10"><i class="ri-alert-line me-1"></i>Sin imagen</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    @if($subject->ine_back_path)
+                                                        <button type="button" class="btn btn-sm btn-outline-primary fs-11" onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_back']) }}', 'INE Reverso — Documento Vinculado')">
+                                                            <i class="ri-eye-line me-1"></i>Ver Imagen
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Botones de Ejecución OCR --}}
+                                <div class="d-flex flex-wrap gap-2 mb-4">
+                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-primary px-3" {{ $isProcessing || empty($subject->ine_front_path) ? 'disabled' : '' }}>
+                                            <i class="ri-play-circle-line me-1"></i> {{ $ineFrenteQuery ? 'Re-Consultar OCR Frente' : 'Consultar OCR Frente' }}
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_reverso']) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-primary px-3" {{ $isProcessing || empty($subject->ine_back_path) ? 'disabled' : '' }}>
+                                            <i class="ri-play-circle-line me-1"></i> {{ $ineReversoQuery ? 'Re-Consultar OCR Reverso' : 'Consultar OCR Reverso' }}
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {{-- Resultados OCR Frente y Reverso --}}
+                                <div class="row g-3">
+                                    {{-- RESULTADOS FRENTE --}}
+                                    <div class="col-lg-7">
+                                        <div class="border rounded p-3 bg-white h-100">
+                                            <h6 class="fw-bold text-dark fs-13 mb-3 border-bottom pb-2">
+                                                <i class="ri-user-line text-primary me-1"></i> Datos OCR Frente (https://nufi.azure-api.net/ocr/v4/frente)
+                                            </h6>
+                                            @if(!$ineFrenteQuery)
+                                                <p class="text-muted fs-12 mb-0">No se ha ejecutado la consulta del frente del INE.</p>
+                                            @elseif(in_array($ineFrenteQuery->status, ['pending', 'processing']))
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-primary spinner-border-sm me-2"></div>
+                                                    <span class="fs-12 text-muted">Procesando OCR Frente...</span>
+                                                </div>
+                                            @elseif($ineFrenteQuery->status === 'failed')
+                                                <div class="alert alert-danger fs-12 py-2 mb-0">{{ $ineFrenteQuery->error_message }}</div>
+                                            @elseif($ineFrenteQuery->status === 'completed')
+                                                @php $fData = $ineFrenteQuery->result?->processed_data ?? []; @endphp
+                                                <table class="table table-bordered table-sm align-middle fs-12 mb-0">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light" style="width: 40%">Nombre Completo:</td>
+                                                            <td class="fw-bold text-dark">{{ trim(($fData['nombre'] ?? '') . ' ' . ($fData['apellido_paterno'] ?? '') . ' ' . ($fData['apellido_materno'] ?? '')) ?: 'N/A' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">CURP Extraído:</td>
+                                                            <td><code>{{ $fData['curp'] ?? 'N/A' }}</code></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">Clave de Elector:</td>
+                                                            <td><code>{{ $fData['clave_elector'] ?? 'N/A' }}</code></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">Número de Emisión:</td>
+                                                            <td><code>{{ $fData['numero_emision'] ?? 'N/A' }}</code></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">Sección Electoral:</td>
+                                                            <td>{{ $fData['seccion'] ?? 'N/A' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">Fecha de Nacimiento:</td>
+                                                            <td>{{ $fData['fecha_nacimiento'] ?? 'N/A' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">Vigencia:</td>
+                                                            <td><span class="badge bg-success-subtle text-success fs-11">{{ $fData['vigencia'] ?? 'N/A' }}</span></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- RESULTADOS REVERSO --}}
+                                    <div class="col-lg-5">
+                                        <div class="border rounded p-3 bg-white h-100">
+                                            <h6 class="fw-bold text-dark fs-13 mb-3 border-bottom pb-2">
+                                                <i class="ri-qr-code-line text-primary me-1"></i> Datos OCR Reverso (https://nufi.azure-api.net/ocr/v4/reverso)
+                                            </h6>
+                                            @if(!$ineReversoQuery)
+                                                <p class="text-muted fs-12 mb-0">No se ha ejecutado la consulta del reverso del INE.</p>
+                                            @elseif(in_array($ineReversoQuery->status, ['pending', 'processing']))
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-primary spinner-border-sm me-2"></div>
+                                                    <span class="fs-12 text-muted">Procesando OCR Reverso...</span>
+                                                </div>
+                                            @elseif($ineReversoQuery->status === 'failed')
+                                                <div class="alert alert-danger fs-12 py-2 mb-0">{{ $ineReversoQuery->error_message }}</div>
+                                            @elseif($ineReversoQuery->status === 'completed')
+                                                @php $rData = $ineReversoQuery->result?->processed_data ?? []; @endphp
+                                                <table class="table table-bordered table-sm align-middle fs-12 mb-0">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light" style="width: 45%">CIC:</td>
+                                                            <td><code>{{ $rData['cic'] ?? $rData['numero_identificador'] ?? 'N/A' }}</code></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">Código OCR / MRZ:</td>
+                                                            <td><code class="text-break">{{ $rData['codigo_ocr'] ?? 'N/A' }}</code></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Subir / Reemplazar Imágenes --}}
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-6">
+                                        <div class="card border border-dashed p-3 mb-0 bg-light-subtle">
+                                            <h6 class="fs-12 text-uppercase fw-semibold mb-2 text-primary"><i class="ri-upload-cloud-2-line me-1"></i> Reemplazar Imagen Frente</h6>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST" enctype="multipart/form-data">
+                                                @csrf
+                                                <div class="input-group input-group-sm">
+                                                    <input type="file" name="ine_front" class="form-control" accept="image/*" required>
+                                                    <button type="submit" class="btn btn-primary" {{ $isProcessing ? 'disabled' : '' }}>Procesar Frente</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card border border-dashed p-3 mb-0 bg-light-subtle">
+                                            <h6 class="fs-12 text-uppercase fw-semibold mb-2 text-primary"><i class="ri-upload-cloud-2-line me-1"></i> Reemplazar Imagen Reverso</h6>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_back']) }}" method="POST" enctype="multipart/form-data">
+                                                @csrf
+                                                <div class="input-group input-group-sm">
+                                                    <input type="file" name="ine_back" class="form-control" accept="image/*" required>
+                                                    <button type="submit" class="btn btn-primary" {{ $isProcessing ? 'disabled' : '' }}>Procesar Reverso</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- 4. LISTAS SAT 69/B -->
                     <div class="accordion-item shadow-sm border mb-3">
@@ -793,254 +1017,7 @@
 
 
 
-                    <!-- 6. INE FRENTE -->
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingIneFrente">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIneFrente" aria-expanded="false" aria-controls="collapseIneFrente">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-profile-fill text-primary me-2 align-middle fs-18"></i> Identificación INE Frente (OCR)
-                                    </div>
-                                    <div>
-                                        @if(!$ineFrenteQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($ineFrenteQuery->status === 'pending' || $ineFrenteQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($ineFrenteQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($ineFrenteQuery->status === 'completed')
-                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseIneFrente" class="accordion-collapse collapse" aria-labelledby="headingIneFrente" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                {{-- Vincular documento del enrolamiento --}}
-                                <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="ri-id-card-line fs-20 text-primary"></i>
-                                        <div>
-                                            <span class="fs-12 fw-bold text-dark d-block">Documento Origen para OCR:</span>
-                                            @if($subject->ine_front_path)
-                                                <span class="badge bg-success-subtle text-success fs-11"><i class="ri-checkbox-circle-line me-1"></i>Imagen INE Frente vinculada</span>
-                                            @else
-                                                <span class="badge bg-warning-subtle text-warning fs-11"><i class="ri-alert-line me-1"></i>Sin imagen vinculada</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @if($subject->ine_front_path)
-                                        <button type="button" class="btn btn-sm btn-outline-primary fs-11" onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_front']) }}', 'INE Frente — Documento Vinculado')">
-                                            <i class="ri-eye-line me-1"></i>Ver Imagen Vinculada
-                                        </button>
-                                    @endif
-                                </div>
-
-                                @if(!$ineFrenteQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La consulta del OCR para la parte frontal del INE aún no se ha iniciado o requiere imágenes válidas.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }} {{ empty($subject->ine_front_path) ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Frente
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($ineFrenteQuery->status === 'pending' || $ineFrenteQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Extrayendo datos de la credencial. Espere...</span>
-                                    </div>
-                                @elseif($ineFrenteQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $ineFrenteQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Procesar</button>
-                                        </form>
-                                    </div>
-                                @elseif($ineFrenteQuery->status === 'completed')
-                                    @php $frenteData = $ineFrenteQuery->result?->processed_data ?? []; @endphp
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <table class="table table-bordered align-middle mb-0">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light" style="width: 40%">Nombre:</td>
-                                                        <td class="text-dark fw-medium">{{ $frenteData['nombre'] ?? 'N/A' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Apellido Paterno:</td>
-                                                        <td class="text-dark fw-medium">{{ $frenteData['apellido_paterno'] ?? 'N/A' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Apellido Materno:</td>
-                                                        <td class="text-dark fw-medium">{{ $frenteData['apellido_materno'] ?? 'N/A' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">CURP:</td>
-                                                        <td><code>{{ $frenteData['curp'] ?? 'N/A' }}</code></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Clave Elector:</td>
-                                                        <td><code>{{ $frenteData['clave_elector'] ?? 'N/A' }}</code></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <table class="table table-bordered align-middle mb-0">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light" style="width: 40%">Número Emisión:</td>
-                                                        <td><code>{{ $frenteData['numero_emision'] ?? 'N/A' }}</code></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Sección Electoral:</td>
-                                                        <td><span class="badge bg-light text-dark fs-12">{{ $frenteData['seccion'] ?? 'N/A' }}</span></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Fecha de Nacimiento:</td>
-                                                        <td>{{ $frenteData['fecha_nacimiento'] ?? 'N/A' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Sexo:</td>
-                                                        <td>{{ $frenteData['sexo'] ?? 'N/A' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="fw-semibold bg-light">Vigencia:</td>
-                                                        <td><span class="badge bg-success-subtle text-success fs-12">{{ $frenteData['vigencia'] ?? 'N/A' }}</span></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <div class="card border border-dashed p-3 mb-0 mt-3 bg-light-subtle">
-                                    <h6 class="fs-12 text-uppercase fw-semibold mb-2 text-primary"><i class="ri-upload-cloud-2-line align-middle me-1"></i> Sustituir Imagen Frente / Re-Consultar</h6>
-                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_frente']) }}" method="POST" enctype="multipart/form-data">
-                                        @csrf
-                                        <div class="input-group">
-                                            <input type="file" name="ine_front" class="form-control" accept="image/*" required>
-                                            <button type="submit" class="btn btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                Subir y Procesar OCR
-                                            </button>
-                                        </div>
-                                        <small class="text-muted mt-1 d-block">Suba una nueva imagen para reemplazar la actual. Se iniciará el OCR de forma inmediata.</small>
-                                    </form>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 7. INE REVERSO -->
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingIneReverso">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIneReverso" aria-expanded="false" aria-controls="collapseIneReverso">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-pages-fill text-primary me-2 align-middle fs-18"></i> Identificación INE Reverso (OCR)
-                                    </div>
-                                    <div>
-                                        @if(!$ineReversoQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($ineReversoQuery->status === 'pending' || $ineReversoQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($ineReversoQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($ineReversoQuery->status === 'completed')
-                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseIneReverso" class="accordion-collapse collapse" aria-labelledby="headingIneReverso" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                {{-- Vincular documento del enrolamiento --}}
-                                <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded border">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="ri-id-card-line fs-20 text-primary"></i>
-                                        <div>
-                                            <span class="fs-12 fw-bold text-dark d-block">Documento Origen para OCR:</span>
-                                            @if($subject->ine_back_path)
-                                                <span class="badge bg-success-subtle text-success fs-11"><i class="ri-checkbox-circle-line me-1"></i>Imagen INE Reverso vinculada</span>
-                                            @else
-                                                <span class="badge bg-warning-subtle text-warning fs-11"><i class="ri-alert-line me-1"></i>Sin imagen vinculada</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @if($subject->ine_back_path)
-                                        <button type="button" class="btn btn-sm btn-outline-primary fs-11" onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'ine_back']) }}', 'INE Reverso — Documento Vinculado')">
-                                            <i class="ri-eye-line me-1"></i>Ver Imagen Vinculada
-                                        </button>
-                                    @endif
-                                </div>
-
-                                @if(!$ineReversoQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La consulta del OCR para la parte trasera del INE aún no se ha iniciado o requiere imágenes válidas.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_reverso']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }} {{ empty($subject->ine_back_path) ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Reverso
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($ineReversoQuery->status === 'pending' || $ineReversoQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Extrayendo códigos y datos del reverso. Espere...</span>
-                                    </div>
-                                @elseif($ineReversoQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $ineReversoQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_reverso']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Procesar</button>
-                                        </form>
-                                    </div>
-                                @elseif($ineReversoQuery->status === 'completed')
-                                    @php $reversoData = $ineReversoQuery->result?->processed_data ?? []; @endphp
-                                    <table class="table table-bordered align-middle mb-0">
-                                        <tbody>
-                                            <tr>
-                                                <td class="fw-semibold bg-light" style="width: 30%">Código CIC:</td>
-                                                <td class="text-dark fw-medium"><code>{{ $reversoData['cic'] ?? 'N/A' }}</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold bg-light">Código OCR (MRZ):</td>
-                                                <td><code style="word-break: break-all;">{{ $reversoData['codigo_ocr'] ?? 'N/A' }}</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold bg-light">Número Identificador de Credencial:</td>
-                                                <td><code>{{ $reversoData['numero_identificador'] ?? 'N/A' }}</code></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                @endif
-
-                                <div class="card border border-dashed p-3 mb-0 mt-3 bg-light-subtle">
-                                    <h6 class="fs-12 text-uppercase fw-semibold mb-2 text-primary"><i class="ri-upload-cloud-2-line align-middle me-1"></i> Sustituir Imagen Reverso / Re-Consultar</h6>
-                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_reverso']) }}" method="POST" enctype="multipart/form-data">
-                                        @csrf
-                                        <div class="input-group">
-                                            <input type="file" name="ine_back" class="form-control" accept="image/*" required>
-                                            <button type="submit" class="btn btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                Subir y Procesar OCR
-                                            </button>
-                                        </div>
-                                        <small class="text-muted mt-1 d-block">Suba una nueva imagen para reemplazar la actual. Se iniciará el OCR de forma inmediata.</small>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 8. LISTAS DE SANCIONES Y PEPS -->
+                    <!-- 5. LISTAS DE SANCIONES Y PEPS -->
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingSanciones">
                             <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSanciones" aria-expanded="false" aria-controls="collapseSanciones">

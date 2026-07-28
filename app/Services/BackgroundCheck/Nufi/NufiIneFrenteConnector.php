@@ -17,6 +17,11 @@ class NufiIneFrenteConnector extends NufiConnector
         return 'Identificación INE Frente (OCR)';
     }
 
+    public function getMinTierLevel(): int
+    {
+        return 1;
+    }
+
     public function appliesTo(Subject $subject): bool
     {
         // Applies to physical persons who uploaded front INE image

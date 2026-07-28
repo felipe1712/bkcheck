@@ -17,6 +17,11 @@ class NufiIneReversoConnector extends NufiConnector
         return 'Identificación INE Reverso (OCR)';
     }
 
+    public function getMinTierLevel(): int
+    {
+        return 1;
+    }
+
     public function appliesTo(Subject $subject): bool
     {
         // Applies to physical persons who uploaded back INE image
