@@ -91,9 +91,9 @@ class NufiConnectorsTest extends TestCase
 
         // Under PHPUnit's sync queue driver, the runner's dispatches execute immediately.
         // We can query the results and assert states directly.
-        // persona_fisica (no INE): curp, rfc, csd, sat_listas, lista_nominal, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital = 11
+        // persona_fisica (no INE): curp, rfc, csd, sat_listas, lista_nominal, ine_vs_selfie, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital = 12
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(11, $queries);
+        $this->assertCount(12, $queries);
 
         // Verify that query statuses are completed
         foreach ($queries as $q) {
@@ -104,11 +104,11 @@ class NufiConnectorsTest extends TestCase
         }
 
         $auditLogs = AuditLog::where('tenant_id', $user->tenant_id)->get();
-        $this->assertCount(11, $auditLogs);
+        $this->assertCount(12, $auditLogs);
 
         // Verify api_usage totals
         $usageCount = ApiUsage::where('tenant_id', $user->tenant_id)->sum('conteo');
-        $this->assertEquals(11, $usageCount);
+        $this->assertEquals(12, $usageCount);
     }
 
     /**
@@ -396,9 +396,9 @@ class NufiConnectorsTest extends TestCase
         $runner = new InvestigationRunner();
         $runner->run($subject);
 
-        // 13 jobs: curp, rfc, csd, sat_listas, ine_frente, ine_reverso, lista_nominal, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
+        // 14 jobs: curp, rfc, csd, sat_listas, ine_frente, ine_reverso, lista_nominal, ine_vs_selfie, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(13, $queries);
+        $this->assertCount(14, $queries);
 
         // Verify status
         $frenteQuery = $queries->where('source_type', 'ine_frente')->first();
@@ -591,5 +591,60 @@ class NufiConnectorsTest extends TestCase
         $this->assertTrue($realData['activa']);
         $this->assertEquals('La credencial esta vigente', $realData['estado']);
         $this->assertContains('Tus datos se encuentran en el Padrón Electoral.', $realData['comentarios']);
+    }
+
+    /**
+     * Test INE vs Selfie biometric comparison connector.
+     */
+    public function test_ine_vs_selfie_connector_mock_and_real_response_mapping()
+    {
+        $user = User::where('email', 'investigador@alfa.com')->firstOrFail();
+        $this->actingAs($user);
+
+        $project = Project::create(['tenant_id' => $user->tenant_id, 'name' => 'Project Biometrico']);
+        $subject = Subject::create([
+            'project_id' => $project->id,
+            'tipo' => 'persona_fisica',
+            'name_or_company' => 'Luis Felipe Caudillo',
+            'rfc' => 'CAML7804014N5',
+            'consent_granted' => true,
+        ]);
+
+        // 1. Mock test
+        config(['background_check.nufi.mock' => true]);
+        $connector = new \App\Services\BackgroundCheck\Nufi\NufiIneVsSelfieConnector();
+        $mockData = $connector->execute($subject);
+
+        $this->assertTrue($mockData['coincide_rostro']);
+        $this->assertEquals('94.85%', $mockData['certeza_porcentaje']);
+
+        // 2. Real API response mapping test
+        config(['background_check.nufi.mock' => false]);
+        $realConnector = new \App\Services\BackgroundCheck\Nufi\NufiIneVsSelfieConnector();
+
+        \Illuminate\Support\Facades\Http::fake([
+            'nufi.azure-api.net/biometrico/v2/ine_vs_selfie' => \Illuminate\Support\Facades\Http::response([
+                'uuid' => 'fb183f6f-942d-4796-898e-6286be6b7e2d',
+                'status' => 'success',
+                'message' => 'Consulta con exito!',
+                'data' => [
+                    'resultado_verificacion_rostro' => 'True',
+                    'certeza_verificacion_rostro' => '0.61747',
+                    'resultado_credencial_frente' => '1',
+                    'tipo_credencial_frente' => 'IFE',
+                    'resultado_credencial_reverso' => '1',
+                    'tipo_credencial_reverso' => 'IFE',
+                ],
+                'code' => 200,
+            ], 200)
+        ]);
+
+        $realData = $realConnector->execute($subject);
+
+        $this->assertTrue($realData['coincide_rostro']);
+        $this->assertEquals(0.61747, $realData['certeza']);
+        $this->assertEquals('61.75%', $realData['certeza_porcentaje']);
+        $this->assertTrue($realData['frente_valido']);
+        $this->assertTrue($realData['reverso_valido']);
     }
 }

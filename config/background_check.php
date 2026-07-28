@@ -31,6 +31,7 @@ return [
         'ine_frente'          => 1.50,
         'ine_reverso'         => 1.50,
         'lista_nominal'       => 1.50,
+        'ine_vs_selfie'       => 2.00,
         'sanciones'           => 0.80,
         'litigios'            => 1.50,
         'selfie'              => 0.00,   // Sin costo extra (proceso interno)
@@ -52,6 +53,7 @@ return [
         'ine_frente'          => 3.50,
         'ine_reverso'         => 3.50,
         'lista_nominal'       => 3.50,
+        'ine_vs_selfie'       => 5.00,
         'sanciones'           => 2.00,
         'litigios'            => 4.00,
         'selfie'              => 0.00,

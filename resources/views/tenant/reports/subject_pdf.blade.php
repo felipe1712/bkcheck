@@ -216,6 +216,7 @@
                         @case('ine_frente') Identificación INE Frente (OCR) @break
                         @case('ine_reverso') Identificación INE Reverso (OCR) @break
                         @case('lista_nominal') Validación Lista Nominal INE @break
+                        @case('ine_vs_selfie') Biometría Facial (INE vs Selfie) @break
                         @default {{ $query->source_type }}
                     @endswitch
                 </td>
@@ -524,6 +525,32 @@
                     <td>{{ implode(', ', (array)$lnData['comentarios']) }}</td>
                 </tr>
                 @endif
+            </table>
+        @elseif($query->source_type === 'ine_vs_selfie' && $query->result)
+            @php $bioData = $query->result->processed_data; @endphp
+            <table class="metadata-table">
+                <tr>
+                    <td style="width: 30%; font-weight: bold;">Coincidencia de Rostro:</td>
+                    <td style="width: 70%;">
+                        @if($bioData['coincide_rostro'] ?? false)
+                            <span class="badge badge-success">Positiva (Coincide)</span>
+                        @else
+                            <span class="badge badge-danger">Negativa (No coincide)</span>
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Certeza Biométrica:</td>
+                    <td><strong>{{ $bioData['certeza_porcentaje'] ?? '0%' }}</strong> (Valor: {{ $bioData['certeza'] ?? 0 }})</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Credencial Frente:</td>
+                    <td>{{ ($bioData['frente_valido'] ?? false) ? 'Detectada (1)' : 'No detectada' }} — {{ $bioData['tipo_credencial_frente'] ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Credencial Reverso:</td>
+                    <td>{{ ($bioData['reverso_valido'] ?? false) ? 'Detectada (1)' : 'No detectada' }} — {{ $bioData['tipo_credencial_reverso'] ?? 'N/A' }}</td>
+                </tr>
             </table>
         @elseif($query->source_type === 'sanciones' && $query->result)
             @php $sancData = $query->result->processed_data; @endphp

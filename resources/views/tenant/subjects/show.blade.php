@@ -48,6 +48,7 @@
     $ineFrenteQuery = $queries->firstWhere('source_type', 'ine_frente');
     $ineReversoQuery = $queries->firstWhere('source_type', 'ine_reverso');
     $listaNominalQuery = $queries->firstWhere('source_type', 'lista_nominal');
+    $ineVsSelfieQuery = $queries->firstWhere('source_type', 'ine_vs_selfie');
     $sancionesQuery = $queries->firstWhere('source_type', 'sanciones');
     $litigiosQuery = $queries->firstWhere('source_type', 'litigios');
     $identidadDigitalQuery = $queries->firstWhere('source_type', 'identidad_digital');
@@ -1135,9 +1136,14 @@
                                             <i class="ri-shield-check-line me-1"></i> {{ $listaNominalQuery ? 'Re-Validar en Lista Nominal' : 'Validar en Lista Nominal (INE)' }}
                                         </button>
                                     </form>
-                                </div>
 
-                                {{-- Resultados OCR Frente y Reverso --}}
+                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'ine_vs_selfie']) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-info px-3" {{ $isProcessing ? 'disabled' : '' }}>
+                                            <i class="ri-user-shared-line me-1"></i> {{ $ineVsSelfieQuery ? 'Re-Comparar Biometría (INE vs Selfie)' : 'Comparar Biometría (INE vs Selfie)' }}
+                                        </button>
+                                    </form>
+                                </div>
                                 <div class="row g-3">
                                     {{-- RESULTADOS FRENTE --}}
                                     <div class="col-lg-7">
@@ -1284,6 +1290,77 @@
                                                         <pre class="bg-light p-2 rounded text-dark fs-11 mb-0" style="white-space: pre-wrap;">{{ $lnData['information'] }}</pre>
                                                     </div>
                                                     @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- RESULTADOS COMPARACIÓN BIOMÉTRICA (INE VS SELFIE) --}}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="border rounded p-3 bg-white">
+                                            <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                                                <h6 class="fw-bold text-dark fs-13 mb-0">
+                                                    <i class="ri-user-shared-line text-info me-1"></i> Comparación Biométrica Facial (INE vs Selfie / Rostro)
+                                                </h6>
+                                                @if($ineVsSelfieQuery && $ineVsSelfieQuery->status === 'completed')
+                                                    @php $bioData = $ineVsSelfieQuery->result?->processed_data ?? []; @endphp
+                                                    <span class="badge {{ ($bioData['coincide_rostro'] ?? false) ? 'bg-success' : 'bg-danger' }} fs-11">
+                                                        {{ ($bioData['coincide_rostro'] ?? false) ? '✓ Coincidencia Facial Positiva' : '✗ Sin Coincidencia Facial' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if(!$ineVsSelfieQuery)
+                                                <p class="text-muted fs-12 mb-0">No se ha ejecutado la comparación biométrica de INE vs Selfie.</p>
+                                            @elseif(in_array($ineVsSelfieQuery->status, ['pending', 'processing']))
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-info spinner-border-sm me-2"></div>
+                                                    <span class="fs-12 text-muted">Procesando comparación de algoritmos biométricos de rostro...</span>
+                                                </div>
+                                            @elseif($ineVsSelfieQuery->status === 'failed')
+                                                <div class="alert alert-danger fs-12 py-2 mb-0">{{ $ineVsSelfieQuery->error_message }}</div>
+                                            @elseif($ineVsSelfieQuery->status === 'completed')
+                                                @php $bioData = $ineVsSelfieQuery->result?->processed_data ?? []; @endphp
+                                                <div class="row g-3 fs-12 align-items-center">
+                                                    <div class="col-md-4 text-center border-end">
+                                                        <span class="text-muted d-block fs-11">Nivel de Certeza Biométrica:</span>
+                                                        <span class="display-6 fw-bold {{ ($bioData['coincide_rostro'] ?? false) ? 'text-success' : 'text-danger' }}">
+                                                            {{ $bioData['certeza_porcentaje'] ?? '0%' }}
+                                                        </span>
+                                                        <span class="badge bg-light text-dark d-block mt-1">Certeza: {{ $bioData['certeza'] ?? 0 }}</span>
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <table class="table table-bordered table-sm align-middle fs-12 mb-0">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td class="fw-semibold bg-light" style="width: 50%">Resultado Verificación Rostro:</td>
+                                                                    <td class="fw-bold {{ ($bioData['coincide_rostro'] ?? false) ? 'text-success' : 'text-danger' }}">
+                                                                        {{ ($bioData['coincide_rostro'] ?? false) ? 'POSITIVO (Coincide)' : 'NEGATIVO (No Coincide)' }}
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="fw-semibold bg-light">Lectura Credencial Frente:</td>
+                                                                    <td>
+                                                                        <span class="badge {{ ($bioData['frente_valido'] ?? false) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                                                                            {{ ($bioData['frente_valido'] ?? false) ? 'Detectada (1)' : 'No Detectada' }}
+                                                                        </span>
+                                                                        <small class="ms-1 text-muted">({{ $bioData['tipo_credencial_frente'] ?? 'IFE/INE' }})</small>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="fw-semibold bg-light">Lectura Credencial Reverso:</td>
+                                                                    <td>
+                                                                        <span class="badge {{ ($bioData['reverso_valido'] ?? false) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                                                                            {{ ($bioData['reverso_valido'] ?? false) ? 'Detectada (1)' : 'No Detectada' }}
+                                                                        </span>
+                                                                        <small class="ms-1 text-muted">({{ $bioData['tipo_credencial_reverso'] ?? 'IFE/INE' }})</small>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
                                             @endif
                                         </div>

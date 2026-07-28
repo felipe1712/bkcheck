@@ -48,9 +48,9 @@ class InvestigationAndReportsTest extends TestCase
 
         // Confirm that the source queries were created in database
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        // Since it is persona_fisica, it dispatches 11 queries (excluding marcas which applies to persona_moral only):
-        // curp, rfc, csd, sat_listas, lista_nominal, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
-        $this->assertCount(11, $queries);
+        // Since it is persona_fisica, it dispatches 12 queries (excluding marcas which applies to persona_moral only):
+        // curp, rfc, csd, sat_listas, lista_nominal, ine_vs_selfie, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
+        $this->assertCount(12, $queries);
     }
 
     /**
