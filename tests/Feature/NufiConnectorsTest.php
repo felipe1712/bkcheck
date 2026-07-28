@@ -91,9 +91,9 @@ class NufiConnectorsTest extends TestCase
 
         // Under PHPUnit's sync queue driver, the runner's dispatches execute immediately.
         // We can query the results and assert states directly.
-        // persona_fisica (no INE): curp, rfc, csd, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital = 11
+        // persona_fisica (no INE): curp, rfc, csd, sat_listas, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital = 10
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(11, $queries);
+        $this->assertCount(10, $queries);
 
         // Verify that query statuses are completed
         foreach ($queries as $q) {
@@ -104,11 +104,11 @@ class NufiConnectorsTest extends TestCase
         }
 
         $auditLogs = AuditLog::where('tenant_id', $user->tenant_id)->get();
-        $this->assertCount(11, $auditLogs);
+        $this->assertCount(10, $auditLogs);
 
         // Verify api_usage totals
         $usageCount = ApiUsage::where('tenant_id', $user->tenant_id)->sum('conteo');
-        $this->assertEquals(11, $usageCount);
+        $this->assertEquals(10, $usageCount);
     }
 
     /**
@@ -331,9 +331,9 @@ class NufiConnectorsTest extends TestCase
         $runner = new InvestigationRunner();
         $runner->run($subject);
 
-        // 13 jobs: curp, rfc, csd, sat_listas, marcas, ine_frente, ine_reverso, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
+        // 12 jobs: curp, rfc, csd, sat_listas, ine_frente, ine_reverso, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(13, $queries);
+        $this->assertCount(12, $queries);
 
         // Verify status
         $frenteQuery = $queries->where('source_type', 'ine_frente')->first();

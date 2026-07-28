@@ -18,13 +18,13 @@ class NufiMarcasConnector extends NufiConnector
 
     public function getMinTierLevel(): int
     {
-        return 3;
+        return 4;
     }
 
     public function appliesTo(Subject $subject): bool
     {
-        // Marcas lookup applies to all subjects
-        return !empty($subject->name_or_company);
+        // Marcas IMPI lookup applies strictly to personas morales in Tier 4
+        return $subject->tipo === 'persona_moral' && !empty($subject->name_or_company);
     }
 
     protected function callApi(Subject $subject): array

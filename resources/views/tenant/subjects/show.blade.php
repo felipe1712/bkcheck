@@ -1484,93 +1484,7 @@
                     <div class="tier-section" id="tierSection3">
                         <div class="alert alert-warning border-0 d-flex align-items-center mb-3 shadow-sm py-2 px-3 mt-4">
                             <i class="ri-award-fill fs-18 me-2 text-warning-emphasis"></i>
-                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase text-warning-emphasis">NIVEL 3 — Verificación Ejecutiva (Marcas IMPI y Certificados CSD)</span>
-                        </div>
-
-                        <!-- 8. REGISTRO DE MARCAS IMPI -->
-                        <div class="accordion-item shadow-sm border mb-3">
-                            <h2 class="accordion-header" id="headingMarcas">
-                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMarcas" aria-expanded="false" aria-controls="collapseMarcas">
-                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                        <div class="fw-semibold text-dark fs-14">
-                                            <i class="ri-trademark-fill text-primary me-2 align-middle fs-18"></i> Propiedad Industrial e Intelectual (IMPI)
-                                        </div>
-                                        <div>
-                                            @if(!$marcasQuery)
-                                                <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                            @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
-                                                <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                            @elseif($marcasQuery->status === 'failed')
-                                                <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                            @elseif($marcasQuery->status === 'completed')
-                                                <span class="badge bg-success text-white py-1 px-2">Completed</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </button>
-                            </h2>
-                            <div id="collapseMarcas" class="accordion-collapse collapse" aria-labelledby="headingMarcas" data-bs-parent="#sourcesAccordion">
-                                <div class="accordion-body">
-                                    @if(!$marcasQuery)
-                                        <div class="text-center py-3">
-                                            <p class="text-muted mb-2">La búsqueda de marcas y patentes a nombre del sujeto en las bases del IMPI aún no se ha iniciado.</p>
-                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                    <i class="ri-play-circle-line me-1"></i> Consultar Fuente
-                                                </button>
-                                            </form>
-                                        </div>
-                                    @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
-                                        <div class="text-center py-3">
-                                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                            <span>Buscando marcas registradas. Espere...</span>
-                                        </div>
-                                    @elseif($marcasQuery->status === 'failed')
-                                        <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                            <span><strong>Error:</strong> {{ $marcasQuery->error_message }}</span>
-                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST" class="ms-3">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
-                                            </form>
-                                        </div>
-                                    @elseif($marcasQuery->status === 'completed')
-                                        @php $marcas = $marcasQuery->result?->processed_data['marcas'] ?? []; @endphp
-                                        @if(empty($marcas))
-                                            <div class="text-center text-muted py-3">No se detectaron marcas o solicitudes registradas a nombre del titular en el IMPI.</div>
-                                        @else
-                                            <div class="table-responsive">
-                                                <table class="table table-striped align-middle mb-0">
-                                                    <thead class="table-light">
-                                                        <tr>
-                                                            <th>Registro</th>
-                                                            <th>Expediente</th>
-                                                            <th>Denominación</th>
-                                                            <th>Titular</th>
-                                                            <th>Clase Nice</th>
-                                                            <th>Concesión</th>
-                                                            <th>Estatus</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach($marcas as $marca)
-                                                        <tr>
-                                                            <td><code>{{ $marca['numero_registro'] ?? 'N/A' }}</code></td>
-                                                            <td><code>{{ $marca['numero_expediente'] ?? 'N/A' }}</code></td>
-                                                            <td class="fw-semibold text-dark">{{ $marca['denominacion'] ?? '' }}</td>
-                                                            <td>{{ $marca['titular'] ?? '' }}</td>
-                                                            <td><span class="badge bg-light text-dark">Clase {{ $marca['clase_nice'] ?? '' }}</span></td>
-                                                            <td>{{ isset($marca['fecha_concesion']) ? \Carbon\Carbon::parse($marca['fecha_concesion'])->format('d/m/Y') : 'N/A' }}</td>
-                                                            <td><span class="badge bg-success-subtle text-success">{{ $marca['estatus'] ?? 'REGISTRADA' }}</span></td>
-                                                        </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        @endif
-                                    @endif
-                                </div>
-                            </div>
+                            <span class="fw-bold fs-13 flex-grow-1 text-uppercase text-warning-emphasis">NIVEL 3 — Verificación Ejecutiva (Certificados CSD, OSINT y Perfil Digital)</span>
                         </div>
 
                         <!-- 9. CERTIFICADOS CSD -->
@@ -1970,6 +1884,92 @@
                                                 </div>
                                             </div>
                                             @endforeach
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 11. REGISTRO DE MARCAS IMPI -->
+                        <div class="accordion-item shadow-sm border mb-3">
+                            <h2 class="accordion-header" id="headingMarcas">
+                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMarcas" aria-expanded="false" aria-controls="collapseMarcas">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <div class="fw-semibold text-dark fs-14">
+                                            <i class="ri-trademark-fill text-primary me-2 align-middle fs-18"></i> Propiedad Industrial e Intelectual (IMPI)
+                                        </div>
+                                        <div>
+                                            @if(!$marcasQuery)
+                                                <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                            @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
+                                                <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                            @elseif($marcasQuery->status === 'failed')
+                                                <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                            @elseif($marcasQuery->status === 'completed')
+                                                <span class="badge bg-success text-white py-1 px-2">Completed</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapseMarcas" class="accordion-collapse collapse" aria-labelledby="headingMarcas" data-bs-parent="#sourcesAccordion">
+                                <div class="accordion-body">
+                                    @if(!$marcasQuery)
+                                        <div class="text-center py-3">
+                                            <p class="text-muted mb-2">La búsqueda de marcas y patentes a nombre de la empresa en las bases del IMPI aún no se ha iniciado.</p>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                    <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($marcasQuery->status === 'pending' || $marcasQuery->status === 'processing')
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                            <span>Buscando marcas registradas. Espere...</span>
+                                        </div>
+                                    @elseif($marcasQuery->status === 'failed')
+                                        <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                            <span><strong>Error:</strong> {{ $marcasQuery->error_message }}</span>
+                                            <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'marcas']) }}" method="POST" class="ms-3">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                            </form>
+                                        </div>
+                                    @elseif($marcasQuery->status === 'completed')
+                                        @php $marcas = $marcasQuery->result?->processed_data['marcas'] ?? []; @endphp
+                                        @if(empty($marcas))
+                                            <div class="text-center text-muted py-3">No se detectaron marcas o solicitudes registradas a nombre del titular en el IMPI.</div>
+                                        @else
+                                            <div class="table-responsive">
+                                                <table class="table table-striped align-middle mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Registro</th>
+                                                            <th>Expediente</th>
+                                                            <th>Denominación</th>
+                                                            <th>Titular</th>
+                                                            <th>Clase Nice</th>
+                                                            <th>Concesión</th>
+                                                            <th>Estatus</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($marcas as $marca)
+                                                        <tr>
+                                                            <td><code>{{ $marca['numero_registro'] ?? 'N/A' }}</code></td>
+                                                            <td><code>{{ $marca['numero_expediente'] ?? 'N/A' }}</code></td>
+                                                            <td class="fw-semibold text-dark">{{ $marca['denominacion'] ?? '' }}</td>
+                                                            <td>{{ $marca['titular'] ?? '' }}</td>
+                                                            <td><span class="badge bg-light text-dark">Clase {{ $marca['clase_nice'] ?? '' }}</span></td>
+                                                            <td>{{ isset($marca['fecha_concesion']) ? \Carbon\Carbon::parse($marca['fecha_concesion'])->format('d/m/Y') : 'N/A' }}</td>
+                                                            <td><span class="badge bg-success-subtle text-success">{{ $marca['estatus'] ?? 'REGISTRADA' }}</span></td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         @endif
                                     @endif
                                 </div>
