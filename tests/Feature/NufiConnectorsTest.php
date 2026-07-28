@@ -23,6 +23,7 @@ class NufiConnectorsTest extends TestCase
     {
         parent::setUp();
         $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        config(['background_check.nufi.mock' => true]);
     }
 
     /**

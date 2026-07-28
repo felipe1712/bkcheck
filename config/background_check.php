@@ -17,7 +17,7 @@ return [
         'api_key_general' => env('NUFI_API_KEY_GENERAL', '7ab9fd7a3bec4c88b08455fd0f1b9405'),
         'api_key_enrichment' => env('NUFI_API_KEY_ENRICHMENT', '60476115a2b14fc0948fed47cca07d65'),
         'api_key_judicial' => env('NUFI_API_KEY_JUDICIAL', '57e5493afbb14b9688bb6376af4d0999'),
-        'mock' => env('NUFI_MOCK', true), // Mock by default for safety in sandbox
+        'mock' => env('NUFI_MOCK', false), // Live production/sandbox API mode by default
         'webhook_url' => env('NUFI_WEBHOOK_URL'),
     ],
 

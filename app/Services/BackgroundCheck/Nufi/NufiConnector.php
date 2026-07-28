@@ -31,7 +31,7 @@ abstract class NufiConnector extends BaseSourceConnector
         }
 
         $this->apiKey = $key ?: '7ab9fd7a3bec4c88b08455fd0f1b9405';
-        $this->isMock = config('background_check.nufi.mock', true);
+        $this->isMock = config('background_check.nufi.mock', false);
     }
 
     /**

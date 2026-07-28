@@ -157,7 +157,7 @@ class EnrollmentController extends Controller
 
         try {
             $connector = new \App\Services\BackgroundCheck\Nufi\NufiSelfieConnector();
-            $isMock = config('background_check.nufi.mock', true);
+            $isMock = config('background_check.nufi.mock', false);
 
             if ($isMock) {
                 $idValidacion = 'LIV-MOCK-' . strtoupper(substr(md5($subject->id . time()), 0, 8));
