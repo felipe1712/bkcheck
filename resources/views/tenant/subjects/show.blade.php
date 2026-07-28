@@ -1556,8 +1556,9 @@
                                                             <td><code>{{ $cert['numero_serie'] ?? '' }}</code></td>
                                                             <td><span class="badge bg-secondary-subtle text-secondary">{{ $cert['tipo'] ?? 'CSD' }}</span></td>
                                                             <td>
-                                                                <span class="badge bg-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}-subtle text-{{ ($cert['estado'] ?? '') === 'ACTIVO' ? 'success' : 'danger' }}">
-                                                                    {{ $cert['estado'] ?? 'CADUCO' }}
+                                                                @php $st = strtolower($cert['estado'] ?? ''); @endphp
+                                                                <span class="badge bg-{{ $st === 'activo' ? 'success' : ($st === 'revocado' ? 'danger' : 'warning') }}-subtle text-{{ $st === 'activo' ? 'success' : ($st === 'revocado' ? 'danger' : 'warning') }}">
+                                                                    {{ ucfirst($cert['estado'] ?? 'Caduco') }}
                                                                 </span>
                                                             </td>
                                                             <td>{{ isset($cert['fecha_inicio']) ? \Carbon\Carbon::parse($cert['fecha_inicio'])->format('d/m/Y H:i') : 'N/A' }}</td>

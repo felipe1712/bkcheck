@@ -4,8 +4,17 @@ namespace App\Services\BackgroundCheck\Nufi;
 
 use App\Models\Subject;
 
+/**
+ * Conector de Certificados del SAT (CSD / FIEL / Sellos Digitales).
+ *
+ * Endpoint Oficial NuFi: POST /certificadosat/v1/consultar/consultar
+ * Header: NUFI-API-KEY
+ * Payload: { "rfc": "NWM9709244W4" }
+ */
 class NufiCsdConnector extends NufiConnector
 {
+    protected string $apiKeyCategory = 'enrichment';
+
     public function getIdentifier(): string
     {
         return 'csd';
@@ -13,7 +22,7 @@ class NufiCsdConnector extends NufiConnector
 
     public function getName(): string
     {
-        return 'Certificados de Sello Digital (CSD)';
+        return 'Certificados CSD y e-Firma (SAT)';
     }
 
     public function getMinTierLevel(): int
@@ -23,39 +32,69 @@ class NufiCsdConnector extends NufiConnector
 
     public function appliesTo(Subject $subject): bool
     {
-        // CSD validation applies to all subjects
         return !empty($subject->rfc);
     }
 
     protected function callApi(Subject $subject): array
     {
-        $webhookUrl = config('background_check.nufi.webhook_url') ?? url('/api/nufi/webhook');
-        return $this->postRequest('/certificadosat/v1/consultar/async', [
-            'rfc' => $subject->rfc,
-            'webhook' => $webhookUrl,
+        $response = $this->postRequest('/certificadosat/v1/consultar/consultar', [
+            'rfc' => strtoupper(trim($subject->rfc)),
         ]);
+
+        $data = $response['data'] ?? [];
+        $rawCerts = $data['certificados'] ?? [];
+
+        $certificados = [];
+        foreach ($rawCerts as $c) {
+            $certificados[] = [
+                'numero_serie' => $c['numero_serie'] ?? null,
+                'estado'       => $c['estado'] ?? 'Desconocido',
+                'tipo'         => $c['tipo'] ?? 'SELLO',
+                'fecha_inicio' => $c['fecha_inicial'] ?? $c['fecha_inicio'] ?? null,
+                'fecha_fin'    => $c['fecha_final'] ?? $c['fecha_fin'] ?? null,
+                'certificado'  => $c['certificado'] ?? null,
+            ];
+        }
+
+        return [
+            'status'       => $response['status'] ?? 'success',
+            'rfc'          => $data['rfc'] ?? $subject->rfc,
+            'razon_social' => $data['razon_social'] ?? null,
+            'certificados' => $certificados,
+            'total'        => count($certificados),
+        ];
     }
 
     protected function mockResponse(Subject $subject): array
     {
         return [
-            'rfc' => $subject->rfc,
+            'status'       => 'success',
+            'rfc'          => strtoupper($subject->rfc ?? 'NWM9709244W4'),
+            'razon_social' => $subject->name_or_company ?? 'EMPRESA / PERSONA FICTICIA SA DE CV',
+            'total'        => 2,
             'certificados' => [
                 [
-                    'numero_serie' => '000010000005' . rand(10000000, 99999999),
-                    'estado' => 'ACTIVO',
-                    'tipo' => 'CSD',
-                    'fecha_inicio' => now()->subYears(2)->toIso8601String(),
-                    'fecha_fin' => now()->addYears(2)->toIso8601String(),
+                    'numero_serie' => '00001000000514203894',
+                    'estado'       => 'Activo',
+                    'tipo'         => 'SELLO',
+                    'fecha_inicio' => '2022-07-28 16:55:12',
+                    'fecha_fin'    => '2026-07-28 16:55:12',
                 ],
                 [
-                    'numero_serie' => '000010000005' . rand(10000000, 99999999),
-                    'estado' => 'CADUCO',
-                    'tipo' => 'FIEL',
-                    'fecha_inicio' => now()->subYears(6)->toIso8601String(),
-                    'fecha_fin' => now()->subYears(2)->toIso8601String(),
+                    'numero_serie' => '00001000000507729458',
+                    'estado'       => 'Activo',
+                    'tipo'         => 'FIEL',
+                    'fecha_inicio' => '2021-06-10 16:04:17',
+                    'fecha_fin'    => '2025-06-10 16:04:57',
                 ]
             ]
+        ];
+    }
+
+    protected function getMockBody(Subject $subject): array
+    {
+        return [
+            'rfc' => $subject->rfc,
         ];
     }
 }

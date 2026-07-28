@@ -260,7 +260,7 @@ class NufiConnectorsTest extends TestCase
     }
 
     /**
-     * Test CSD async processing status in ProcessConnectorQuery.
+     * Test CSD processing status in ProcessConnectorQuery.
      */
     public function test_csd_async_processing_status()
     {
@@ -284,13 +284,25 @@ class NufiConnectorsTest extends TestCase
             'status' => 'pending',
         ]);
 
-        // Mock Http to return async success with uuid
+        // Mock Http to return synchronous success with certificados
         \Illuminate\Support\Facades\Http::fake([
-            'https://nufi.azure-api.net/certificadosat/v1/consultar/async' => \Illuminate\Support\Facades\Http::response([
+            'https://nufi.azure-api.net/certificadosat/v1/consultar/consultar' => \Illuminate\Support\Facades\Http::response([
                 'code' => 200,
                 'status' => 'success',
-                'uuid' => 'test-async-uuid-5678',
-                'message' => 'alta de la operacion realizada con exito.'
+                'message' => 'La petición se ha realizado correctamente',
+                'data' => [
+                    'rfc' => 'CAML7804014N5',
+                    'razon_social' => 'CSD Test Company',
+                    'certificados' => [
+                        [
+                            'numero_serie' => '00001000000514203894',
+                            'estado' => 'Activo',
+                            'tipo' => 'SELLO',
+                            'fecha_inicial' => '2022-07-28 16:55:12',
+                            'fecha_final' => '2026-07-28 16:55:12',
+                        ]
+                    ]
+                ]
             ], 200)
         ]);
 
@@ -302,9 +314,9 @@ class NufiConnectorsTest extends TestCase
         $job->handle();
 
         $sourceQuery->refresh();
-        // CSD has uuid, so status should remain 'processing', not 'completed'
-        $this->assertEquals('processing', $sourceQuery->status);
-        $this->assertEquals('test-async-uuid-5678', $sourceQuery->result->processed_data['uuid']);
+        $this->assertEquals('completed', $sourceQuery->status);
+        $this->assertCount(1, $sourceQuery->result->processed_data['certificados']);
+        $this->assertEquals('00001000000514203894', $sourceQuery->result->processed_data['certificados'][0]['numero_serie']);
     }
 
     /**
