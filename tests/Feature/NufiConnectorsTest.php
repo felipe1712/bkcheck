@@ -91,9 +91,9 @@ class NufiConnectorsTest extends TestCase
 
         // Under PHPUnit's sync queue driver, the runner's dispatches execute immediately.
         // We can query the results and assert states directly.
-        // persona_fisica (no INE, no selfie): rfc, csd, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue = 8
+        // persona_fisica (no INE, no selfie): curp, rfc, csd, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue = 9
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(8, $queries);
+        $this->assertCount(9, $queries);
 
         // Verify that query statuses are completed
         foreach ($queries as $q) {
@@ -331,9 +331,9 @@ class NufiConnectorsTest extends TestCase
         $runner = new InvestigationRunner();
         $runner->run($subject);
 
-        // 10 jobs: rfc, csd, sat_listas, marcas, ine_frente, ine_reverso, sanciones, litigios, presencia_en_linea, denue
+        // 11 jobs: curp, rfc, csd, sat_listas, marcas, ine_frente, ine_reverso, sanciones, litigios, presencia_en_linea, denue
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(10, $queries);
+        $this->assertCount(11, $queries);
 
         // Verify status
         $frenteQuery = $queries->where('source_type', 'ine_frente')->first();

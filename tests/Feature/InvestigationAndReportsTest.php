@@ -48,9 +48,9 @@ class InvestigationAndReportsTest extends TestCase
 
         // Confirm that the source queries were created in database
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        // Since it is persona_fisica, it dispatches 8 queries:
-        // rfc, csd, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue
-        $this->assertCount(8, $queries);
+        // Since it is persona_fisica, it dispatches 9 queries:
+        // curp, rfc, csd, sat_listas, marcas, sanciones, litigios, presencia_en_linea, denue
+        $this->assertCount(9, $queries);
     }
 
     /**
