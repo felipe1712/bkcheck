@@ -2500,15 +2500,120 @@ function openDocModal(src, title) {
 
 
 
-@if($isProcessing)
 @section('script')
 <script>
-    setTimeout(function() {
-        window.location.reload();
-    }, 3000);
+    let pollInterval = null;
+
+    function startPolling() {
+        if (pollInterval) return;
+        pollInterval = setInterval(fetchAndRefreshAccordion, 2500);
+    }
+
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    function fetchAndRefreshAccordion() {
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(htmlText => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+
+            // 1. Remember currently expanded accordions
+            const openIds = Array.from(document.querySelectorAll('#sourcesAccordion .accordion-collapse.show')).map(el => el.id);
+
+            // 2. Replace sourcesAccordion inner HTML
+            const newAccordion = doc.getElementById('sourcesAccordion');
+            const currentAccordion = document.getElementById('sourcesAccordion');
+            if (newAccordion && currentAccordion) {
+                currentAccordion.innerHTML = newAccordion.innerHTML;
+            }
+
+            // 3. Restore open accordions
+            openIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('show');
+                    const btn = document.querySelector(`button[data-bs-target="#${id}"]`);
+                    if (btn) btn.classList.remove('collapsed');
+                }
+            });
+
+            // 4. Update Re-ejecutar Todo button state
+            const newBtn = doc.getElementById('runInvestigationBtn');
+            const currentBtn = document.getElementById('runInvestigationBtn');
+            if (newBtn && currentBtn) {
+                currentBtn.outerHTML = newBtn.outerHTML;
+            }
+
+            // 5. Check if any queries are still processing
+            const stillProcessing = doc.querySelector('#sourcesAccordion .spinner-border, #sourcesAccordion .badge.bg-warning-subtle') !== null;
+            if (!stillProcessing) {
+                stopPolling();
+            }
+        })
+        .catch(err => console.error('Error al actualizar acordeón por AJAX:', err));
+    }
+
+    // Intercept form submissions for background checks
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (form.action && form.action.includes('/investigate')) {
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalHtml = submitBtn ? submitBtn.innerHTML : '';
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Procesando...';
+            }
+
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Start or trigger polling immediately
+                    fetchAndRefreshAccordion();
+                    startPolling();
+                } else {
+                    alert(data.message || 'Ocurrió un error al procesar la consulta.');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHtml;
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error AJAX en formulario, ejecutando submit normal:', err);
+                form.submit();
+            });
+        }
+    });
+
+    // Auto-start polling on page load if queries are currently processing
+    @if($isProcessing)
+        startPolling();
+    @endif
 </script>
 @endsection
-@endif
 
 <script>
 function copyEnrollUrl() {

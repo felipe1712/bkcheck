@@ -17,7 +17,7 @@ class InvestigationController extends Controller
     /**
      * Start background check investigation for the given subject.
      */
-    public function investigate($id)
+    public function investigate(Request $request, $id)
     {
         try {
             $subject = Subject::findOrFail($id);
@@ -32,12 +32,26 @@ class InvestigationController extends Controller
                 ->causedBy(auth()->user())
                 ->log("Investigación iniciada para el sujeto: {$subject->name_or_company}");
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Investigación iniciada correctamente en segundo plano.',
+                ]);
+            }
+
             return redirect()->route('tenant.subjects.show', $subject->id)
                 ->with('success', 'Investigación iniciada correctamente en segundo plano. Los resultados se actualizarán a continuación.');
 
         } catch (\Throwable $e) {
             Log::error("Error al iniciar investigación para el sujeto ID {$id}: " . $e->getMessage());
-            
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             return redirect()->route('tenant.subjects.show', $id)
                 ->withErrors(['error' => $e->getMessage()]);
         }
@@ -82,12 +96,26 @@ class InvestigationController extends Controller
                 ->causedBy(auth()->user())
                 ->log("Consulta individual de {$sourceType} iniciada para el sujeto: {$subject->name_or_company}");
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Consulta individual iniciada correctamente en segundo plano.',
+                ]);
+            }
+
             return redirect()->route('tenant.subjects.show', $subject->id)
                 ->with('success', 'Consulta individual iniciada correctamente en segundo plano. Los resultados se actualizarán a continuación.');
 
         } catch (\Throwable $e) {
             Log::error("Error al iniciar consulta {$sourceType} para el sujeto ID {$id}: " . $e->getMessage());
-            
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             return redirect()->route('tenant.subjects.show', $id)
                 ->withErrors(['error' => $e->getMessage()]);
         }
