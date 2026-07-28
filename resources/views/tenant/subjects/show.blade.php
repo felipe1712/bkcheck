@@ -789,7 +789,7 @@
                                     <div class="col-lg-7">
                                         <div class="border rounded p-3 bg-white h-100">
                                             <h6 class="fw-bold text-dark fs-13 mb-3 border-bottom pb-2">
-                                                <i class="ri-user-line text-primary me-1"></i> Datos OCR Frente (https://nufi.azure-api.net/ocr/v4/frente)
+                                                <i class="ri-user-line text-primary me-1"></i> Verificación INE frente
                                             </h6>
                                             @if(!$ineFrenteQuery)
                                                 <p class="text-muted fs-12 mb-0">No se ha ejecutado la consulta del frente del INE.</p>
@@ -842,7 +842,7 @@
                                     <div class="col-lg-5">
                                         <div class="border rounded p-3 bg-white h-100">
                                             <h6 class="fw-bold text-dark fs-13 mb-3 border-bottom pb-2">
-                                                <i class="ri-qr-code-line text-primary me-1"></i> Datos OCR Reverso (https://nufi.azure-api.net/ocr/v4/reverso)
+                                                <i class="ri-qr-code-line text-primary me-1"></i> Verificación INE reverso
                                             </h6>
                                             @if(!$ineReversoQuery)
                                                 <p class="text-muted fs-12 mb-0">No se ha ejecutado la consulta del reverso del INE.</p>
