@@ -38,6 +38,8 @@
 @endif
 
 @php
+    $curpQuery = $queries->firstWhere('source_type', 'curp');
+    $curpData = $curpQuery?->result?->processed_data ?? [];
     $rfcQuery = $queries->firstWhere('source_type', 'rfc');
     $csdQuery = $queries->firstWhere('source_type', 'csd');
     $sigerQuery = $queries->firstWhere('source_type', 'siger');
