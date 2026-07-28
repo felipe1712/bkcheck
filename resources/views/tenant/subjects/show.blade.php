@@ -1246,82 +1246,7 @@
                     </div>
                     @endif
 
-                    <div class="accordion-item shadow-sm border mb-3">
-                        <h2 class="accordion-header" id="headingIdentidadDigital">
-                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentidadDigital" aria-expanded="false" aria-controls="collapseIdentidadDigital">
-                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                    <div class="fw-semibold text-dark fs-14">
-                                        <i class="ri-mail-check-fill text-primary me-2 align-middle fs-18"></i> Identidad Digital y Búsqueda por Email
-                                    </div>
-                                    <div>
-                                        @if(!$identidadDigitalQuery)
-                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
-                                        @elseif($identidadDigitalQuery->status === 'pending' || $identidadDigitalQuery->status === 'processing')
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
-                                        @elseif($identidadDigitalQuery->status === 'failed')
-                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
-                                        @elseif($identidadDigitalQuery->status === 'completed')
-                                            <span class="badge bg-success text-white py-1 px-2">Completed</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </button>
-                        </h2>
-                        <div id="collapseIdentidadDigital" class="accordion-collapse collapse" aria-labelledby="headingIdentidadDigital" data-bs-parent="#sourcesAccordion">
-                            <div class="accordion-body">
-                                @if(!$identidadDigitalQuery)
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-2">La búsqueda de perfiles digitales y brechas asociadas al correo aún no se ha iniciado.</p>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'identidad_digital']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
-                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
-                                            </button>
-                                        </form>
-                                    </div>
-                                @elseif($identidadDigitalQuery->status === 'pending' || $identidadDigitalQuery->status === 'processing')
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                                        <span>Buscando presencia digital y análisis de correo...</span>
-                                    </div>
-                                @elseif($identidadDigitalQuery->status === 'failed')
-                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
-                                        <span><strong>Error:</strong> {{ $identidadDigitalQuery->error_message }}</span>
-                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'identidad_digital']) }}" method="POST" class="ms-3">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
-                                        </form>
-                                    </div>
-                                @elseif($identidadDigitalQuery->status === 'completed' && $identidadDigitalQuery->result)
-                                    @php $idData = $identidadDigitalQuery->result->processed_data ?? []; @endphp
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <div class="border rounded p-3 bg-light-subtle">
-                                                <h6 class="fs-12 text-muted text-uppercase mb-2">Presencia en Redes y Plataformas</h6>
-                                                @foreach($idData['presencia_redes'] ?? [] as $red)
-                                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                                        <span class="fs-13 font-semibold">{{ $red['red'] }}</span>
-                                                        <span class="badge bg-{{ $red['encontrado'] ? 'success' : 'secondary' }}-subtle text-{{ $red['encontrado'] ? 'success' : 'secondary' }}">
-                                                            {{ $red['encontrado'] ? 'Verificado' : 'No Encontrado' }}
-                                                        </span>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="border rounded p-3 bg-light-subtle">
-                                                <h6 class="fs-12 text-muted text-uppercase mb-2">Score de Confiabilidad Digital</h6>
-                                                <div class="d-flex align-items-center gap-3">
-                                                    <div class="fs-24 font-bold text-success">{{ $idData['score_confiabilidad'] ?? 100 }}/100</div>
-                                                    <div class="fs-12 text-muted">{{ $idData['brechas_seguridad']['detalles'] ?? 'Sin brechas detectadas.' }}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+
 
 
 
@@ -1419,6 +1344,88 @@
                                     @endif
                                 @endif
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. IDENTIDAD DIGITAL Y ENRIQUECIMIENTO DE REDES (ÚLTIMO RUBRO TIER 2) -->
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingIdentidadDigital">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentidadDigital" aria-expanded="false" aria-controls="collapseIdentidadDigital">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-mail-check-fill text-primary me-2 align-middle fs-18"></i> Identidad Digital y Enriquecimiento de Redes
+                                    </div>
+                                    <div>
+                                        @if(!$identidadDigitalQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($identidadDigitalQuery->status === 'pending' || $identidadDigitalQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($identidadDigitalQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($identidadDigitalQuery->status === 'completed')
+                                            <span class="badge bg-success text-white py-1 px-2"><i class="ri-checkbox-circle-fill me-1"></i> Verificación Completada</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseIdentidadDigital" class="accordion-collapse collapse" aria-labelledby="headingIdentidadDigital" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$identidadDigitalQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La búsqueda de perfiles digitales y enriquecimiento por teléfono/correo aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'identidad_digital']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($identidadDigitalQuery->status === 'pending' || $identidadDigitalQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Consultando perfiles de enriquecimiento de identidad en NuFi...</span>
+                                    </div>
+                                @elseif($identidadDigitalQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $identidadDigitalQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'identidad_digital']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($identidadDigitalQuery->status === 'completed' && $identidadDigitalQuery->result)
+                                    @php $idData = $identidadDigitalQuery->result->processed_data ?? []; @endphp
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-light-subtle h-100">
+                                                <h6 class="fs-12 text-muted text-uppercase mb-2">Presencia y Coincidencias Digitales</h6>
+                                                @foreach($idData['presencia_redes'] ?? [] as $red)
+                                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                                        <span class="fs-13 font-semibold">{{ $red['red'] }}</span>
+                                                        <span class="badge bg-{{ $red['encontrado'] ? 'success' : 'secondary' }}-subtle text-{{ $red['encontrado'] ? 'success' : 'secondary' }}">
+                                                            {{ $red['encontrado'] ? 'Verificado' : 'No Encontrado' }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-light-subtle h-100">
+                                                <h6 class="fs-12 text-muted text-uppercase mb-2">Información Recuperada</h6>
+                                                <ul class="list-unstyled mb-0 fs-12 text-muted">
+                                                    <li class="mb-1"><strong>Top Match:</strong> {{ ($idData['top_match'] ?? true) ? 'Sí' : 'No' }}</li>
+                                                    <li class="mb-1"><strong>ID de Búsqueda:</strong> <code>{{ $idData['search_id'] ?? 'N/A' }}</code></li>
+                                                    <li class="mb-1"><strong>Coincidencias de Teléfono:</strong> {{ count($idData['phones'] ?? []) }}</li>
+                                                    <li class="mb-1"><strong>Coincidencias de Correo:</strong> {{ count($idData['emails'] ?? []) }}</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                     </div> {{-- /tierSection2 --}}
 
                     {{-- SECCIÓN 3: NIVEL 3 — VERIFICACIÓN EJECUTIVA --}}
