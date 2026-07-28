@@ -47,6 +47,7 @@
     $marcasQuery = $queries->firstWhere('source_type', 'marcas');
     $ineFrenteQuery = $queries->firstWhere('source_type', 'ine_frente');
     $ineReversoQuery = $queries->firstWhere('source_type', 'ine_reverso');
+    $listaNominalQuery = $queries->firstWhere('source_type', 'lista_nominal');
     $sancionesQuery = $queries->firstWhere('source_type', 'sanciones');
     $litigiosQuery = $queries->firstWhere('source_type', 'litigios');
     $identidadDigitalQuery = $queries->firstWhere('source_type', 'identidad_digital');
@@ -1035,15 +1036,18 @@
                                         @php
                                             $frenteDone = $ineFrenteQuery && $ineFrenteQuery->status === 'completed';
                                             $reversoDone = $ineReversoQuery && $ineReversoQuery->status === 'completed';
-                                            $ineProc = ($ineFrenteQuery && in_array($ineFrenteQuery->status, ['pending', 'processing'])) || ($ineReversoQuery && in_array($ineReversoQuery->status, ['pending', 'processing']));
-                                            $ineFail = ($ineFrenteQuery && $ineFrenteQuery->status === 'failed') || ($ineReversoQuery && $ineReversoQuery->status === 'failed');
+                                            $lnDone = $listaNominalQuery && $listaNominalQuery->status === 'completed';
+                                            $ineProc = ($ineFrenteQuery && in_array($ineFrenteQuery->status, ['pending', 'processing'])) || ($ineReversoQuery && in_array($ineReversoQuery->status, ['pending', 'processing'])) || ($listaNominalQuery && in_array($listaNominalQuery->status, ['pending', 'processing']));
+                                            $ineFail = ($ineFrenteQuery && $ineFrenteQuery->status === 'failed') || ($ineReversoQuery && $ineReversoQuery->status === 'failed') || ($listaNominalQuery && $listaNominalQuery->status === 'failed');
                                         @endphp
-                                        @if($frenteDone && $reversoDone)
+                                        @if($lnDone && ($listaNominalQuery->result?->processed_data['valida'] ?? false))
+                                            <span class="badge bg-success text-white py-1 px-2"><i class="ri-checkbox-circle-line me-1"></i> Credencial Vigente en Padrón INE</span>
+                                        @elseif($frenteDone && $reversoDone)
                                             <span class="badge bg-success text-white py-1 px-2">✓ INE Validada (Frente y Reverso)</span>
                                         @elseif($frenteDone || $reversoDone)
                                             <span class="badge bg-info text-white py-1 px-2">Validación Parcial ({{ $frenteDone ? 'Frente' : 'Reverso' }})</span>
                                         @elseif($ineProc)
-                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando OCR</span>
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando Consulta</span>
                                         @elseif($ineFail)
                                             <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
                                         @else
@@ -1122,6 +1126,13 @@
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-primary px-3" {{ $isProcessing || empty($subject->ine_back_path) ? 'disabled' : '' }}>
                                             <i class="ri-play-circle-line me-1"></i> {{ $ineReversoQuery ? 'Re-Consultar OCR Reverso' : 'Consultar OCR Reverso' }}
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'lista_nominal']) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success px-3" {{ $isProcessing ? 'disabled' : '' }}>
+                                            <i class="ri-shield-check-line me-1"></i> {{ $listaNominalQuery ? 'Re-Validar en Lista Nominal' : 'Validar en Lista Nominal (INE)' }}
                                         </button>
                                     </form>
                                 </div>
@@ -1216,6 +1227,64 @@
                                                         </tr>
                                                     </tbody>
                                                 </table>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- RESULTADOS VALIDACIÓN LISTA NOMINAL (PADRÓN INE) --}}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="border rounded p-3 bg-white">
+                                            <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                                                <h6 class="fw-bold text-dark fs-13 mb-0">
+                                                    <i class="ri-shield-check-line text-success me-1"></i> Validación en Lista Nominal / Padrón Electoral (INE API)
+                                                </h6>
+                                                @if($listaNominalQuery && $listaNominalQuery->status === 'completed')
+                                                    @php $lnData = $listaNominalQuery->result?->processed_data ?? []; @endphp
+                                                    <span class="badge {{ ($lnData['valida'] ?? false) ? 'bg-success' : 'bg-danger' }} fs-11">
+                                                        {{ ($lnData['valida'] ?? false) ? '✓ Credencial Vigente' : '✗ No Vigente / Inactiva' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if(!$listaNominalQuery)
+                                                <p class="text-muted fs-12 mb-0">No se ha ejecutado la validación en Lista Nominal del INE.</p>
+                                            @elseif(in_array($listaNominalQuery->status, ['pending', 'processing']))
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-success spinner-border-sm me-2"></div>
+                                                    <span class="fs-12 text-muted">Consultando Padrón Electoral del INE en tiempo real...</span>
+                                                </div>
+                                            @elseif($listaNominalQuery->status === 'failed')
+                                                <div class="alert alert-danger fs-12 py-2 mb-0">{{ $listaNominalQuery->error_message }}</div>
+                                            @elseif($listaNominalQuery->status === 'completed')
+                                                @php $lnData = $listaNominalQuery->result?->processed_data ?? []; @endphp
+                                                <div class="row g-2 fs-12">
+                                                    <div class="col-md-6">
+                                                        <span class="text-muted d-block fs-11">Estatus en INE:</span>
+                                                        <strong class="{{ ($lnData['valida'] ?? false) ? 'text-success' : 'text-danger' }}">{{ $lnData['estado'] ?? '—' }}</strong>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <span class="text-muted d-block fs-11">Resultado de la Operación:</span>
+                                                        <span>{{ $lnData['mensaje'] ?? 'Operación completada' }}</span>
+                                                    </div>
+                                                    @if(!empty($lnData['comentarios']))
+                                                    <div class="col-12 mt-2">
+                                                        <span class="text-muted d-block fs-11 mb-1">Comentarios del INE:</span>
+                                                        @foreach((array)$lnData['comentarios'] as $comentario)
+                                                            <div class="alert alert-info border-0 py-1 px-2 mb-1 fs-12">
+                                                                <i class="ri-information-line me-1"></i>{{ $comentario }}
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                    @endif
+                                                    @if(!empty($lnData['information']))
+                                                    <div class="col-12 mt-1">
+                                                        <span class="text-muted d-block fs-11 mb-1">Detalle del Registro:</span>
+                                                        <pre class="bg-light p-2 rounded text-dark fs-11 mb-0" style="white-space: pre-wrap;">{{ $lnData['information'] }}</pre>
+                                                    </div>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </div>
                                     </div>

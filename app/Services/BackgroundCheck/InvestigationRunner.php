@@ -13,6 +13,7 @@ use App\Services\BackgroundCheck\Nufi\NufiSatListasConnector;
 use App\Services\BackgroundCheck\Nufi\NufiMarcasConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIneFrenteConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIneReversoConnector;
+use App\Services\BackgroundCheck\Nufi\NufiListaNominalConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSancionesConnector;
 use App\Services\BackgroundCheck\Nufi\NufiLitigiosConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSelfieConnector;
@@ -44,6 +45,7 @@ class InvestigationRunner
             new NufiMarcasConnector(),
             new NufiIneFrenteConnector(),
             new NufiIneReversoConnector(),
+            new NufiListaNominalConnector(),
             new NufiSancionesConnector(),
             new NufiLitigiosConnector(),
             new NufiSelfieConnector(),

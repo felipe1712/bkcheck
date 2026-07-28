@@ -13,6 +13,7 @@ use App\Services\BackgroundCheck\Nufi\NufiSatListasConnector;
 use App\Services\BackgroundCheck\Nufi\NufiMarcasConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIneFrenteConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIneReversoConnector;
+use App\Services\BackgroundCheck\Nufi\NufiListaNominalConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSancionesConnector;
 use App\Services\BackgroundCheck\Nufi\NufiLitigiosConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSelfieConnector;
@@ -69,6 +70,7 @@ class ProcessConnectorQuery implements ShouldQueue
                 'marcas'           => new NufiMarcasConnector(),
                 'ine_frente'       => new NufiIneFrenteConnector(),
                 'ine_reverso'      => new NufiIneReversoConnector(),
+                'lista_nominal'    => new NufiListaNominalConnector(),
                 'sanciones'        => new NufiSancionesConnector(),
                 'litigios'         => new NufiLitigiosConnector(),
                 'selfie'               => new NufiSelfieConnector(),

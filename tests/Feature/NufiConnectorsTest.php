@@ -91,9 +91,9 @@ class NufiConnectorsTest extends TestCase
 
         // Under PHPUnit's sync queue driver, the runner's dispatches execute immediately.
         // We can query the results and assert states directly.
-        // persona_fisica (no INE): curp, rfc, csd, sat_listas, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital = 10
+        // persona_fisica (no INE): curp, rfc, csd, sat_listas, lista_nominal, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital = 11
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(10, $queries);
+        $this->assertCount(11, $queries);
 
         // Verify that query statuses are completed
         foreach ($queries as $q) {
@@ -104,11 +104,11 @@ class NufiConnectorsTest extends TestCase
         }
 
         $auditLogs = AuditLog::where('tenant_id', $user->tenant_id)->get();
-        $this->assertCount(10, $auditLogs);
+        $this->assertCount(11, $auditLogs);
 
         // Verify api_usage totals
         $usageCount = ApiUsage::where('tenant_id', $user->tenant_id)->sum('conteo');
-        $this->assertEquals(10, $usageCount);
+        $this->assertEquals(11, $usageCount);
     }
 
     /**
@@ -396,9 +396,9 @@ class NufiConnectorsTest extends TestCase
         $runner = new InvestigationRunner();
         $runner->run($subject);
 
-        // 12 jobs: curp, rfc, csd, sat_listas, ine_frente, ine_reverso, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
+        // 13 jobs: curp, rfc, csd, sat_listas, ine_frente, ine_reverso, lista_nominal, sanciones, litigios, presencia_en_linea, denue, selfie, identidad_digital
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
-        $this->assertCount(12, $queries);
+        $this->assertCount(13, $queries);
 
         // Verify status
         $frenteQuery = $queries->where('source_type', 'ine_frente')->first();
@@ -537,5 +537,59 @@ class NufiConnectorsTest extends TestCase
 
         $this->assertEquals('123456789', $reversoData['cic']);
         $this->assertEquals('IDMEX123456789', $reversoData['codigo_ocr']);
+    }
+
+    /**
+     * Test Lista Nominal connector with both mock and real response structures.
+     */
+    public function test_lista_nominal_connector_mock_and_real_response_mapping()
+    {
+        $user = User::where('email', 'investigador@alfa.com')->firstOrFail();
+        $this->actingAs($user);
+
+        $project = Project::create(['tenant_id' => $user->tenant_id, 'name' => 'Project Lista Nominal']);
+        $subject = Subject::create([
+            'project_id' => $project->id,
+            'tipo' => 'persona_fisica',
+            'name_or_company' => 'Luis Felipe Caudillo',
+            'rfc' => 'CAML7804014N5',
+            'consent_granted' => true,
+        ]);
+
+        // 1. Mock mode test
+        config(['background_check.nufi.mock' => true]);
+        $connector = new \App\Services\BackgroundCheck\Nufi\NufiListaNominalConnector();
+        $mockData = $connector->execute($subject);
+
+        $this->assertTrue($mockData['valida']);
+        $this->assertTrue($mockData['activa']);
+        $this->assertEquals('La credencial esta vigente', $mockData['estado']);
+
+        // 2. Real response simulation test
+        config(['background_check.nufi.mock' => false]);
+        \Illuminate\Support\Facades\Http::fake([
+            'nufi.azure-api.net/lista_nominal/validar/v2' => \Illuminate\Support\Facades\Http::response([
+                'code' => 200,
+                'status' => 'Success',
+                'message' => 'Operación exitosa.',
+                'data' => [
+                    [
+                        'information' => "CIC\t232759468\r\nClave de elector\tTMORAN04050519H300\r\nTus datos se encuentran en el Padrón Electoral.",
+                        'activa' => true,
+                        'estado' => 'La credencial esta vigente',
+                        'comentarios' => [
+                            'Tus datos se encuentran en el Padrón Electoral.'
+                        ]
+                    ]
+                ]
+            ], 200)
+        ]);
+
+        $realData = $connector->execute($subject);
+
+        $this->assertTrue($realData['valida']);
+        $this->assertTrue($realData['activa']);
+        $this->assertEquals('La credencial esta vigente', $realData['estado']);
+        $this->assertContains('Tus datos se encuentran en el Padrón Electoral.', $realData['comentarios']);
     }
 }

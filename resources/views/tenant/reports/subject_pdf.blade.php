@@ -215,6 +215,7 @@
                         @case('marcas') Búsqueda de Marcas (IMPI) @break
                         @case('ine_frente') Identificación INE Frente (OCR) @break
                         @case('ine_reverso') Identificación INE Reverso (OCR) @break
+                        @case('lista_nominal') Validación Lista Nominal INE @break
                         @default {{ $query->source_type }}
                     @endswitch
                 </td>
@@ -503,6 +504,26 @@
                     <td style="font-weight: bold;">Número Identificador:</td>
                     <td><code>{{ $reversoData['numero_identificador'] ?? 'N/A' }}</code></td>
                 </tr>
+            </table>
+        @elseif($query->source_type === 'lista_nominal' && $query->result)
+            @php $lnData = $query->result->processed_data; @endphp
+            <table class="metadata-table">
+                <tr>
+                    <td style="width: 25%; font-weight: bold;">Estatus en Padrón INE:</td>
+                    <td style="width: 75%;">
+                        @if($lnData['valida'] ?? false)
+                            <span class="badge badge-success">Vigente</span> ({{ $lnData['estado'] ?? '' }})
+                        @else
+                            <span class="badge badge-danger">No Vigente / Inactiva</span> ({{ $lnData['estado'] ?? '' }})
+                        @endif
+                    </td>
+                </tr>
+                @if(!empty($lnData['comentarios']))
+                <tr>
+                    <td style="font-weight: bold;">Comentarios:</td>
+                    <td>{{ implode(', ', (array)$lnData['comentarios']) }}</td>
+                </tr>
+                @endif
             </table>
         @elseif($query->source_type === 'sanciones' && $query->result)
             @php $sancData = $query->result->processed_data; @endphp
