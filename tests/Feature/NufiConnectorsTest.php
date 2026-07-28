@@ -143,6 +143,59 @@ class NufiConnectorsTest extends TestCase
     }
 
     /**
+     * Test CURP connector parsing of real NuFi response payload with nested curpdata.
+     */
+    public function test_curp_connector_real_nufi_response_mapping()
+    {
+        config(['background_check.nufi.mock' => false]);
+        config(['background_check.nufi.api_key' => 'test-api-key']);
+
+        $subject = new Subject([
+            'curp' => 'CAML780401HDFRTL01',
+            'name_or_company' => 'LUIS FELIPE CAUDILLO',
+            'tipo' => 'persona_fisica',
+        ]);
+
+        $connector = new \App\Services\BackgroundCheck\Nufi\NufiCurpConnector();
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://nufi.azure-api.net/curp/v1/consulta' => \Illuminate\Support\Facades\Http::response([
+                'body' => [
+                    'code' => 200,
+                    'status' => 'success',
+                    'message' => 'resolve!',
+                    'data' => [
+                        'guid' => '5b3702e1-0d9b-4a3b-bdf2-0b7c58e3c6a6',
+                        'curpdata' => [
+                            [
+                                'curp' => 'CAML780401HDFRTL01',
+                                'sexo' => 'HOMBRE',
+                                'entidad' => 'CIUDAD DE MEXICO',
+                                'nombres' => 'LUIS FELIPE',
+                                'statusCurp' => 'RCN',
+                                'primerApellido' => 'CAUDILLO',
+                                'segundoApellido' => 'MARTINEZ',
+                                'fechaNacimiento' => '01/04/1978',
+                                'descriptionStatusCurp' => 'Registro de Cambio No Afectando a CURP'
+                            ]
+                        ]
+                    ]
+                ],
+                'status' => 200
+            ], 200)
+        ]);
+
+        $res = $connector->execute($subject);
+
+        $this->assertTrue($res['valida']);
+        $this->assertEquals('LUIS FELIPE', $res['nombre']);
+        $this->assertEquals('CAUDILLO', $res['primer_apellido']);
+        $this->assertEquals('MARTINEZ', $res['segundo_apellido']);
+        $this->assertEquals('RCN', $res['estatus_curp']);
+        $this->assertEquals('Registro de Cambio No Afectando a CURP', $res['description_status_curp']);
+    }
+
+    /**
      * Test SAT Listas connector response mapping.
      */
     public function test_sat_listas_connector_mapping()
