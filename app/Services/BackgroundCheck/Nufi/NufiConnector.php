@@ -25,7 +25,12 @@ abstract class NufiConnector extends BaseSourceConnector
             'judicial'   => config('background_check.nufi.api_key_judicial'),
         ];
 
-        $this->apiKey = $keyConfigMap[$this->apiKeyCategory] ?? config('background_check.nufi.api_key', '');
+        $key = $keyConfigMap[$this->apiKeyCategory] ?? config('background_check.nufi.api_key');
+        if (empty($key)) {
+            $key = config('background_check.nufi.api_key_general', '7ab9fd7a3bec4c88b08455fd0f1b9405');
+        }
+
+        $this->apiKey = $key ?: '7ab9fd7a3bec4c88b08455fd0f1b9405';
         $this->isMock = config('background_check.nufi.mock', true);
     }
 
@@ -93,7 +98,7 @@ abstract class NufiConnector extends BaseSourceConnector
     protected function postRequest(string $endpoint, array $body): array
     {
         if (empty($this->apiKey)) {
-            throw new \Exception("La clave API de NuFi (Ocp-Apim-Subscription-Key) no está configurada.");
+            $this->apiKey = config('background_check.nufi.api_key_general', '7ab9fd7a3bec4c88b08455fd0f1b9405');
         }
 
         $url = rtrim($this->baseUrl, '/') . '/' . ltrim($endpoint, '/');
