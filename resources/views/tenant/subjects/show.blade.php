@@ -1175,6 +1175,12 @@
                                                             <td class="fw-semibold bg-light">Vigencia:</td>
                                                             <td><span class="badge bg-success-subtle text-success fs-11">{{ $fData['vigencia'] ?? 'N/A' }}</span></td>
                                                         </tr>
+                                                        @if(!empty($fData['calle_numero']) || !empty($fData['colonia']) || !empty($fData['municipio']) || !empty($fData['estado']))
+                                                        <tr>
+                                                            <td class="fw-semibold bg-light">Domicilio INE:</td>
+                                                            <td>{{ collect([$fData['calle_numero'] ?? null, $fData['colonia'] ?? null, $fData['municipio'] ?? null, $fData['estado'] ?? null])->filter()->implode(', ') }} @if(!empty($fData['codigo_postal'])) C.P. {{ $fData['codigo_postal'] }} @endif</td>
+                                                        </tr>
+                                                        @endif
                                                     </tbody>
                                                 </table>
                                             @endif

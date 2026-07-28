@@ -48,7 +48,22 @@ class NufiIneFrenteConnector extends NufiConnector
             'base64_credencial_frente' => $base64
         ]);
 
-        return $response['data'] ?? $response ?? [];
+        $data = $response['body']['data']['ocr']
+            ?? $response['body']['data']
+            ?? $response['data']['ocr']
+            ?? $response['data']
+            ?? $response;
+
+        if (is_array($data)) {
+            if (isset($data['clave']) && empty($data['clave_elector'])) {
+                $data['clave_elector'] = $data['clave'];
+            }
+            if (isset($data['emision']) && empty($data['numero_emision'])) {
+                $data['numero_emision'] = $data['emision'];
+            }
+        }
+
+        return is_array($data) ? $data : [];
     }
 
     protected function mockResponse(Subject $subject): array

@@ -454,4 +454,88 @@ class NufiConnectorsTest extends TestCase
         $this->assertTrue($sancionesQuery->result->processed_data['encontrado']);
         $this->assertTrue($litigiosQuery->result->processed_data['tiene_juicios']);
     }
+
+    /**
+     * Test INE Frente and Reverso connectors mapping with real NuFi API response structure.
+     */
+    public function test_ine_frente_and_reverso_real_nufi_response_mapping()
+    {
+        $user = User::where('email', 'investigador@alfa.com')->firstOrFail();
+        $this->actingAs($user);
+
+        $project = Project::create(['tenant_id' => $user->tenant_id, 'name' => 'Project INE']);
+        $subject = Subject::create([
+            'project_id' => $project->id,
+            'tipo' => 'persona_fisica',
+            'name_or_company' => 'Pablo Caudillo Martinez',
+            'rfc' => 'CAML7804014N5',
+            'ine_front_path' => 'dummy_frente.jpg',
+            'ine_back_path' => 'dummy_back.jpg',
+            'consent_granted' => true,
+        ]);
+
+        \Illuminate\Support\Facades\Storage::fake();
+        \Illuminate\Support\Facades\Storage::put('dummy_frente.jpg', 'dummy content');
+        \Illuminate\Support\Facades\Storage::put('dummy_back.jpg', 'dummy content');
+
+        \Illuminate\Support\Facades\Http::fake([
+            'nufi.azure-api.net/ocr/v4/frente' => \Illuminate\Support\Facades\Http::response([
+                'body' => [
+                    'code' => 200,
+                    'data' => [
+                        'id' => '20260728220508_65988100',
+                        'ocr' => [
+                            'curp' => 'CAML7804014N5',
+                            'sexo' => 'HOMBRE',
+                            'tipo' => 'G',
+                            'clave' => 'CDML7804014N5',
+                            'nombre' => 'PABLO',
+                            'apellido_paterno' => 'CAUDILLO',
+                            'apellido_materno' => 'MARTINEZ',
+                            'emision' => '03',
+                            'seccion' => '0106',
+                            'fecha_nacimiento' => '25/10/1976',
+                            'calle_numero' => 'BLVD ADOLFO LOPEZ MATEOS 359',
+                            'colonia' => 'SAN ANGEL INN',
+                            'municipio' => 'ALVARO OBREGON',
+                            'estado' => 'CDMX',
+                            'codigo_postal' => '01060',
+                        ],
+                    ],
+                    'status' => 'success',
+                ],
+                'status' => 200,
+            ]),
+            'nufi.azure-api.net/ocr/v4/reverso' => \Illuminate\Support\Facades\Http::response([
+                'body' => [
+                    'code' => 200,
+                    'data' => [
+                        'id' => '20260728220528_65988100',
+                        'ocr' => [
+                            'numero_identificador' => '123456789',
+                            'ocr' => 'IDMEX123456789',
+                        ],
+                    ],
+                    'status' => 'success',
+                ],
+                'status' => 200,
+            ]),
+        ]);
+
+        config(['background_check.nufi.mock' => false]);
+
+        $frenteConnector = new \App\Services\BackgroundCheck\Nufi\NufiIneFrenteConnector();
+        $frenteData = $frenteConnector->execute($subject);
+
+        $this->assertEquals('PABLO', $frenteData['nombre']);
+        $this->assertEquals('CAUDILLO', $frenteData['apellido_paterno']);
+        $this->assertEquals('CDML7804014N5', $frenteData['clave_elector']);
+        $this->assertEquals('03', $frenteData['numero_emision']);
+
+        $reversoConnector = new \App\Services\BackgroundCheck\Nufi\NufiIneReversoConnector();
+        $reversoData = $reversoConnector->execute($subject);
+
+        $this->assertEquals('123456789', $reversoData['cic']);
+        $this->assertEquals('IDMEX123456789', $reversoData['codigo_ocr']);
+    }
 }

@@ -48,7 +48,22 @@ class NufiIneReversoConnector extends NufiConnector
             'base64_credencial_reverso' => $base64
         ]);
 
-        return $response['data'] ?? $response ?? [];
+        $data = $response['body']['data']['ocr']
+            ?? $response['body']['data']
+            ?? $response['data']['ocr']
+            ?? $response['data']
+            ?? $response;
+
+        if (is_array($data)) {
+            if (isset($data['ocr']) && empty($data['codigo_ocr'])) {
+                $data['codigo_ocr'] = $data['ocr'];
+            }
+            if (isset($data['numero_identificador']) && empty($data['cic'])) {
+                $data['cic'] = $data['numero_identificador'];
+            }
+        }
+
+        return is_array($data) ? $data : [];
     }
 
     protected function mockResponse(Subject $subject): array
