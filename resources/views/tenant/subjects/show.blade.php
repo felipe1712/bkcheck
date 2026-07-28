@@ -486,7 +486,103 @@
                             <span class="fw-bold fs-13 flex-grow-1 text-uppercase">NIVEL 1 — Verificación Básica (Identidad, Listas SAT 69/69B y Sanciones/OFAC)</span>
                         </div>
 
-                    <!-- 1. VALIDACIÓN RFC -->
+                    <!-- 1. VALIDACIÓN CURP / RENAPO -->
+                    @if($subject->tipo === 'persona_fisica')
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingCurp">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCurp" aria-expanded="false" aria-controls="collapseCurp">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-fingerprint-line text-primary me-2 align-middle fs-18"></i> Validación CURP / RENAPO
+                                    </div>
+                                    <div>
+                                        @if(!$curpQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($curpQuery->status === 'pending' || $curpQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($curpQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($curpQuery->status === 'completed')
+                                            @if(!empty($curpData['valida']))
+                                                <span class="badge bg-success text-white py-1 px-2">✓ CURP Válida</span>
+                                            @else
+                                                <span class="badge bg-danger text-white py-1 px-2">✗ CURP Inválida</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseCurp" class="accordion-collapse collapse" aria-labelledby="headingCurp" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$curpQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La consulta de validación de este CURP ante RENAPO aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'curp']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($curpQuery->status === 'pending' || $curpQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Estamos validando la CURP ante RENAPO. Por favor espere...</span>
+                                    </div>
+                                @elseif($curpQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $curpQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'curp']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($curpQuery->status === 'completed')
+                                    @php $cData = $curpQuery->result?->processed_data ?? []; @endphp
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered align-middle mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light" style="width: 30%">CURP Oficial:</td>
+                                                    <td><code>{{ $cData['curp'] ?? $subject->curp }}</code></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Estatus RENAPO:</td>
+                                                    <td><span class="badge bg-success-subtle text-success fs-12">{{ $cData['estatus_curp'] ?? 'AN (Activo)' }}</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Nombre Completo:</td>
+                                                    <td class="fw-semibold text-dark">{{ trim(($cData['nombre'] ?? '') . ' ' . ($cData['primer_apellido'] ?? '') . ' ' . ($cData['segundo_apellido'] ?? '')) ?: 'N/A' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Fecha de Nacimiento:</td>
+                                                    <td>{{ $cData['fecha_nacimiento'] ?? 'N/A' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Sexo:</td>
+                                                    <td>{{ $cData['sexo'] ?? 'N/A' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Entidad de Nacimiento:</td>
+                                                    <td>{{ $cData['estado_nacimiento'] ?? 'N/A' }}</td>
+                                                </tr>
+                                                @if(!empty($cData['nacionalidad']))
+                                                <tr>
+                                                    <td class="fw-semibold bg-light">Nacionalidad:</td>
+                                                    <td>{{ $cData['nacionalidad'] }}</td>
+                                                </tr>
+                                                @endif
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- 2. VALIDACIÓN RFC -->
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingRfc">
                             <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRfc" aria-expanded="false" aria-controls="collapseRfc">
