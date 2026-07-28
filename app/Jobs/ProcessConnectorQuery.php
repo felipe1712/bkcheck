@@ -20,6 +20,7 @@ use App\Services\BackgroundCheck\Nufi\NufiCurpConnector;
 use App\Services\BackgroundCheck\Nufi\NufiDomicilioConnector;
 use App\Services\BackgroundCheck\Nufi\NufiNssConnector;
 use App\Services\BackgroundCheck\Nufi\NufiFinancialConnector;
+use App\Services\BackgroundCheck\Nufi\NufiIdentidadDigitalConnector;
 use App\Services\BackgroundCheck\PresenciaEnLineaConnector;
 use App\Services\BackgroundCheck\Inegi\DenueConnector;
 use Illuminate\Bus\Queueable;
@@ -75,6 +76,7 @@ class ProcessConnectorQuery implements ShouldQueue
                 'comprobante_domicilio'=> new NufiDomicilioConnector(),
                 'nss_imss'             => new NufiNssConnector(),
                 'score_crediticio'     => new NufiFinancialConnector(),
+                'identidad_digital'    => new NufiIdentidadDigitalConnector(),
                 'presencia_en_linea'   => new PresenciaEnLineaConnector(),
                 'denue'                => new DenueConnector(),
                 default => throw new \Exception("Conector no soportado: {$type}"),
