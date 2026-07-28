@@ -1969,25 +1969,40 @@ function openDocModal(src, title) {
             </div>
             <div class="card-body pt-2 fs-13">
                 @if($nssQuery->status === 'completed' && !empty($nssData))
+                    @php
+                        $empleosList = $nssData['empleos'] ?? $nssData['historial_empleos'] ?? [];
+                        $ultimoPatron = !empty($empleosList) ? ($empleosList[0]['patron'] ?? '—') : ($nssData['ultimo_patron'] ?? '—');
+                        $totalPatrones = count($empleosList) ?: ($nssData['total_patrones'] ?? '—');
+                    @endphp
                     <div class="row g-2 mb-2">
                         <div class="col-6"><span class="text-muted d-block fs-11">NSS</span><code class="fs-12">{{ $nssData['nss'] ?? '—' }}</code></div>
                         <div class="col-6"><span class="text-muted d-block fs-11">Semanas cotizadas</span><strong class="text-primary">{{ $nssData['semanas_cotizadas'] ?? '—' }}</strong></div>
-                        <div class="col-6"><span class="text-muted d-block fs-11">Último patrón</span>{{ $nssData['ultimo_patron'] ?? '—' }}</div>
-                        <div class="col-6"><span class="text-muted d-block fs-11">Últ. cotización</span>{{ $nssData['fecha_ultima_cotizacion'] ?? '—' }}</div>
-                        <div class="col-6"><span class="text-muted d-block fs-11">Total empleadores</span>{{ $nssData['total_patrones'] ?? '—' }}</div>
-                        <div class="col-6"><span class="text-muted d-block fs-11">SBC</span>${{ number_format($nssData['salario_base_cotizacion'] ?? 0, 2) }}/día</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Último patrón</span>{{ $ultimoPatron }}</div>
+                        <div class="col-6"><span class="text-muted d-block fs-11">Total empleadores</span>{{ $totalPatrones }}</div>
+                        @if(isset($nssData['semanas_descontadas']))
+                        <div class="col-6"><span class="text-muted d-block fs-11">Sem. descontadas</span>{{ $nssData['semanas_descontadas'] }}</div>
+                        @endif
+                        @if(isset($nssData['semanas_reintegradas']))
+                        <div class="col-6"><span class="text-muted d-block fs-11">Sem. reintegradas</span>{{ $nssData['semanas_reintegradas'] }}</div>
+                        @endif
                     </div>
-                    @if(!empty($nssData['historial_empleos']))
+                    @if(!empty($empleosList))
                     <div class="table-responsive mt-2">
                         <table class="table table-xs table-hover fs-12 mb-0">
-                            <thead class="table-light"><tr><th>Patrón</th><th>Inicio</th><th>Baja</th><th>Sem.</th></tr></thead>
+                            <thead class="table-light"><tr><th>Patrón</th><th>Reg. Patronal / Entidad</th><th>Estatus / Baja</th><th>Salario Base</th></tr></thead>
                             <tbody>
-                                @foreach(array_slice($nssData['historial_empleos'], 0, 4) as $emp)
+                                @foreach(array_slice($empleosList, 0, 5) as $emp)
                                 <tr>
-                                    <td>{{ $emp['patron'] ?? '—' }}<br><small class="text-muted">{{ $emp['tipo_movimiento'] ?? '' }}</small></td>
-                                    <td>{{ $emp['fecha_inicio'] ?? '—' }}</td>
-                                    <td>{{ $emp['fecha_baja'] ?? 'Vigente' }}</td>
-                                    <td class="text-center fw-semibold">{{ $emp['semanas'] ?? '—' }}</td>
+                                    <td><strong>{{ $emp['patron'] ?? '—' }}</strong></td>
+                                    <td>{{ $emp['registro_patronal'] ?? '—' }}<br><small class="text-muted">{{ $emp['entidad_federativa'] ?? '' }}</small></td>
+                                    <td>
+                                        @if(strtolower($emp['fecha_baja'] ?? '') === 'vigente')
+                                            <span class="badge bg-success-subtle text-success">Vigente</span>
+                                        @else
+                                            {{ $emp['fecha_baja'] ?? '—' }}
+                                        @endif
+                                    </td>
+                                    <td class="fw-semibold text-primary">{{ $emp['salario_base'] ?? '—' }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

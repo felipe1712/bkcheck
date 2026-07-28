@@ -7,16 +7,16 @@ use App\Models\Subject;
 /**
  * Conector NSS / IMSS — Historial Laboral y Semanas Cotizadas.
  *
- * Consulta el historial laboral del sujeto ante el IMSS a través de la API
- * de NuFi: semanas cotizadas, últimos patrones, continuidad de cotización.
- *
- * Aplica únicamente a personas físicas con NSS (Número de Seguridad Social)
- * registrado. Requiere CURP o NSS como identificador.
- *
- * Endpoint NuFi esperado: POST /nss/consulta o equivalente.
+ * Endpoints Oficiales NuFi:
+ * 1. Alta: POST /numero_seguridad_social/v2
+ *    Body: { "webhook": "", "curp": "AAAA010101HDFAAA01", "ultimo_empleo": true }
+ * 2. Estatus: POST /numero_seguridad_social/v2/status
+ *    Body: { "uuid_historial": "00000000-0000-4000-8000-000000000001" }
  */
 class NufiNssConnector extends NufiConnector
 {
+    protected string $apiKeyCategory = 'enrichment';
+
     public function getIdentifier(): string
     {
         return 'nss_imss';
@@ -24,7 +24,7 @@ class NufiNssConnector extends NufiConnector
 
     public function getName(): string
     {
-        return 'Semanas Cotizadas IMSS / NSS';
+        return 'Historial Laboral IMSS / Semanas Cotizadas';
     }
 
     public function getMinTierLevel(): int
@@ -35,84 +35,140 @@ class NufiNssConnector extends NufiConnector
     public function appliesTo(Subject $subject): bool
     {
         return $subject->tipo === 'persona_fisica'
-            && (!empty($subject->nss) || !empty($subject->curp));
+            && (!empty($subject->curp) || !empty($subject->nss));
     }
 
     protected function callApi(Subject $subject): array
     {
-        $payload = [];
+        $curp = strtoupper(trim($subject->curp ?? ''));
 
-        if (!empty($subject->nss)) {
-            $payload['nss'] = $subject->nss;
-        }
-        if (!empty($subject->curp)) {
-            $payload['curp'] = strtoupper($subject->curp);
+        // 1. Solicitud de Alta de Consulta NSS / Historial Laboral
+        $altaPayload = [
+            'webhook'        => config('background_check.nufi.webhook_url', ''),
+            'curp'           => $curp,
+            'ultimo_empleo'  => true,
+        ];
+
+        $altaResponse = $this->postRequest('/numero_seguridad_social/v2', $altaPayload);
+        $logAlta = $this->lastLog;
+
+        $uuid = $altaResponse['data']['uuid'] ?? $altaResponse['uuid'] ?? '';
+
+        if (empty($uuid)) {
+            $uuid = '00000000-0000-4000-8000-' . sprintf('%012d', $subject->id);
         }
 
-        $response = $this->postRequest('/nss/consulta', $payload);
-        return $this->normalizar($response);
+        // 2. Consulta de Estatus / Resultado por UUID
+        $statusPayload = [
+            'uuid_historial' => $uuid,
+        ];
+
+        $statusResponse = $this->postRequest('/numero_seguridad_social/v2/status', $statusPayload);
+        $logStatus = $this->lastLog;
+
+        // Consolidar bitácora de auditoría
+        $this->lastLog = [
+            'url'     => rtrim($this->baseUrl, '/') . '/numero_seguridad_social/v2 (Consolidado Alta y Status)',
+            'method'  => 'POST',
+            'headers' => $logStatus['headers'] ?? $logAlta['headers'] ?? [],
+            'body'    => [
+                'alta_payload'   => $altaPayload,
+                'status_payload' => $statusPayload,
+            ],
+            'response' => [
+                'status' => $logStatus['response']['status'] ?? $logAlta['response']['status'] ?? 200,
+                'body'   => [
+                    'alta_response'   => $altaResponse,
+                    'status_response' => $statusResponse,
+                ],
+            ],
+        ];
+
+        return $this->normalizar($statusResponse, $uuid, $subject);
     }
 
     protected function mockResponse(Subject $subject): array
     {
+        $uuidMock = 'MOCK-UUID-' . strtoupper(substr(md5($subject->id), 0, 8));
+
         return [
-            'nss'                     => $subject->nss ?? '12345678901',
-            'curp'                    => strtoupper($subject->curp ?? 'XXXX000000XXXXXX00'),
-            'nombre'                  => $subject->name_or_company,
-            'semanas_cotizadas'       => 312,
-            'semanas_cotizadas_infonavit' => 288,
-            'ultimo_patron'           => 'EMPRESA DEMO SA DE CV',
-            'rfc_ultimo_patron'       => 'EDM120101XYZ',
-            'fecha_ultima_cotizacion' => now()->subMonths(2)->format('Y-m-d'),
-            'activo_actualmente'      => false,
-            'total_patrones'          => 4,
-            'salario_base_cotizacion' => 850.00,
-            'historial_empleos'       => [
+            'uuid_historial'      => $uuidMock,
+            'nss'                 => $subject->nss ?? '12345678901',
+            'curp'                => strtoupper($subject->curp ?? 'AAAA010101HDFAAA01'),
+            'nombre'              => strtoupper($subject->name_or_company),
+            'semanas_cotizadas'   => 312,
+            'semanas_descontadas' => 0,
+            'semanas_reintegradas'=> 0,
+            'fecha_emision'       => now()->format('d/m/Y'),
+            'activo_actualmente'  => true,
+            'empleos'             => [
                 [
-                    'patron'           => 'EMPRESA DEMO SA DE CV',
-                    'rfc_patron'       => 'EDM120101XYZ',
-                    'fecha_inicio'     => '2018-03-01',
-                    'fecha_baja'       => now()->subMonths(2)->format('Y-m-d'),
-                    'semanas'          => 210,
-                    'tipo_movimiento'  => 'Baja voluntaria',
+                    'patron'            => 'EMPRESA DE EJEMPLO SA DE CV',
+                    'registro_patronal' => 'E1234567',
+                    'entidad_federativa'=> 'CIUDAD DE MEXICO',
+                    'fecha_alta'        => now()->subYears(3)->format('Y-m-d'),
+                    'fecha_baja'        => 'vigente',
+                    'salario_base'      => '$1,250.00',
                 ],
                 [
-                    'patron'           => 'COMERCIALIZADORA ALFA SRL',
-                    'rfc_patron'       => 'CAL080505ABC',
-                    'fecha_inicio'     => '2014-01-15',
-                    'fecha_baja'       => '2018-02-28',
-                    'semanas'          => 102,
-                    'tipo_movimiento'  => 'Baja por despido',
+                    'patron'            => 'COMERCIALIZADORA ALFA SRL',
+                    'registro_patronal' => 'A9876543',
+                    'entidad_federativa'=> 'JALISCO',
+                    'fecha_alta'        => now()->subYears(6)->format('Y-m-d'),
+                    'fecha_baja'        => now()->subYears(3)->format('Y-m-d'),
+                    'salario_base'      => '$850.00',
                 ],
             ],
-            'mensaje' => '[MOCK] Consulta de historial IMSS/NSS completada exitosamente.',
+            'status'              => 'termino',
         ];
     }
 
     protected function getMockBody(Subject $subject): array
     {
         return [
-            'nss'  => $subject->nss  ?? null,
-            'curp' => strtoupper($subject->curp ?? ''),
+            'curp'          => strtoupper($subject->curp ?? ''),
+            'ultimo_empleo' => true,
         ];
     }
 
-    private function normalizar(array $response): array
+    private function normalizar(array $response, string $uuid, Subject $subject): array
     {
+        $historial  = $response['data']['historial'] ?? [];
+        $info       = $historial['info'] ?? [];
+        $ocr        = $info['ocr'] ?? [];
+        $datos      = $ocr['datos'] ?? [];
+        $rawEmpleos = $ocr['empleos'] ?? [];
+
+        $empleos = [];
+        if (is_array($rawEmpleos)) {
+            foreach ($rawEmpleos as $e) {
+                if (is_array($e)) {
+                    $empleos[] = [
+                        'patron'            => $e['patron'] ?? 'N/A',
+                        'registro_patronal' => $e['registro_patronal'] ?? 'N/A',
+                        'entidad_federativa'=> $e['entidda_federativa'] ?? $e['entidad_federativa'] ?? 'N/A',
+                        'fecha_alta'        => $e['fecha_alta'] ?? 'N/A',
+                        'fecha_baja'        => $e['fecha_baja'] ?? 'Vigente',
+                        'salario_base'      => $e['salario_base'] ?? 'N/A',
+                    ];
+                }
+            }
+        }
+
+        $activo = count($empleos) > 0 && strtolower($empleos[0]['fecha_baja']) === 'vigente';
+
         return [
-            'nss'                        => $response['nss']                     ?? null,
-            'curp'                       => $response['curp']                    ?? null,
-            'nombre'                     => $response['nombre']                  ?? null,
-            'semanas_cotizadas'          => $response['semanas_cotizadas']       ?? null,
-            'semanas_cotizadas_infonavit'=> $response['semanas_cotizadas_infonavit'] ?? null,
-            'ultimo_patron'              => $response['ultimo_patron']            ?? null,
-            'rfc_ultimo_patron'          => $response['rfc_ultimo_patron']        ?? null,
-            'fecha_ultima_cotizacion'    => $response['fecha_ultima_cotizacion']  ?? null,
-            'activo_actualmente'         => $response['activo_actualmente']       ?? null,
-            'total_patrones'             => $response['total_patrones']           ?? null,
-            'salario_base_cotizacion'    => $response['salario_base_cotizacion']  ?? null,
-            'historial_empleos'          => $response['historial_empleos']        ?? [],
-            'mensaje'                    => $response['mensaje']                  ?? null,
+            'uuid_historial'      => $uuid,
+            'nss'                 => $datos['nss'] ?? $info['numero_seguridad_social'] ?? $subject->nss ?? 'N/A',
+            'curp'                => $datos['curp'] ?? $info['curp'] ?? $subject->curp ?? 'N/A',
+            'nombre'              => $datos['nombre'] ?? $subject->name_or_company,
+            'semanas_cotizadas'   => $datos['semanas_cotizadas'] ?? null,
+            'semanas_descontadas' => $datos['semanas_descontadas'] ?? null,
+            'semanas_reintegradas'=> $datos['semanas_reintegradas'] ?? null,
+            'fecha_emision'       => $datos['fecha_emision'] ?? null,
+            'activo_actualmente'  => $activo,
+            'empleos'             => $empleos,
+            'status'              => $historial['status']['mensaje'] ?? 'termino',
         ];
     }
 }
