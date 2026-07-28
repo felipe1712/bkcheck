@@ -50,6 +50,7 @@
     $sancionesQuery = $queries->firstWhere('source_type', 'sanciones');
     $litigiosQuery = $queries->firstWhere('source_type', 'litigios');
     $identidadDigitalQuery = $queries->firstWhere('source_type', 'identidad_digital');
+    $nssQuery = $queries->firstWhere('source_type', 'nss_imss');
 
     $hasCompletedQueries = $queries->where('status', 'completed')->isNotEmpty();
     $isProcessing = $queries->whereIn('status', ['pending', 'processing'])->isNotEmpty();
