@@ -32,6 +32,7 @@ class Subject extends Model
         'enrollment_ip',
         'enrollment_tc_accepted_at',
         'selfie_path',
+        'liveness_id_validacion',
         'username',
         'proof_of_address_path',
         'nss',

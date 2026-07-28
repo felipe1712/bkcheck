@@ -86,7 +86,10 @@ Route::prefix('enroll')->name('enroll.')->middleware('throttle:10,1')->group(fun
     Route::get('/{token}',             [App\Http\Controllers\EnrollmentController::class, 'show'])        ->name('show');
     Route::post('/{token}/accept-tc',  [App\Http\Controllers\EnrollmentController::class, 'acceptTerms']) ->name('accept-tc');
     Route::post('/{token}/upload',     [App\Http\Controllers\EnrollmentController::class, 'upload'])      ->name('upload');
-    Route::get('/{token}/done',        [App\Http\Controllers\EnrollmentController::class, 'done'])        ->name('done');
+    Route::post('/{token}/liveness-session', [App\Http\Controllers\EnrollmentController::class, 'startLivenessSession'])->name('liveness-session');
+    Route::get('/{token}/liveness-mock',     [App\Http\Controllers\EnrollmentController::class, 'livenessMock'])         ->name('liveness-mock');
+    Route::get('/{token}/liveness-done',     [App\Http\Controllers\EnrollmentController::class, 'livenessDone'])         ->name('liveness-done');
+    Route::get('/{token}/done',              [App\Http\Controllers\EnrollmentController::class, 'done'])                 ->name('done');
 });
 
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
