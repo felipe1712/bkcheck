@@ -159,7 +159,7 @@ class NufiConnectorsTest extends TestCase
         $mockRes = $connector->execute($subject);
         $this->assertTrue($mockRes['en_lista_69']);
         $this->assertFalse($mockRes['en_lista_69b']);
-        $this->assertEquals('500-05-2026-OF-1024', $mockRes['oficio_oficial']);
+        $this->assertEquals('500-05-2018-22825 de fecha 17 de agosto de 2018', $mockRes['oficio_oficial']);
 
         // 2. Test callApi mapping with a mock HTTP response
         // Disable mock mode in connector to force callApi
