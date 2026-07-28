@@ -891,6 +891,9 @@
                                         </div>
                                     @endif
                                 @endif
+                            </div>
+                        </div>
+                    </div>
                     <!-- 5. BIOMETRÍA Y PRUEBA DE VIDA (LIVENESS / SELFIE) -->
                     @if($subject->tipo === 'persona_fisica')
                     <div class="accordion-item shadow-sm border mb-3">
@@ -2423,6 +2426,8 @@ function selectTierLevel(level) {
             card.style.boxShadow = 'none';
         }
     });
+
+    filterSourcesByTier(level);
 }
 
 function saveTierLevel() {
