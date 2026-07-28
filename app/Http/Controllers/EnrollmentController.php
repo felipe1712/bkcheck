@@ -129,8 +129,7 @@ class EnrollmentController extends Controller
             $runner = new InvestigationRunner();
             $runner->runSingle($subject, 'ine_frente');
             $runner->runSingle($subject, 'ine_reverso');
-            // TODO: Descomentar cuando el endpoint de prueba de vida esté cableado en NuFi:
-            // $runner->runSingle($subject, 'selfie');
+            $runner->runSingle($subject, 'selfie');
         } catch (\Throwable $e) {
             Log::warning("Enrollment: No se pudieron disparar los jobs OCR para sujeto {$subject->id}: " . $e->getMessage());
         }

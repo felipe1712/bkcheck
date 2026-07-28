@@ -891,8 +891,123 @@
                                         </div>
                                     @endif
                                 @endif
+                    <!-- 5. BIOMETRÍA Y PRUEBA DE VIDA (LIVENESS / SELFIE) -->
+                    @if($subject->tipo === 'persona_fisica')
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingSelfie">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSelfie" aria-expanded="false" aria-controls="collapseSelfie">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-user-smile-fill text-primary me-2 align-middle fs-18"></i> Biometría y Prueba de Vida (Liveness / Selfie)
+                                    </div>
+                                    <div>
+                                        @if(!$selfieQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($selfieQuery->status === 'pending' || $selfieQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($selfieQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($selfieQuery->status === 'completed')
+                                            @php $sData = $selfieQuery->result?->processed_data ?? []; @endphp
+                                            @if($sData['aceptado'] ?? false)
+                                                <span class="badge bg-success text-white py-1 px-2"><i class="ri-checkbox-circle-fill me-1"></i> Aprobado — Prueba de Vida Válida</span>
+                                            @else
+                                                <span class="badge bg-danger text-white py-1 px-2"><i class="ri-error-warning-fill me-1"></i> No Aprobado</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseSelfie" class="accordion-collapse collapse" aria-labelledby="headingSelfie" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                {{-- Imagen Selfie Cargada --}}
+                                <div class="card border bg-light-subtle mb-3">
+                                    <div class="card-body d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="ri-user-unfollow-line fs-24 text-primary"></i>
+                                            <div>
+                                                <span class="fs-12 fw-bold text-dark d-block">Selfie Capturada</span>
+                                                @if($subject->selfie_path)
+                                                    <span class="badge bg-success-subtle text-success fs-10"><i class="ri-checkbox-circle-line me-1"></i>Imagen disponible</span>
+                                                @else
+                                                    <span class="badge bg-warning-subtle text-warning fs-10"><i class="ri-alert-line me-1"></i>Sin selfie</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @if($subject->selfie_path)
+                                            <button type="button" class="btn btn-sm btn-outline-primary fs-11" onclick="openDocModal('{{ route('tenant.subjects.document', [$subject->id, 'selfie']) }}', 'Selfie de Verificación Biométrica')">
+                                                <i class="ri-eye-line me-1"></i>Ver Selfie
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                @if(!$selfieQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La prueba de vida biométrica (Liveness Session) aún no se ha ejecutado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'selfie']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($selfieQuery->status === 'pending' || $selfieQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Creando sesión y verificando estatus biométrico en NuFi...</span>
+                                    </div>
+                                @elseif($selfieQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $selfieQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'selfie']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($selfieQuery->status === 'completed')
+                                    @php $sData = $selfieQuery->result?->processed_data ?? []; @endphp
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-white h-100">
+                                                <h6 class="fw-bold text-dark fs-12 mb-2 border-bottom pb-2">Dictamen Biométrico</h6>
+                                                <div class="mb-2">
+                                                    <strong>Resultado:</strong>
+                                                    @if($sData['aceptado'] ?? false)
+                                                        <span class="badge bg-success-subtle text-success fs-12 ms-1">PRUEBA DE VIDA APROBADA</span>
+                                                    @else
+                                                        <span class="badge bg-danger-subtle text-danger fs-12 ms-1">NO APROBADA / NO COINCIDE</span>
+                                                    @endif
+                                                </div>
+                                                <div class="mb-1 fs-12">
+                                                    <strong>ID de Validación NuFi:</strong> <code>{{ $sData['id_validacion'] ?? 'N/A' }}</code>
+                                                </div>
+                                                <div class="mb-1 fs-12">
+                                                    <strong>Puntaje / Rango:</strong> <span class="badge bg-info-subtle text-info">{{ $sData['rango'] ?? 0 }}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-white h-100">
+                                                <h6 class="fw-bold text-dark fs-12 mb-2 border-bottom pb-2">Auditoría / Bitácora de Validación</h6>
+                                                @if(!empty($sData['auditoria']))
+                                                    <ul class="list-unstyled mb-0 fs-12">
+                                                        @foreach($sData['auditoria'] as $auditItem)
+                                                            <li class="mb-1 text-muted"><i class="ri-checkbox-circle-line text-success me-1"></i> {{ $auditItem }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p class="text-muted fs-12 mb-0">Verificación procesada correctamente.</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
+                    </div>
+                    @endif
                     </div> {{-- /tierSection1 --}}
 
                     {{-- SECCIÓN 2: NIVEL 2 — VERIFICACIÓN ESTÁNDAR --}}
