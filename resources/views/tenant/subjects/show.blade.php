@@ -1347,6 +1347,134 @@
                         </div>
                     </div>
 
+                    <!-- 3. HISTORIAL LABORAL IMSS / SEMANAS COTIZADAS (NSS) -->
+                    @if($subject->tipo === 'persona_fisica')
+                    <div class="accordion-item shadow-sm border mb-3">
+                        <h2 class="accordion-header" id="headingNss">
+                            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNss" aria-expanded="false" aria-controls="collapseNss">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="fw-semibold text-dark fs-14">
+                                        <i class="ri-hospital-fill text-primary me-2 align-middle fs-18"></i> Historial Laboral IMSS / Semanas Cotizadas (NSS)
+                                    </div>
+                                    <div>
+                                        @if(!$nssQuery)
+                                            <span class="badge bg-secondary-subtle text-secondary py-1 px-2">No Iniciado</span>
+                                        @elseif($nssQuery->status === 'pending' || $nssQuery->status === 'processing')
+                                            <span class="badge bg-warning-subtle text-warning py-1 px-2">Procesando</span>
+                                        @elseif($nssQuery->status === 'failed')
+                                            <span class="badge bg-danger-subtle text-danger py-1 px-2">Error de Consulta</span>
+                                        @elseif($nssQuery->status === 'completed')
+                                            @php $nData = $nssQuery->result?->processed_data ?? []; @endphp
+                                            <span class="badge {{ ($nData['activo_actualmente'] ?? false) ? 'bg-success' : 'bg-secondary' }} text-white py-1 px-2">
+                                                <i class="ri-checkbox-circle-fill me-1"></i> {{ ($nData['activo_actualmente'] ?? false) ? 'Activo IMSS' : 'Baja IMSS' }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapseNss" class="accordion-collapse collapse" aria-labelledby="headingNss" data-bs-parent="#sourcesAccordion">
+                            <div class="accordion-body">
+                                @if(!$nssQuery)
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-2">La consulta del historial de empleadores y semanas cotizadas ante el IMSS aún no se ha iniciado.</p>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'nss_imss']) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary" {{ $isProcessing ? 'disabled' : '' }}>
+                                                <i class="ri-play-circle-line me-1"></i> Consultar Fuente
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($nssQuery->status === 'pending' || $nssQuery->status === 'processing')
+                                    <div class="text-center py-3">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                        <span>Solicitando UUID y verificando historial afiliatorio ante el IMSS...</span>
+                                    </div>
+                                @elseif($nssQuery->status === 'failed')
+                                    <div class="alert alert-danger border-0 d-flex justify-content-between align-items-center mb-0">
+                                        <span><strong>Error:</strong> {{ $nssQuery->error_message }}</span>
+                                        <form action="{{ route('tenant.subjects.investigate.source', [$subject->id, 'nss_imss']) }}" method="POST" class="ms-3">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger" {{ $isProcessing ? 'disabled' : '' }}>Re-Consultar</button>
+                                        </form>
+                                    </div>
+                                @elseif($nssQuery->status === 'completed')
+                                    @php
+                                        $nData = $nssQuery->result?->processed_data ?? [];
+                                        $empleosList = $nData['empleos'] ?? $nData['historial_empleos'] ?? [];
+                                        $ultimoPatron = !empty($empleosList) ? ($empleosList[0]['patron'] ?? '—') : ($nData['ultimo_patron'] ?? '—');
+                                    @endphp
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-3 col-6">
+                                            <div class="border rounded p-2 text-center bg-light-subtle">
+                                                <span class="fs-11 text-muted d-block text-uppercase">NSS</span>
+                                                <code class="fs-13 fw-bold text-dark">{{ $nData['nss'] ?? 'N/A' }}</code>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6">
+                                            <div class="border rounded p-2 text-center bg-light-subtle">
+                                                <span class="fs-11 text-muted d-block text-uppercase">Semanas Cotizadas</span>
+                                                <span class="fs-14 fw-bold text-primary">{{ $nData['semanas_cotizadas'] ?? 0 }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6">
+                                            <div class="border rounded p-2 text-center bg-light-subtle">
+                                                <span class="fs-11 text-muted d-block text-uppercase">Estatus Afiliatorio</span>
+                                                <span class="badge {{ ($nData['activo_actualmente'] ?? false) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} fs-11 mt-1">
+                                                    {{ ($nData['activo_actualmente'] ?? false) ? 'VIGENTE / ACTIVO' : 'BAJA' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6">
+                                            <div class="border rounded p-2 text-center bg-light-subtle">
+                                                <span class="fs-11 text-muted d-block text-uppercase">Último Patrón</span>
+                                                <span class="fs-12 fw-semibold text-dark text-truncate d-block">{{ $ultimoPatron }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if(!empty($empleosList))
+                                        <div class="table-responsive">
+                                            <table class="table table-striped align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Empresa / Patrón</th>
+                                                        <th>Registro Patronal</th>
+                                                        <th>Entidad Federativa</th>
+                                                        <th>Fecha Alta</th>
+                                                        <th>Fecha Baja / Estatus</th>
+                                                        <th>Salario Base</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($empleosList as $emp)
+                                                    <tr>
+                                                        <td class="fw-bold text-dark">{{ $emp['patron'] ?? 'N/A' }}</td>
+                                                        <td><code>{{ $emp['registro_patronal'] ?? 'N/A' }}</code></td>
+                                                        <td>{{ $emp['entidad_federativa'] ?? 'N/A' }}</td>
+                                                        <td>{{ $emp['fecha_alta'] ?? 'N/A' }}</td>
+                                                        <td>
+                                                            @if(strtolower($emp['fecha_baja'] ?? '') === 'vigente')
+                                                                <span class="badge bg-success-subtle text-success">Vigente</span>
+                                                            @else
+                                                                <span class="text-muted">{{ $emp['fecha_baja'] ?? 'N/A' }}</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="fw-semibold text-primary">{{ $emp['salario_base'] ?? 'N/A' }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
+                                        <p class="text-muted fs-12 mb-0">Sin desglose de empleos registrados.</p>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- 4. IDENTIDAD DIGITAL Y ENRIQUECIMIENTO DE REDES (ÚLTIMO RUBRO TIER 2) -->
                     <div class="accordion-item shadow-sm border mb-3">
                         <h2 class="accordion-header" id="headingIdentidadDigital">
