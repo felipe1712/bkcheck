@@ -4,6 +4,15 @@ namespace App\Services\BackgroundCheck\Nufi;
 
 use App\Models\Subject;
 
+/**
+ * Conector de Listas SAT 69 (No Localizados) y 69-B (Boletinados / EFOS).
+ *
+ * Endpoints Oficiales NuFi:
+ * 1. Lista 69: POST /contribuyentes_69/v1/no_localizados
+ *    Body JSON: {"rfc": "..."}
+ * 2. Lista 69-B: POST /contribuyentes/v1/obtener_contribuyente
+ *    Body JSON: {"rfc": "..."}
+ */
 class NufiSatListasConnector extends NufiConnector
 {
     protected string $apiKeyCategory = 'enrichment';
@@ -15,20 +24,26 @@ class NufiSatListasConnector extends NufiConnector
 
     public function getName(): string
     {
-        return 'Listas SAT 69 y 69B (EFOS/EDOS)';
+        return 'Listas SAT 69 y 69-B (Cumplimiento Fiscal)';
+    }
+
+    public function getMinTierLevel(): int
+    {
+        return 1;
     }
 
     public function appliesTo(Subject $subject): bool
     {
-        // SAT Listas applies to all subjects
         return !empty($subject->rfc);
     }
 
     protected function callApi(Subject $subject): array
     {
-        // 1. Query Article 69 (No Localizados)
+        $rfc = strtoupper(trim($subject->rfc));
+
+        // 1. Consulta Artículo 69 (No Localizados / Incumplidos)
         $response69 = $this->postRequest('/contribuyentes_69/v1/no_localizados', [
-            'rfc' => $subject->rfc,
+            'rfc' => $rfc,
         ]);
         $log69 = $this->lastLog;
 
@@ -43,9 +58,9 @@ class NufiSatListasConnector extends NufiConnector
             $fechaPublicacion69 = $first69['publicacion_dof'] ?? $first69['fecha_publicacion'] ?? $first69['fecha'] ?? null;
         }
 
-        // 2. Query Article 69-B (Boletinados - EFOS/EDOS)
+        // 2. Consulta Artículo 69-B (Boletinados EFOS - Simulación de Operaciones)
         $response69b = $this->postRequest('/contribuyentes/v1/obtener_contribuyente', [
-            'rfc' => $subject->rfc,
+            'rfc' => $rfc,
         ]);
         $log69b = $this->lastLog;
 
@@ -59,7 +74,7 @@ class NufiSatListasConnector extends NufiConnector
             $first69b = $response69b['data'][0];
             $estatus69b = $first69b['situacion_contribuyente'] ?? null;
 
-            // Extract official notice
+            // Extraer oficio oficial
             foreach ([
                 'fecha_oficio_global_definitivos',
                 'fecha_oficio_global_presuncion',
@@ -72,7 +87,7 @@ class NufiSatListasConnector extends NufiConnector
                 }
             }
 
-            // Extract publication date
+            // Extraer fecha publicación DOF / SAT
             foreach ([
                 'fecha_publi_dof_definitivos',
                 'fecha_publi_dof_presuntos',
@@ -90,17 +105,16 @@ class NufiSatListasConnector extends NufiConnector
             }
         }
 
-        // Combine metadata prioritizing 69-B (since it is higher risk)
         $oficioOficial = $oficioOficial69b ?: $oficioOficial69;
         $fechaPublicacion = $fechaPublicacion69b ?: $fechaPublicacion69;
 
-        // Consolidate logs for support
+        // Consolidar logs de llamadas
         $this->lastLog = [
             'url' => rtrim($this->baseUrl, '/') . '/contribuyentes (Consolidado SAT 69/69B)',
             'method' => 'POST',
             'headers' => $log69['headers'] ?? $log69b['headers'] ?? [],
             'body' => [
-                'rfc' => $subject->rfc,
+                'rfc' => $rfc,
                 'queries' => [
                     'no_localizados' => [
                         'url' => $log69['url'] ?? null,
@@ -113,7 +127,7 @@ class NufiSatListasConnector extends NufiConnector
                 ]
             ],
             'response' => [
-                'status' => isset($log69b['response']['status']) ? $log69b['response']['status'] : (isset($log69['response']['status']) ? $log69['response']['status'] : 200),
+                'status' => $log69b['response']['status'] ?? $log69['response']['status'] ?? 200,
                 'body' => [
                     'no_localizados_response' => $response69,
                     'obtener_contribuyente_response' => $response69b,
@@ -122,7 +136,7 @@ class NufiSatListasConnector extends NufiConnector
         ];
 
         return [
-            'rfc' => $subject->rfc,
+            'rfc' => $rfc,
             'en_lista_69' => $enLista69,
             'en_lista_69b' => $enLista69b,
             'estatus_69b' => $estatus69b,
@@ -133,18 +147,26 @@ class NufiSatListasConnector extends NufiConnector
 
     protected function mockResponse(Subject $subject): array
     {
-        // If the subject name contains 'Simulado' or 'Efo', let's mock them as being in list 69B for QA demonstration purposes.
-        $in69b = (str_contains(strtolower($subject->name_or_company), 'simulado') || str_contains(strtolower($subject->name_or_company), 'efo'));
-        // If the subject name contains 'No Localizado' or 'Inlocalizable', mock them in list 69.
-        $in69 = (str_contains(strtolower($subject->name_or_company), 'no localizado') || str_contains(strtolower($subject->name_or_company), 'inlocalizable'));
+        $rfc = strtoupper(trim($subject->rfc ?? ''));
+        $name = strtolower($subject->name_or_company);
+
+        $in69b = str_contains($name, 'simulado') || str_contains($name, 'efo');
+        $in69 = str_contains($name, 'no localizado') || str_contains($name, 'inlocalizable');
 
         return [
-            'rfc' => $subject->rfc,
+            'rfc' => $rfc,
             'en_lista_69' => $in69,
             'en_lista_69b' => $in69b,
             'estatus_69b' => $in69b ? 'Presunto' : null,
             'oficio_oficial' => ($in69b || $in69) ? '500-05-2026-OF-1024' : null,
             'fecha_publicacion' => ($in69b || $in69) ? now()->subMonths(3)->format('Y-m-d') : null,
+        ];
+    }
+
+    protected function getMockBody(Subject $subject): array
+    {
+        return [
+            'rfc' => strtoupper(trim($subject->rfc ?? '')),
         ];
     }
 }
