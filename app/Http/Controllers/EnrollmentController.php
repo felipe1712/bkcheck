@@ -201,16 +201,13 @@ class EnrollmentController extends Controller
 
             // 3. Registrar en AuditLog (visible en la vista de Peticiones de API)
             \App\Models\AuditLog::create([
-                'tenant_id'  => $subject->tenant_id,
-                'user_id'    => null,
-                'action'     => 'API_QUERY_SELFIE',
-                'details'    => [
-                    'subject_id'  => $subject->id,
-                    'source_type' => 'selfie',
-                    'endpoint'    => '/liveness/V1/alta_consulta',
-                    'http_log'    => $logData,
-                ],
-                'ip_address' => $request->ip(),
+                'tenant_id'    => $subject->tenant_id,
+                'user_id'      => null,
+                'subject_name' => $subject->name_or_company ?: 'Enrolamiento Candidato',
+                'subject_rfc'  => $subject->rfc,
+                'fuente'       => $connector->getName(),
+                'ip_address'   => $request->ip() ?? '127.0.0.1',
+                'created_at'   => now(),
             ]);
 
             if (\Illuminate\Support\Facades\Schema::hasColumn('subjects', 'liveness_id_validacion')) {
