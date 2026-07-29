@@ -162,13 +162,56 @@ class EnrollmentController extends Controller
             if ($isMock) {
                 $idValidacion = 'LIV-MOCK-' . strtoupper(substr(md5($subject->id . time()), 0, 8));
                 $livenessUrl = route('enroll.liveness-mock', [$token, 'id_validacion' => $idValidacion]);
+                $logData = $connector->getLastLog();
             } else {
                 $response = $connector->postRequest('/liveness/V1/alta_consulta', $altaPayload);
                 $rawBody = $response['body'] ?? $response;
                 $data = $rawBody['data'] ?? $rawBody;
                 $idValidacion = $data['id_validacion'] ?? $rawBody['id_validacion'] ?? ('LIV-' . strtoupper(substr(md5($subject->id), 0, 8)));
                 $livenessUrl = $data['url'] ?? $data['link'] ?? ("https://liveness.nufi.mx/?id_validacion=" . $idValidacion);
+                $logData = $connector->getLastLog();
             }
+
+            // 1. Registrar o actualizar la consulta en SourceQuery (para cobro/auditoría)
+            $sourceQuery = \App\Models\SourceQuery::updateOrCreate(
+                [
+                    'subject_id'  => $subject->id,
+                    'source_type' => 'selfie',
+                ],
+                [
+                    'tenant_id' => $subject->tenant_id,
+                    'status'    => 'completed',
+                    'cost'      => config('background_check.costs.selfie.cost', 2.00),
+                    'price'     => config('background_check.costs.selfie.price', 5.00),
+                ]
+            );
+
+            // 2. Registrar el resultado en QueryResult
+            \App\Models\QueryResult::updateOrCreate(
+                ['source_query_id' => $sourceQuery->id],
+                [
+                    'raw_payload'    => $logData['response']['body'] ?? $logData,
+                    'processed_data' => [
+                        'id_validacion' => $idValidacion,
+                        'url'           => $livenessUrl,
+                        'status'        => 'session_started',
+                    ],
+                ]
+            );
+
+            // 3. Registrar en AuditLog (visible en la vista de Peticiones de API)
+            \App\Models\AuditLog::create([
+                'tenant_id'  => $subject->tenant_id,
+                'user_id'    => null,
+                'action'     => 'API_QUERY_SELFIE',
+                'details'    => [
+                    'subject_id'  => $subject->id,
+                    'source_type' => 'selfie',
+                    'endpoint'    => '/liveness/V1/alta_consulta',
+                    'http_log'    => $logData,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
 
             if (\Illuminate\Support\Facades\Schema::hasColumn('subjects', 'liveness_id_validacion')) {
                 $subject->update([

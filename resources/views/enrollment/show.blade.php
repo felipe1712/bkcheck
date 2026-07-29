@@ -148,13 +148,21 @@
 <div id="livenessModal" style="
     display:none; position:fixed; inset:0; z-index:10000;
     background:#0f1117; flex-direction:column;">
-    <div style="padding:12px 20px; background:#1a1f2e; border-bottom:1px solid #2e3550; display:flex; justify-content:space-between; align-items:center;">
+    <div style="padding:12px 18px; background:#1a1f2e; border-bottom:1px solid #2e3550; display:flex; justify-content:space-between; align-items:center;">
         <span style="color:#fff; font-weight:bold; font-size:15px;">📹 Prueba de Vida en Vivo</span>
-        <button id="btnCloseLivenessModal" style="background:transparent; border:none; color:#8892a4; font-size:20px; cursor:pointer;">✕</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <a id="btnOpenLivenessNewTab" href="#" target="_blank" style="padding:6px 12px; background:rgba(79,110,247,0.2); border:1px solid #4f6ef7; border-radius:6px; color:#4f6ef7; font-size:12px; font-weight:bold; text-decoration:none;">
+                ↗ Pantalla Completa
+            </a>
+            <button id="btnCloseLivenessModal" style="background:transparent; border:none; color:#8892a4; font-size:22px; cursor:pointer;">✕</button>
+        </div>
     </div>
-        <button id="btnCloseLivenessModal" style="background:transparent; border:none; color:#8892a4; font-size:20px; cursor:pointer;">✕</button>
-    </div>
-    <iframe id="livenessIframe" src="" style="width:100%; height:100%; border:none;"></iframe>
+    <iframe id="livenessIframe" src="" 
+        style="width:100%; height:100%; border:none; background:#0f1117;"
+        allow="camera *; microphone *; autoplay *; camera; microphone; display-capture; geolocation"
+        allowfullscreen
+        playsinline>
+    </iframe>
 </div>
 
 <script>
@@ -397,10 +405,14 @@ document.addEventListener('DOMContentLoaded', function () {
             EnrollApp.hideLoader();
 
             if (livenessRes.ok && livenessData.url) {
-                // Abrir NuFi Liveness en modal iframe u orientar redirigiendo
                 const modal = document.getElementById('livenessModal');
                 const iframe = document.getElementById('livenessIframe');
+                const btnNewTab = document.getElementById('btnOpenLivenessNewTab');
+
                 iframe.src = livenessData.url;
+                if (btnNewTab) {
+                    btnNewTab.href = livenessData.url;
+                }
                 modal.style.display = 'flex';
             } else {
                 throw new Error(livenessData.error || 'No se pudo generar el enlace de Prueba de Vida.');
