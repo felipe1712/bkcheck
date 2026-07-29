@@ -152,7 +152,7 @@
             </td>
             <td style="text-align: right;">
                 <span class="report-title">Expediente de Validación</span><br>
-                <span style="color:#56657e; font-size:9px;">Fecha de Generación: {{ now()->format('d/m/Y H:i') }}</span>
+                <span style="color:#56657e; font-size:9px;">Fecha de Generación: {{ now()->setTimezone('America/Mexico_City')->format('d/m/Y H:i') }}</span>
             </td>
         </tr>
     </table>
@@ -186,7 +186,7 @@
                 <span class="badge badge-success">Otorgado</span>
             </td>
             <td style="width: 20%; font-weight: bold;">Fecha de Firma:</td>
-            <td style="width: 30%;">{{ $subject->consent_date ? $subject->consent_date->format('d/m/Y H:i') : 'N/A' }}</td>
+            <td style="width: 30%;">{{ $subject->consent_date ? $subject->consent_date->setTimezone('America/Mexico_City')->format('d/m/Y H:i') : 'N/A' }}</td>
         </tr>
         <tr>
             <td style="font-weight: bold;">Finalidad / Base Legal:</td>

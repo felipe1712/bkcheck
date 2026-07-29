@@ -174,7 +174,7 @@
                             </div>
                             <div class="col-6">
                                 <span class="text-muted fs-12 fw-semibold d-block">Fecha de Firma:</span>
-                                <span class="fs-13 text-dark d-block mt-1">{{ $subject->consent_date ? \Carbon\Carbon::parse($subject->consent_date)->format('d/m/Y H:i') : 'N/A' }}</span>
+                                <span class="fs-13 text-dark d-block mt-1">{{ $subject->consent_date ? \Carbon\Carbon::parse($subject->consent_date)->setTimezone('America/Mexico_City')->format('d/m/Y H:i') : 'N/A' }}</span>
                             </div>
                             <div class="col-12 mt-2">
                                 <span class="text-muted fs-12 fw-semibold d-block">Finalidad / Base Legal:</span>
@@ -379,20 +379,20 @@
                             @if($subject->enrollment_expires_at && $enrollStatus === 'pendiente')
                                 <span class="badge bg-light text-muted fs-11">
                                     <i class="ri-timer-line me-1"></i>
-                                    Expira {{ \Carbon\Carbon::parse($subject->enrollment_expires_at)->diffForHumans() }}
-                                    ({{ \Carbon\Carbon::parse($subject->enrollment_expires_at)->format('d/m/Y H:i') }})
+                                    Expira {{ \Carbon\Carbon::parse($subject->enrollment_expires_at)->setTimezone('America/Mexico_City')->diffForHumans() }}
+                                    ({{ \Carbon\Carbon::parse($subject->enrollment_expires_at)->setTimezone('America/Mexico_City')->format('d/m/Y H:i') }})
                                 </span>
                             @endif
                             @if($subject->enrollment_tc_accepted_at)
                                 <span class="badge bg-info-subtle text-info fs-11">
                                     <i class="ri-file-text-line me-1"></i>
-                                    T&C aceptados: {{ \Carbon\Carbon::parse($subject->enrollment_tc_accepted_at)->format('d/m/Y H:i') }}
+                                    T&C aceptados: {{ \Carbon\Carbon::parse($subject->enrollment_tc_accepted_at)->setTimezone('America/Mexico_City')->format('d/m/Y H:i') }}
                                 </span>
                             @endif
                             @if($subject->enrollment_completed_at)
                                 <span class="badge bg-success-subtle text-success fs-11">
                                     <i class="ri-calendar-check-line me-1"></i>
-                                    Completado: {{ \Carbon\Carbon::parse($subject->enrollment_completed_at)->format('d/m/Y H:i') }}
+                                    Completado: {{ \Carbon\Carbon::parse($subject->enrollment_completed_at)->setTimezone('America/Mexico_City')->format('d/m/Y H:i') }}
                                 </span>
                             @endif
                             @if($subject->selfie_path || ($selfieQuery && $selfieQuery->status === 'completed'))
