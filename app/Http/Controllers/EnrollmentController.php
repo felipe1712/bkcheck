@@ -186,8 +186,8 @@ class EnrollmentController extends Controller
                 ]
             );
 
-            // 2. Registrar el resultado en QueryResult
-            \App\Models\QueryResult::updateOrCreate(
+            // 2. Registrar el resultado en SourceResult
+            \App\Models\SourceResult::updateOrCreate(
                 ['source_query_id' => $sourceQuery->id],
                 [
                     'raw_payload'    => $logData['response']['body'] ?? $logData,
