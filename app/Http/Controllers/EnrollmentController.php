@@ -170,9 +170,11 @@ class EnrollmentController extends Controller
                 $livenessUrl = $data['url'] ?? $data['link'] ?? ("https://liveness.nufi.mx/?id_validacion=" . $idValidacion);
             }
 
-            $subject->update([
-                'liveness_id_validacion' => $idValidacion,
-            ]);
+            if (\Illuminate\Support\Facades\Schema::hasColumn('subjects', 'liveness_id_validacion')) {
+                $subject->update([
+                    'liveness_id_validacion' => $idValidacion,
+                ]);
+            }
 
             return response()->json([
                 'status'        => 'ok',
