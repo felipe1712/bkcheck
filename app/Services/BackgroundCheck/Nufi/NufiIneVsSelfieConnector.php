@@ -44,13 +44,30 @@ class NufiIneVsSelfieConnector extends NufiConnector
             $selfieB64 = base64_encode(Storage::get($subject->selfie_path));
         }
 
-        // Dummy transparent 1x1 image fallback if file missing in testing/dev
-        $dummyB64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        // Si no hay selfie o INE frente real y no estamos en entorno de pruebas, retornar resultado informativo
+        if ((empty($frenteB64) || empty($selfieB64)) && !app()->environment('testing')) {
+            return [
+                'coincide_rostro'        => false,
+                'certeza'                => 0.0,
+                'certeza_porcentaje'     => '0.00%',
+                'frente_valido'          => !empty($frenteB64),
+                'reverso_valido'         => !empty($reversoB64),
+                'tipo_credencial_frente' => 'N/A',
+                'tipo_credencial_reverso'=> 'N/A',
+                'uuid'                   => 'N/A',
+                'status'                 => 'skipped',
+                'message'                => 'Se requiere contar con la foto del frente de la INE y la selfie para realizar la comparación biométrica.',
+                'detalles'               => [],
+            ];
+        }
+
+        // Base64 JPEG de prueba para entorno de test unitario
+        $sampleB64 = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=';
 
         $body = [
-            'imagen_rostro'      => $selfieB64 ?: $dummyB64,
-            'credencial_frente'  => $frenteB64 ?: $dummyB64,
-            'credencial_reverso' => $reversoB64 ?: $dummyB64,
+            'imagen_rostro'      => $selfieB64 ?: $sampleB64,
+            'credencial_frente'  => $frenteB64 ?: $sampleB64,
+            'credencial_reverso' => $reversoB64 ?: $frenteB64 ?: $sampleB64,
         ];
 
         $response = $this->postRequest('/biometrico/v2/ine_vs_selfie', $body);
