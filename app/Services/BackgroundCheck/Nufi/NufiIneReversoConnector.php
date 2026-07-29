@@ -48,22 +48,44 @@ class NufiIneReversoConnector extends NufiConnector
             'base64_credencial_reverso' => $base64
         ]);
 
-        $data = $response['body']['data']['ocr']
-            ?? $response['body']['data']
-            ?? $response['data']['ocr']
-            ?? $response['data']
-            ?? $response;
+        $rawBody = $response['body'] ?? $response;
+        $rawData = $rawBody['data'] ?? $rawBody;
+        $ocrData = is_array($rawData['ocr'] ?? null) ? $rawData['ocr'] : [];
 
-        if (is_array($data)) {
-            if (isset($data['ocr']) && empty($data['codigo_ocr'])) {
-                $data['codigo_ocr'] = $data['ocr'];
-            }
-            if (isset($data['numero_identificador']) && empty($data['cic'])) {
-                $data['cic'] = $data['numero_identificador'];
+        $mrz = '';
+        if (isset($ocrData['mrz'])) {
+            $mrz = $ocrData['mrz'];
+        } elseif (isset($ocrData['ocr'])) {
+            $mrz = $ocrData['ocr'];
+        } elseif (isset($rawData['mrz'])) {
+            $mrz = $rawData['mrz'];
+        } elseif (isset($rawData['codigo_ocr'])) {
+            $mrz = $rawData['codigo_ocr'];
+        } elseif (isset($rawData['ocr']) && is_string($rawData['ocr'])) {
+            $mrz = $rawData['ocr'];
+        }
+
+        $cic = $rawData['cic'] 
+            ?? $rawData['numero_identificador'] 
+            ?? $ocrData['cic'] 
+            ?? $ocrData['numero_identificador'] 
+            ?? null;
+
+        // Extraer automáticamente el número CIC de 9 a 10 dígitos del código MRZ si no viene explícito
+        if (empty($cic) && !empty($mrz)) {
+            if (preg_match('/IDMEX(\d{9,10})/i', $mrz, $matches)) {
+                $cic = $matches[1];
             }
         }
 
-        return is_array($data) ? $data : [];
+        return [
+            'codigo_ocr'           => $mrz ?: 'N/A',
+            'mrz'                  => $mrz ?: 'N/A',
+            'cic'                  => $cic ?: 'N/A',
+            'numero_identificador' => $cic ?: 'N/A',
+            'model'                => $ocrData['model'] ?? $rawData['model'] ?? 'N/A',
+            'raw_ocr'              => $ocrData,
+        ];
     }
 
     protected function mockResponse(Subject $subject): array

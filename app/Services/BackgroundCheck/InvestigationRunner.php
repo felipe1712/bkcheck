@@ -192,8 +192,8 @@ class InvestigationRunner
             'status' => 'pending',
         ]);
 
-        // Dispatch job to the queue
-        ProcessConnectorQuery::dispatch($sourceQuery, $userId, $ipAddress);
+        // Dispatch job synchronously for immediate single-source queries
+        ProcessConnectorQuery::dispatchSync($sourceQuery, $userId, $ipAddress);
 
         Log::info("Consulta individual '{$sourceType}' iniciada para sujeto {$subject->id} por el usuario {$userId}.");
     }
