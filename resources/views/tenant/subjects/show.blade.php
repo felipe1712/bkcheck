@@ -337,7 +337,7 @@
 @php
     $enrollStatus = $subject->enrollmentStatus();
     $enrollUrl    = $subject->enrollment_token
-        ? url('/enroll/' . $subject->enrollment_token)
+        ? url('/e/' . $subject->enrollment_token)
         : null;
     $enrollBadge  = match($enrollStatus) {
         'completado'  => ['class' => 'bg-success',          'icon' => 'ri-check-circle-fill',    'label' => 'Completado'],

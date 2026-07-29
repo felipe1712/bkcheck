@@ -146,7 +146,11 @@ class Subject extends Model
      */
     public function generateEnrollmentToken(): void
     {
-        $this->enrollment_token         = Str::uuid()->toString();
+        do {
+            $token = Str::random(8);
+        } while (static::where('enrollment_token', $token)->exists());
+
+        $this->enrollment_token         = $token;
         $this->enrollment_expires_at    = now()->addHours(24);
         $this->enrollment_completed_at  = null;
         $this->enrollment_tc_accepted_at = null;

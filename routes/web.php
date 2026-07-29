@@ -82,6 +82,9 @@ Route::post('/update-password/{id}', [App\Http\Controllers\HomeController::class
 // RUTAS PÚBLICAS — Enrolamiento del Investigado (sin auth)
 // Seguridad basada en token UUID + expiración 24h
 // ─────────────────────────────────────────────────────────
+// Ruta ultra-corta de enrolamiento: /e/{token}
+Route::get('/e/{token}', [App\Http\Controllers\EnrollmentController::class, 'show'])->middleware('throttle:10,1')->name('enroll.short');
+
 Route::prefix('enroll')->name('enroll.')->middleware('throttle:10,1')->group(function () {
     Route::get('/{token}',             [App\Http\Controllers\EnrollmentController::class, 'show'])        ->name('show');
     Route::post('/{token}/accept-tc',  [App\Http\Controllers\EnrollmentController::class, 'acceptTerms']) ->name('accept-tc');
