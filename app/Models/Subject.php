@@ -158,6 +158,27 @@ class Subject extends Model
     }
 
     /**
+     * Accessor to ensure legacy 36-char UUID tokens are automatically converted to 8-char short tokens on access.
+     */
+    public function getEnrollmentTokenAttribute($value): ?string
+    {
+        if (!empty($value) && strlen($value) === 36) {
+            do {
+                $newToken = Str::random(8);
+            } while (static::where('enrollment_token', $newToken)->exists());
+
+            \Illuminate\Support\Facades\DB::table('subjects')
+                ->where('id', $this->id)
+                ->update(['enrollment_token' => $newToken]);
+
+            $this->attributes['enrollment_token'] = $newToken;
+            return $newToken;
+        }
+
+        return $value;
+    }
+
+    /**
      * Determine if the enrollment link is currently active (not expired, not completed).
      */
     public function isEnrollmentActive(): bool
