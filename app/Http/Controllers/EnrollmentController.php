@@ -124,6 +124,18 @@ class EnrollmentController extends Controller
             'selfie_path'    => $selfiePath,
         ]);
 
+        // Ejecutar procesamiento de OCR y biometría inmediatamente
+        try {
+            $runner = new \App\Services\BackgroundCheck\InvestigationRunner();
+            $runner->runSingle($subject, 'ine_frente');
+            $runner->runSingle($subject, 'ine_reverso');
+            if (!empty($selfiePath)) {
+                $runner->runSingle($subject, 'ine_vs_selfie');
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Upload Enrollment: Error procesando OCR inmediato para sujeto {$subject->id}: " . $e->getMessage());
+        }
+
         return response()->json(['status' => 'ok']);
     }
 
