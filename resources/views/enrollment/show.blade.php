@@ -102,47 +102,7 @@
 @endsection
 
 @section('scripts')
-{{-- Cropper.js CDN --}}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-
-{{-- Modal de recorte ajustado --}}
-<div id="cropModal" style="
-    display:none; position:fixed; inset:0; z-index:9999;
-    background:rgba(0,0,0,.92); flex-direction:column;
-    align-items:center; justify-content:center; padding:12px;">
-    <div style="width:100%; max-width:540px; background:#1a1f2e; border-radius:16px; overflow:hidden;">
-        <div style="padding:12px 18px; border-bottom:1px solid #2e3550; display:flex; justify-content:space-between; align-items:center;">
-            <span id="cropModalTitle" style="color:#e8eaf0; font-weight:600; font-size:15px;"></span>
-            <span style="color:#8892a4; font-size:11px;">Ajusta o usa la foto completa</span>
-        </div>
-        {{-- Contenedor del cropper --}}
-        <div id="cropContainer" style="background:#0f1117; height:50vh; position:relative;">
-            <img id="cropImg" alt="" style="max-width:100%; display:block;">
-        </div>
-        <div style="padding:12px 18px; display:flex; flex-direction:column; gap:8px;">
-            <button id="btnCropConfirm" style="
-                width:100%; padding:13px;
-                background:linear-gradient(135deg,#4f6ef7,#3a55e0);
-                border:none; border-radius:10px; color:#fff;
-                font-size:15px; font-weight:600; cursor:pointer;">
-                ✂️ Confirmar Recorte
-            </button>
-            <div style="display:flex; gap:8px;">
-                <button id="btnCropOriginal" style="
-                    flex:1; padding:10px; background:rgba(255,255,255,0.08); border:1px solid #3e4868;
-                    border-radius:8px; color:#e8eaf0; font-size:12px; font-weight:600; cursor:pointer;">
-                    📷 Usar foto completa (Sin recortar)
-                </button>
-                <button id="btnCropCancel" style="
-                    padding:10px 16px; background:transparent; border:1px solid #2e3550;
-                    border-radius:8px; color:#8892a4; font-size:12px; font-weight:600; cursor:pointer;">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+{{-- Modal Overlay para Liveness Session --}}
 
 {{-- Modal Overlay para Liveness Session --}}
 <div id="livenessModal" style="
@@ -197,83 +157,86 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById(id)?.classList.remove('show');
     }
 
-    function previewPhoto(slot, file) {
+    /**
+     * Procesa y optimiza la foto completa conservando el 100% de la imagen (0% recorte).
+     * Soporta rotación de 0, 90, 180, 270 grados en HTML5 Canvas.
+     */
+    function processFullImage(file, rotationDegrees = 0) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    const maxDim = 1920;
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+
+                    const rad = ((rotationDegrees % 360) * Math.PI) / 180;
+                    if ((rotationDegrees / 90) % 2 !== 0) {
+                        canvas.width = height;
+                        canvas.height = width;
+                    } else {
+                        canvas.width = width;
+                        canvas.height = height;
+                    }
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.save();
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate(rad);
+                    ctx.drawImage(img, -width / 2, -height / 2, width, height);
+                    ctx.restore();
+
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', 0.92);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function previewPhoto(slot, file, onRotate = null) {
         if (!file) return;
         const url = URL.createObjectURL(file);
-        slot.innerHTML = `<img src="${url}" alt="Previsualización"><span class="slot-badge">✓ Listo</span>`;
+        slot.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; width: 100%; gap: 8px;">
+                <img src="${url}" alt="Previsualización" style="max-height: 220px; object-fit: contain; width: 100%; border-radius: 8px; border: 1px solid #2e3550;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <span class="slot-badge" style="position: static; display: inline-flex; align-items: center; gap: 4px; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold;">
+                        ✓ Foto Completa (Sin recorte)
+                    </span>
+                    ${onRotate ? `<button type="button" class="btn-rotate-photo" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #3e4868; color: #e8eaf0; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">🔄 Rotar 90°</button>` : ''}
+                </div>
+            </div>
+        `;
         slot.classList.add('has-photo');
-    }
 
-    // ── Cropper.js helper ───────────────────────────────────────────────────
-    let cropperInstance = null;
-    let cropCallback    = null;
-
-    function openCropper(file, title, aspectRatio, callback) {
-        currentRawFile = file;
-        const modal     = document.getElementById('cropModal');
-        const cropImg   = document.getElementById('cropImg');
-        const container = document.getElementById('cropContainer');
-        document.getElementById('cropModalTitle').textContent = title;
-
-        if (cropperInstance) {
-            cropperInstance.destroy();
-            cropperInstance = null;
-        }
-        cropImg.src = '';
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            modal.style.display = 'flex';
-
-            cropImg.onload = () => {
-                cropperInstance = new Cropper(cropImg, {
-                    aspectRatio:       aspectRatio,
-                    viewMode:          0, // 0 = libre sin cortar bordes automáticamente
-                    dragMode:          'crop',
-                    autoCropArea:      0.98, // 98% con margen holgado
-                    restore:           false,
-                    guides:            true,
-                    center:            true,
-                    highlight:         false,
-                    cropBoxMovable:    true,
-                    cropBoxResizable:  true,
-                    checkOrientation:  true,
-                    toggleDragModeOnDblclick: false,
+        if (onRotate) {
+            const btn = slot.querySelector('.btn-rotate-photo');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    onRotate();
                 });
-                cropImg.onload = null;
-            };
-            cropImg.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-        cropCallback = callback;
-    }
-
-    document.getElementById('btnCropConfirm').addEventListener('click', () => {
-        if (!cropperInstance || !cropCallback) return;
-        cropperInstance.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1200, imageSmoothingQuality: 'high' })
-            .toBlob((blob) => {
-                document.getElementById('cropModal').style.display = 'none';
-                cropperInstance.destroy();
-                cropperInstance = null;
-                cropCallback(blob);
-                cropCallback = null;
-            }, 'image/jpeg', 0.92);
-    });
-
-    document.getElementById('btnCropOriginal').addEventListener('click', () => {
-        document.getElementById('cropModal').style.display = 'none';
-        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-        if (currentRawFile && cropCallback) {
-            cropCallback(currentRawFile); // Usar foto original directamente sin recortar
-            cropCallback = null;
+            }
         }
-    });
-
-    document.getElementById('btnCropCancel').addEventListener('click', () => {
-        document.getElementById('cropModal').style.display = 'none';
-        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-        cropCallback = null;
-    });
+    }
 
     // ── Pantalla 0: T&C ─────────────────────────────────────────────────────
     document.getElementById('btnAcceptTc').addEventListener('click', async () => {
@@ -299,15 +262,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ── Pantalla 1: INE Frente ──────────────────────────────────────────────
-    document.getElementById('inputFrente').addEventListener('change', function () {
-        const raw = this.files[0];
-        if (!raw) return;
-        openCropper(raw, '📸 Ajusta el frente de tu INE', 85.6 / 54, (croppedBlob) => {
-            fileFrente = new File([croppedBlob], 'ine_frente.jpg', { type: 'image/jpeg' });
-            previewPhoto(document.getElementById('slotFrente'), fileFrente);
-            document.getElementById('btnFrenteContinuar').disabled = false;
-            hideError('frenteError');
+    let rawFrenteFile = null;
+    let frenteRotation = 0;
+
+    async function handleFrenteSelected(rawFile) {
+        rawFrenteFile = rawFile;
+        EnrollApp.showLoader('Optimizando foto completa...');
+        const blob = await processFullImage(rawFrenteFile, frenteRotation);
+        fileFrente = new File([blob], 'ine_frente.jpg', { type: 'image/jpeg' });
+        previewPhoto(document.getElementById('slotFrente'), fileFrente, async () => {
+            frenteRotation = (frenteRotation + 90) % 360;
+            await handleFrenteSelected(rawFrenteFile);
         });
+        document.getElementById('btnFrenteContinuar').disabled = false;
+        hideError('frenteError');
+        EnrollApp.hideLoader();
+    }
+
+    document.getElementById('inputFrente').addEventListener('change', function () {
+        if (this.files[0]) {
+            frenteRotation = 0;
+            handleFrenteSelected(this.files[0]);
+        }
         this.value = '';
     });
 
@@ -317,15 +293,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ── Pantalla 2: INE Reverso ──────────────────────────────────────────────
-    document.getElementById('inputReverso').addEventListener('change', function () {
-        const raw = this.files[0];
-        if (!raw) return;
-        openCropper(raw, '🔄 Ajusta el reverso de tu INE', 85.6 / 54, (croppedBlob) => {
-            fileReverso = new File([croppedBlob], 'ine_reverso.jpg', { type: 'image/jpeg' });
-            previewPhoto(document.getElementById('slotReverso'), fileReverso);
-            document.getElementById('btnReversoContinuar').disabled = false;
-            hideError('reversoError');
+    let rawReversoFile = null;
+    let reversoRotation = 0;
+
+    async function handleReversoSelected(rawFile) {
+        rawReversoFile = rawFile;
+        EnrollApp.showLoader('Optimizando foto completa...');
+        const blob = await processFullImage(rawReversoFile, reversoRotation);
+        fileReverso = new File([blob], 'ine_reverso.jpg', { type: 'image/jpeg' });
+        previewPhoto(document.getElementById('slotReverso'), fileReverso, async () => {
+            reversoRotation = (reversoRotation + 90) % 360;
+            await handleReversoSelected(rawReversoFile);
         });
+        document.getElementById('btnReversoContinuar').disabled = false;
+        hideError('reversoError');
+        EnrollApp.hideLoader();
+    }
+
+    document.getElementById('inputReverso').addEventListener('change', function () {
+        if (this.files[0]) {
+            reversoRotation = 0;
+            handleReversoSelected(this.files[0]);
+        }
         this.value = '';
     });
 
@@ -339,16 +328,29 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ── Pantalla 3: Selfie Opcional ─────────────────────────────────────────
-    document.getElementById('inputSelfie').addEventListener('change', function () {
-        const raw = this.files[0];
-        if (!raw) return;
-        openCropper(raw, '🤳 Ajusta tu selfie', 1, (croppedBlob) => {
-            fileSelfie = new File([croppedBlob], 'selfie.jpg', { type: 'image/jpeg' });
-            previewPhoto(document.getElementById('slotSelfie'), fileSelfie);
-            document.getElementById('btnEnviar').style.display = 'block';
-            document.getElementById('btnEnviar').disabled = false;
-            hideError('selfieError');
+    let rawSelfieFile = null;
+    let selfieRotation = 0;
+
+    async function handleSelfieSelected(rawFile) {
+        rawSelfieFile = rawFile;
+        EnrollApp.showLoader('Optimizando selfie completa...');
+        const blob = await processFullImage(rawSelfieFile, selfieRotation);
+        fileSelfie = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+        previewPhoto(document.getElementById('slotSelfie'), fileSelfie, async () => {
+            selfieRotation = (selfieRotation + 90) % 360;
+            await handleSelfieSelected(rawSelfieFile);
         });
+        document.getElementById('btnEnviar').style.display = 'block';
+        document.getElementById('btnEnviar').disabled = false;
+        hideError('selfieError');
+        EnrollApp.hideLoader();
+    }
+
+    document.getElementById('inputSelfie').addEventListener('change', function () {
+        if (this.files[0]) {
+            selfieRotation = 0;
+            handleSelfieSelected(this.files[0]);
+        }
         this.value = '';
     });
 

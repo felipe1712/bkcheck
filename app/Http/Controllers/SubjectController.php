@@ -385,19 +385,39 @@ class SubjectController extends Controller
     }
 
     /**
-     * Regenerar el token de enrolamiento del sujeto (genera nuevo UUID con 24h de expiración).
+     * Regenerar el token de enrolamiento del sujeto y limpiar imágenes previas.
      */
     public function regenerateEnrollment($id)
     {
         $subject = Subject::findOrFail($id);
+
+        // 1. Borrar archivos físicos de identidad anteriores si existen
+        $docFields = ['ine_front_path', 'ine_back_path', 'selfie_path', 'proof_of_address_path'];
+        $updates = [
+            'enrollment_completed_at'   => null,
+            'enrollment_tc_accepted_at' => null,
+        ];
+
+        foreach ($docFields as $field) {
+            if (!empty($subject->$field)) {
+                if (Storage::exists($subject->$field)) {
+                    Storage::delete($subject->$field);
+                }
+                $updates[$field] = null;
+            }
+        }
+
+        $subject->update($updates);
+
+        // 2. Generar nuevo token corto de 8 caracteres con 24h de expiración
         $subject->generateEnrollmentToken();
 
         activity()
             ->performedOn($subject)
             ->causedBy(auth()->user())
-            ->log("Token de enrolamiento regenerado para: {$subject->name_or_company}");
+            ->log("Nuevo proceso de enrolamiento iniciado y documentos de identidad limpiados para: {$subject->name_or_company}");
 
-        return back()->with('success', 'Enlace de enrolamiento regenerado. El nuevo enlace es válido por 24 horas.');
+        return back()->with('success', 'Nuevo proceso de enrolamiento iniciado. Se han eliminado las imágenes anteriores y el nuevo enlace es válido por 24 horas.');
     }
 
     /**
