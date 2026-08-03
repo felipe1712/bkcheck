@@ -155,7 +155,21 @@ abstract class NufiConnector extends BaseSourceConnector
                 throw new \Exception("NuFi API retornó código " . $response->status() . ": " . $response->body());
             }
 
-            return $response->json();
+            $json = $response->json();
+
+            // Validar si el cuerpo del JSON indica un error de aplicación (ej. code 503 o status "error")
+            $rawBody = is_array($json) ? ($json['body'] ?? $json) : [];
+            if (is_array($rawBody)) {
+                $status = strtolower($rawBody['status'] ?? $json['status'] ?? '');
+                $code   = $rawBody['code'] ?? $json['code'] ?? 200;
+                if ($status === 'error' || ($code >= 400 && $code !== 404)) {
+                    $msg = $rawBody['message'] ?? $json['message'] ?? 'Error interno de la API de NuFi.';
+                    Log::error("NuFi API retornó error en payload [{$endpoint}]: " . json_encode($json));
+                    throw new \Exception("NuFi API error ({$code}): {$msg}");
+                }
+            }
+
+            return $json;
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             $errorMsg = "El servicio de consulta (SAT / NuFi) agotó el tiempo de respuesta (Timeout de 45s). El portal del SAT puede estar saturado o fuera de servicio temporalmente.";
             $this->lastLog['response'] = [
