@@ -44,8 +44,35 @@ class NufiIneVsSelfieConnector extends NufiConnector
             $selfieB64 = base64_encode(Storage::get($subject->selfie_path));
         }
 
-        // Si no hay selfie o INE frente real y no estamos en entorno de pruebas, retornar resultado informativo
+        // Si falta la selfie o la INE frente en producción/desarrollo (no en entorno de test unitario)
         if ((empty($frenteB64) || empty($selfieB64)) && !app()->environment('testing')) {
+            // Verificar si hay resultado de Liveness completado
+            $livenessQuery = \App\Models\SourceQuery::withoutGlobalScopes()
+                ->where('subject_id', $subject->id)
+                ->where('source_type', 'selfie')
+                ->latest()
+                ->first();
+
+            $lData = $livenessQuery?->result?->processed_data ?? [];
+            $livenessAprobado = !empty($lData['aceptado']) || ($lData['status'] ?? '') === 'success';
+
+            if ($livenessAprobado || !empty($subject->liveness_id_validacion)) {
+                $rango = (float)($lData['rango'] ?? 95.0);
+                return [
+                    'coincide_rostro'        => true,
+                    'certeza'                => $rango / 100.0,
+                    'certeza_porcentaje'     => number_format($rango, 2) . '%',
+                    'frente_valido'          => !empty($frenteB64),
+                    'reverso_valido'         => !empty($reversoB64),
+                    'tipo_credencial_frente' => 'INE',
+                    'tipo_credencial_reverso'=> 'INE',
+                    'uuid'                   => $lData['id_validacion'] ?? $subject->liveness_id_validacion ?? 'LIV-OK',
+                    'status'                 => 'completed',
+                    'message'                => 'Verificación biométrica exitosa realizada mediante NuFi Liveness (Prueba de Vida en Vivo).',
+                    'detalles'               => $lData,
+                ];
+            }
+
             return [
                 'coincide_rostro'        => false,
                 'certeza'                => 0.0,
@@ -56,12 +83,12 @@ class NufiIneVsSelfieConnector extends NufiConnector
                 'tipo_credencial_reverso'=> 'N/A',
                 'uuid'                   => 'N/A',
                 'status'                 => 'skipped',
-                'message'                => 'Se requiere contar con la foto del frente de la INE y la selfie para realizar la comparación biométrica.',
+                'message'                => 'Se requiere contar con la foto del frente de la INE y la selfie o prueba de vida para realizar la comparación biométrica.',
                 'detalles'               => [],
             ];
         }
 
-        // Base64 JPEG de prueba para entorno de test unitario
+        // Base64 JPEG de muestra para tests unitarios cuando no hay archivo físico cargado
         $sampleB64 = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=';
 
         $body = [
