@@ -1,6 +1,32 @@
 @extends('layouts.master')
 @section('title') Log de APIs @endsection
 
+@section('css')
+<style>
+    .pagination {
+        margin-bottom: 0;
+        gap: 2px;
+    }
+    .pagination svg {
+        width: 14px !important;
+        height: 14px !important;
+        max-width: 14px !important;
+        max-height: 14px !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+    .pagination .page-item .page-link {
+        border-radius: 6px !important;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="row">
     <div class="col-12">
@@ -329,8 +355,13 @@ Cuerpo de la Respuesta / Error:
                 </div>
 
                 @if($queries->hasPages())
-                    <div class="d-flex justify-content-end mt-4">
-                        {{ $queries->links() }}
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+                        <div class="text-muted fs-13">
+                            Mostrando <span class="fw-semibold">{{ $queries->firstItem() }}</span> a <span class="fw-semibold">{{ $queries->lastItem() }}</span> de <span class="fw-semibold">{{ $queries->total() }}</span> resultados
+                        </div>
+                        <div>
+                            {{ $queries->withQueryString()->links('pagination::bootstrap-5') }}
+                        </div>
                     </div>
                 @endif
             </div>

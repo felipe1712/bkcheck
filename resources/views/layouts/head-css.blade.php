@@ -86,4 +86,22 @@
     [data-layout="horizontal"] .app-menu .navbar-brand-box {
         display: none !important;
     }
+    /* Fix global pagination SVG sizing & alignment */
+    .pagination svg {
+        width: 14px !important;
+        height: 14px !important;
+        max-width: 14px !important;
+        max-height: 14px !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+    .pagination .page-item .page-link {
+        border-radius: 6px !important;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
