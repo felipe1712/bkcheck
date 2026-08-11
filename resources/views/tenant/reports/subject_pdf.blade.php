@@ -553,8 +553,15 @@
                 </tr>
             </table>
         @elseif($query->source_type === 'sanciones' && $query->result)
-            @php $sancData = $query->result->processed_data; @endphp
-            @if(empty($sancData['hits'] ?? []))
+            @php 
+                $sancData = $query->result->processed_data; 
+                $rawHits = $sancData['hits'] ?? [];
+                $validPdfHits = array_values(array_filter($rawHits, function($h) {
+                    $name = trim($h['nombre_encontrado'] ?? '');
+                    return !empty($name) && strtoupper($name) !== 'N/A';
+                }));
+            @endphp
+            @if(empty($validPdfHits))
                 <p>Sin incidencias registradas en listas de sanciones, PEPs o terrorismo.</p>
             @else
                 <table class="data-table">
@@ -568,7 +575,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($sancData['hits'] as $hit)
+                        @foreach($validPdfHits as $hit)
                         <tr>
                             <td style="font-weight: bold; color: #f06548;">{{ $hit['lista'] ?? 'N/A' }}</td>
                             <td>{{ $hit['nombre_encontrado'] ?? 'N/A' }}</td>

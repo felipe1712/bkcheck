@@ -66,7 +66,12 @@
 
     $hasSancionesAlert = false;
     if ($sancionesQuery && $sancionesQuery->status === 'completed') {
-        $hasSancionesAlert = !empty($sancionesQuery->result?->processed_data['encontrado']);
+        $rawSancHits = $sancionesQuery->result?->processed_data['hits'] ?? [];
+        $validSancHits = array_values(array_filter($rawSancHits, function($h) {
+            $name = trim($h['nombre_encontrado'] ?? '');
+            return !empty($name) && strtoupper($name) !== 'N/A';
+        }));
+        $hasSancionesAlert = !empty($sancionesQuery->result?->processed_data['encontrado']) && count($validSancHits) > 0;
     }
 
     $hasLitigiosAlert = false;
@@ -856,8 +861,15 @@
                                         </form>
                                     </div>
                                 @elseif($sancionesQuery->status === 'completed')
-                                    @php $sancData = $sancionesQuery->result?->processed_data ?? []; @endphp
-                                    @if(empty($sancData['hits'] ?? []))
+                                    @php 
+                                        $sancData = $sancionesQuery->result?->processed_data ?? []; 
+                                        $rawSancHits = $sancData['hits'] ?? [];
+                                        $validSancHits = array_values(array_filter($rawSancHits, function($h) {
+                                            $name = trim($h['nombre_encontrado'] ?? '');
+                                            return !empty($name) && strtoupper($name) !== 'N/A';
+                                        }));
+                                    @endphp
+                                    @if(empty($validSancHits))
                                         <div class="alert alert-success border-0 mb-0">
                                             <h6 class="alert-heading text-success fw-semibold"><i class="ri-checkbox-circle-line me-1"></i> Sin Reportes</h6>
                                             <p class="mb-0">No se detectaron coincidencias en listas de sanciones de la OFAC, Interpol, ONU, ni en listados oficiales de Personas Expuestas Políticamente (PEPs) en México.</p>
@@ -880,7 +892,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach($sancData['hits'] as $hit)
+                                                    @foreach($validSancHits as $hit)
                                                     <tr>
                                                         <td class="fw-semibold text-danger">{{ $hit['lista'] ?? 'N/A' }}</td>
                                                         <td class="fw-medium text-dark">{{ $hit['nombre_encontrado'] ?? 'N/A' }}</td>

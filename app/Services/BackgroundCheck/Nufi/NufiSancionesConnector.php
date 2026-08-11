@@ -87,11 +87,15 @@ class NufiSancionesConnector extends NufiConnector
                 $amlData = $rawAml['data'] ?? $rawAml['hits'] ?? $rawAml['resultados'] ?? null;
                 if (is_array($amlData) && !empty($amlData)) {
                     foreach ($amlData as $item) {
-                        // Asegurar que $item es un registro individual de coincidencia y no la estructura global del response
-                        if (is_array($item) && !isset($item['code']) && !isset($item['status']) && (isset($item['nombre']) || isset($item['nombre_completo']) || isset($item['matched_name']) || isset($item['lista']))) {
+                        if (is_array($item)) {
+                            $nombreEncontrado = trim($item['nombre_completo'] ?? $item['nombre'] ?? $item['matched_name'] ?? '');
+                            if (empty($nombreEncontrado) || strtoupper($nombreEncontrado) === 'N/A') {
+                                continue;
+                            }
+
                             $hits[] = [
                                 'lista'             => $item['lista'] ?? $item['list_name'] ?? 'Listas AML / PEPs',
-                                'nombre_encontrado' => $item['nombre_completo'] ?? $item['nombre'] ?? $item['matched_name'] ?? $fullNameClean,
+                                'nombre_encontrado' => $nombreEncontrado,
                                 'entidad_pais'      => $item['pais'] ?? $item['entidad'] ?? $item['country'] ?? 'MÉXICO',
                                 'tipo_lista'        => $item['tipo'] ?? $item['type'] ?? 'PEP / Sanción AML',
                                 'fecha_publicacion' => $item['fecha_publicacion'] ?? $item['date'] ?? null,
@@ -130,11 +134,15 @@ class NufiSancionesConnector extends NufiConnector
                 $ofacData = $rawOfac['data'] ?? $rawOfac['resultados'] ?? $rawOfac['sancionados'] ?? null;
                 if (is_array($ofacData) && !empty($ofacData)) {
                     foreach ($ofacData as $item) {
-                        // Asegurar que $item es un registro individual de coincidencia y no la estructura global del response
-                        if (is_array($item) && !isset($item['code']) && !isset($item['status']) && (isset($item['nombre']) || isset($item['nombre_completo']) || isset($item['sdn_name']) || isset($item['lista']))) {
+                        if (is_array($item)) {
+                            $nombreEncontrado = trim($item['nombre'] ?? $item['nombre_completo'] ?? $item['sdn_name'] ?? '');
+                            if (empty($nombreEncontrado) || strtoupper($nombreEncontrado) === 'N/A') {
+                                continue;
+                            }
+
                             $hits[] = [
                                 'lista'             => $item['lista'] ?? $item['list_name'] ?? 'OFAC - Specially Designated Nationals (SDN)',
-                                'nombre_encontrado' => $item['nombre'] ?? $item['nombre_completo'] ?? $item['sdn_name'] ?? $fullNameClean,
+                                'nombre_encontrado' => $nombreEncontrado,
                                 'entidad_pais'      => $item['pais'] ?? $item['country'] ?? 'EE.UU. / Internacional',
                                 'tipo_lista'        => 'OFAC ' . ($item['programa'] ?? $item['program'] ?? 'SDN List'),
                                 'fecha_publicacion' => $item['fecha'] ?? $item['date'] ?? null,
