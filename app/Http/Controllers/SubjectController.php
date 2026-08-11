@@ -136,7 +136,10 @@ class SubjectController extends Controller
                 ? \App\Models\SourceQuery::where('subject_id', $subject->id)->with('result')->get()
                 : collect();
 
-            return view('tenant.subjects.show', compact('subject', 'queries'));
+            $riskService = new \App\Services\BackgroundCheck\RiskAssessmentService();
+            $riskAssessment = $riskService->calculateRisk($subject);
+
+            return view('tenant.subjects.show', compact('subject', 'queries', 'riskAssessment'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return back()->with('error', 'El expediente especificado no existe o no pertenece a tu organización.');
         } catch (\Throwable $e) {

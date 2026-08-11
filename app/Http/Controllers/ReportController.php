@@ -40,8 +40,11 @@ class ReportController extends Controller
                 ->causedBy(auth()->user())
                 ->log("Reporte PDF exportado para el sujeto: {$subject->name_or_company}");
 
+            $riskService = new \App\Services\BackgroundCheck\RiskAssessmentService();
+            $riskAssessment = $riskService->calculateRisk($subject);
+
             // Render PDF using Laravel DomPDF
-            $pdf = Pdf::loadView('tenant.reports.subject_pdf', compact('subject', 'queries'));
+            $pdf = Pdf::loadView('tenant.reports.subject_pdf', compact('subject', 'queries', 'riskAssessment'));
 
             // Use stream to open in browser window/tab
             return $pdf->stream("Expediente_{$subject->rfc}_{$subject->id}.pdf");
