@@ -148,6 +148,7 @@ class RiskAssessmentService
 
         // Ángulo de la aguja en el Gauge semicircular (180° = Izquierda/Rojo, 0° = Derecha/Verde)
         $needleAngle = round(180 - ($score * 1.8), 2);
+        $gaugeBase64 = $this->generateGaugePngBase64($score);
 
         return [
             'score'                => $score,
@@ -157,9 +158,70 @@ class RiskAssessmentService
             'text_color'           => $textColor,
             'status_text'          => $statusText,
             'needle_angle'         => $needleAngle,
+            'gauge_base64'         => $gaugeBase64,
             'penalties'            => $penalties,
             'total_penalties'      => count($penalties),
             'queries_evaluadas'    => $completedQueries->count(),
         ];
+    }
+
+    /**
+     * Genera una imagen PNG base64 del velocímetro (Gauge Meter) compatible al 100% con DomPDF y navegadores.
+     */
+    public function generateGaugePngBase64(int $score): string
+    {
+        $w = 360;
+        $h = 210;
+        $img = imagecreatetruecolor($w, $h);
+
+        // Fondo suave
+        $bg = imagecolorallocate($img, 248, 250, 252);
+        imagefill($img, 0, 0, $bg);
+
+        // Colores de los 5 segmentos
+        $cRed    = imagecolorallocate($img, 211, 47, 47);   // #d32f2f
+        $cOrange = imagecolorallocate($img, 240, 101, 72);  // #f06548
+        $cYellow = imagecolorallocate($img, 247, 184, 75);  // #f7b84b
+        $cLGreen = imagecolorallocate($img, 132, 200, 53);  // #84c835
+        $cGreen  = imagecolorallocate($img, 10, 179, 156);  // #0ab39c
+
+        $cx = 180;
+        $cy = 175;
+        $r = 240;
+
+        $segments = [
+            ['start' => 180, 'end' => 216, 'color' => $cRed],
+            ['start' => 216, 'end' => 252, 'color' => $cOrange],
+            ['start' => 252, 'end' => 288, 'color' => $cYellow],
+            ['start' => 288, 'end' => 324, 'color' => $cLGreen],
+            ['start' => 324, 'end' => 360, 'color' => $cGreen],
+        ];
+
+        imagesetthickness($img, 24);
+        foreach ($segments as $seg) {
+            imagearc($img, $cx, $cy, $r, $r, $seg['start'], $seg['end'], $seg['color']);
+        }
+
+        // Calcular ángulo de la aguja: 180° (0%) a 360° (100%)
+        $gdAngle = 180 + ($score * 1.8);
+        $rad = deg2rad($gdAngle);
+
+        $needleLen = 100;
+        $nx = $cx + (int)round($needleLen * cos($rad));
+        $ny = $cy + (int)round($needleLen * sin($rad));
+
+        // Dibujar aguja y pivote central
+        $dark = imagecolorallocate($img, 20, 25, 35);
+        imagesetthickness($img, 6);
+        imageline($img, $cx, $cy, $nx, $ny, $dark);
+        imagefilledellipse($img, $cx, $cy, 22, 22, $dark);
+
+        // Capturar buffer de la imagen PNG a Base64
+        ob_start();
+        imagepng($img);
+        $data = ob_get_clean();
+        imagedestroy($img);
+
+        return 'data:image/png;base64,' . base64_encode($data);
     }
 }

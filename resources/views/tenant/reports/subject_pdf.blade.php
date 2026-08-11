@@ -176,40 +176,24 @@
             <td style="font-weight: bold;">Domicilio:</td>
             <td colspan="3">{{ $subject->address ?: 'No provisto' }}</td>
         </tr>
+    </table>
+
     <!-- Risk Assessment Executive Summary -->
     <div class="section-title">Índice de Confiabilidad y Evaluación de Riesgo</div>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
         <tr>
-            <!-- Gauge Chart SVG Vector (DomPDF Native) -->
-            <td style="width: 38%; text-align: center; padding: 15px; border-right: 1px solid #cbd5e1; vertical-align: middle;">
-                <div style="font-size: 10px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-bottom: 5px;">Índice de Confiabilidad</div>
+            <!-- Gauge Chart PNG (DomPDF 100% Compatible) -->
+            <td style="width: 38%; text-align: center; padding: 12px 10px; border-right: 1px solid #cbd5e1; vertical-align: middle;">
+                <div style="font-size: 10px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-bottom: 3px;">Índice de Confiabilidad</div>
                 
-                <svg viewBox="0 0 200 120" width="170" height="105">
-                    <!-- Segment 1: Red (0-20%) -->
-                    <path d="M 20 100 A 80 80 0 0 1 34.64 52.98" fill="none" stroke="#d32f2f" stroke-width="18" stroke-linecap="butt" />
-                    <!-- Segment 2: Orange (20-40%) -->
-                    <path d="M 34.64 52.98 A 80 80 0 0 1 75.28 23.95" fill="none" stroke="#f06548" stroke-width="18" stroke-linecap="butt" />
-                    <!-- Segment 3: Yellow (40-60%) -->
-                    <path d="M 75.28 23.95 A 80 80 0 0 1 124.72 23.95" fill="none" stroke="#f7b84b" stroke-width="18" stroke-linecap="butt" />
-                    <!-- Segment 4: Light Green (60-80%) -->
-                    <path d="M 124.72 23.95 A 80 80 0 0 1 165.36 52.98" fill="none" stroke="#84c835" stroke-width="18" stroke-linecap="butt" />
-                    <!-- Segment 5: Green (80-100%) -->
-                    <path d="M 165.36 52.98 A 80 80 0 0 1 180 100" fill="none" stroke="#0ab39c" stroke-width="18" stroke-linecap="butt" />
+                @if(!empty($riskAssessment['gauge_base64']))
+                    <img src="{{ $riskAssessment['gauge_base64'] }}" style="width: 160px; height: auto; display: block; margin: 0 auto;" />
+                @endif
 
-                    <!-- Inner Circle Pivot -->
-                    <circle cx="100" cy="100" r="7" fill="#141923" />
-                    
-                    <!-- Needle -->
-                    <g transform="rotate({{ $riskAssessment['needle_angle'] ?? 0 }}, 100, 100)">
-                        <line x1="100" y1="100" x2="32" y2="100" stroke="#141923" stroke-width="4" stroke-linecap="round" />
-                        <polygon points="32,97 22,100 32,103" fill="#141923" />
-                    </g>
-                </svg>
-
-                <div style="font-size: 20px; font-weight: bold; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; margin-top: -2px;">
+                <div style="font-size: 20px; font-weight: bold; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; margin-top: 2px;">
                     {{ $riskAssessment['score'] ?? 100 }}%
                 </div>
-                <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; mt-1;">
+                <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; margin-top: 2px;">
                     Confiabilidad {{ $riskAssessment['confiabilidad_label'] ?? 'MUY ALTA' }}
                 </div>
             </td>
