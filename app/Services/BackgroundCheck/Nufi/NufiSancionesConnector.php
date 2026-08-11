@@ -78,18 +78,26 @@ class NufiSancionesConnector extends NufiConnector
 
         try {
             $amlResponse = $this->postRequest('/perfilamiento/v1/aml', $amlPayload);
-            $amlData = $amlResponse['data'] ?? $amlResponse['hits'] ?? $amlResponse['resultados'] ?? (is_array($amlResponse) ? $amlResponse : []);
-            if (is_array($amlData)) {
-                foreach ($amlData as $item) {
-                    if (is_array($item)) {
-                        $hits[] = [
-                            'lista'             => $item['lista'] ?? $item['list_name'] ?? 'Listas AML / PEPs',
-                            'nombre_encontrado' => $item['nombre_completo'] ?? $item['nombre'] ?? $item['matched_name'] ?? 'N/A',
-                            'entidad_pais'      => $item['pais'] ?? $item['entidad'] ?? $item['country'] ?? 'N/A',
-                            'tipo_lista'        => $item['tipo'] ?? $item['type'] ?? 'PEP / Sanción AML',
-                            'fecha_publicacion' => $item['fecha_publicacion'] ?? $item['date'] ?? null,
-                            'comentarios'       => $item['comentarios'] ?? $item['detalle'] ?? $item['summary'] ?? '',
-                        ];
+            $rawAml = $amlResponse['body'] ?? $amlResponse;
+            $codeAml = (int)($rawAml['code'] ?? $amlResponse['code'] ?? 200);
+            $statusAml = strtolower($rawAml['status'] ?? $amlResponse['status'] ?? '');
+
+            // Si devuelve código 204 o status "no_result" -> no hay coincidencias
+            if ($codeAml !== 204 && $statusAml !== 'no_result') {
+                $amlData = $rawAml['data'] ?? $rawAml['hits'] ?? $rawAml['resultados'] ?? null;
+                if (is_array($amlData) && !empty($amlData)) {
+                    foreach ($amlData as $item) {
+                        // Asegurar que $item es un registro individual de coincidencia y no la estructura global del response
+                        if (is_array($item) && !isset($item['code']) && !isset($item['status']) && (isset($item['nombre']) || isset($item['nombre_completo']) || isset($item['matched_name']) || isset($item['lista']))) {
+                            $hits[] = [
+                                'lista'             => $item['lista'] ?? $item['list_name'] ?? 'Listas AML / PEPs',
+                                'nombre_encontrado' => $item['nombre_completo'] ?? $item['nombre'] ?? $item['matched_name'] ?? $fullNameClean,
+                                'entidad_pais'      => $item['pais'] ?? $item['entidad'] ?? $item['country'] ?? 'MÉXICO',
+                                'tipo_lista'        => $item['tipo'] ?? $item['type'] ?? 'PEP / Sanción AML',
+                                'fecha_publicacion' => $item['fecha_publicacion'] ?? $item['date'] ?? null,
+                                'comentarios'       => $item['comentarios'] ?? $item['detalle'] ?? $item['summary'] ?? '',
+                            ];
+                        }
                     }
                 }
             }
@@ -113,18 +121,26 @@ class NufiSancionesConnector extends NufiConnector
 
         try {
             $ofacResponse = $this->postRequest('/v1/sancionados_ofac/consultar', $ofacPayload);
-            $ofacData = $ofacResponse['data'] ?? $ofacResponse['resultados'] ?? $ofacResponse['sancionados'] ?? (is_array($ofacResponse) ? $ofacResponse : []);
-            if (is_array($ofacData)) {
-                foreach ($ofacData as $item) {
-                    if (is_array($item)) {
-                        $hits[] = [
-                            'lista'             => $item['lista'] ?? $item['list_name'] ?? 'OFAC - Specially Designated Nationals (SDN)',
-                            'nombre_encontrado' => $item['nombre'] ?? $item['nombre_completo'] ?? $item['sdn_name'] ?? 'N/A',
-                            'entidad_pais'      => $item['pais'] ?? $item['country'] ?? 'EE.UU. / Internacional',
-                            'tipo_lista'        => 'OFAC ' . ($item['programa'] ?? $item['program'] ?? 'SDN List'),
-                            'fecha_publicacion' => $item['fecha'] ?? $item['date'] ?? null,
-                            'comentarios'       => $item['comentarios'] ?? $item['remarks'] ?? (isset($item['score']) ? "Score de Coincidencia: {$item['score']}%" : ''),
-                        ];
+            $rawOfac = $ofacResponse['body'] ?? $ofacResponse;
+            $codeOfac = (int)($rawOfac['code'] ?? $ofacResponse['code'] ?? 200);
+            $statusOfac = strtolower($rawOfac['status'] ?? $ofacResponse['status'] ?? '');
+
+            // Si devuelve código 204 o status "no_result" -> no hay coincidencias
+            if ($codeOfac !== 204 && $statusOfac !== 'no_result') {
+                $ofacData = $rawOfac['data'] ?? $rawOfac['resultados'] ?? $rawOfac['sancionados'] ?? null;
+                if (is_array($ofacData) && !empty($ofacData)) {
+                    foreach ($ofacData as $item) {
+                        // Asegurar que $item es un registro individual de coincidencia y no la estructura global del response
+                        if (is_array($item) && !isset($item['code']) && !isset($item['status']) && (isset($item['nombre']) || isset($item['nombre_completo']) || isset($item['sdn_name']) || isset($item['lista']))) {
+                            $hits[] = [
+                                'lista'             => $item['lista'] ?? $item['list_name'] ?? 'OFAC - Specially Designated Nationals (SDN)',
+                                'nombre_encontrado' => $item['nombre'] ?? $item['nombre_completo'] ?? $item['sdn_name'] ?? $fullNameClean,
+                                'entidad_pais'      => $item['pais'] ?? $item['country'] ?? 'EE.UU. / Internacional',
+                                'tipo_lista'        => 'OFAC ' . ($item['programa'] ?? $item['program'] ?? 'SDN List'),
+                                'fecha_publicacion' => $item['fecha'] ?? $item['date'] ?? null,
+                                'comentarios'       => $item['comentarios'] ?? $item['remarks'] ?? (isset($item['score']) ? "Score de Coincidencia: {$item['score']}%" : ''),
+                            ];
+                        }
                     }
                 }
             }
