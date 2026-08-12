@@ -150,21 +150,18 @@
     <!-- Header Section -->
     <table style="width: 100%;" class="header">
         <tr>
-            <td style="width: 40%; vertical-align: top;">
+            <td style="width: 55%; vertical-align: top;">
                 <span class="logo-text">Aval <span>ID</span></span><br>
                 <span class="logo-slogan">LA CONFIANZA DE TU GENTE</span>
-            </td>
-            <td style="width: 60%; text-align: right; vertical-align: top;">
-                <span class="report-title">EXPEDIENTE DE ANTECEDENTES</span><br>
-                <div style="margin-top: 3px; text-align: right;">
-                    <span style="font-size: 9px; color: #56657e; display: inline-block; margin-left: 10px;">
-                        Folio: <strong style="color: #1877f2;">{{ sprintf('AVID-%03d-%04d', floor($subject->id / 10000), $subject->id) }}</strong>
-                    </span>
-                    <span style="font-size: 9px; color: #56657e; display: inline-block; margin-left: 10px;">
-                        ID Cliente: <code style="font-size: 8px;">CLI-{{ strtoupper(substr(md5(($subject->tenant_id ?? '1') . 'avalid'), 0, 8)) }}</code>
-                    </span>
+                <div style="margin-top: 4px; font-size: 9px; color: #56657e;">
+                    <strong style="color: #1877f2; font-size: 10px;">{{ sprintf('AVID-%03d-%04d', floor($subject->id / 10000), $subject->id) }}</strong>
+                    <span style="margin: 0 4px; color: #94a3b8;">|</span>
+                    <code style="font-size: 8.5px;">CLI-{{ strtoupper(substr(md5(($subject->tenant_id ?? '1') . 'avalid'), 0, 8)) }}</code>
                 </div>
-                <div style="font-size: 8px; color: #64748b; margin-top: 2px;">
+            </td>
+            <td style="width: 45%; text-align: right; vertical-align: top;">
+                <span class="report-title">EXPEDIENTE DE ANTECEDENTES</span><br>
+                <div style="font-size: 8.5px; color: #64748b; margin-top: 6px;">
                     Fecha de Generación: {{ now()->setTimezone('America/Mexico_City')->format('d/m/Y H:i') }} hrs
                 </div>
             </td>
@@ -330,7 +327,9 @@
             @endforeach
         </tbody>
     </table>
-
+    <!-- Página 1: Resumen Ejecutivo -> Página 2: Página en Blanco -> Página 3: Detalle de Consultas -->
+    <div class="page-break"></div>
+    <div style="min-height: 400px; line-height: 1;">&nbsp;</div>
     <div class="page-break"></div>
 
     <!-- Detailed Query Sections -->
