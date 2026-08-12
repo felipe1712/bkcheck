@@ -327,9 +327,6 @@
             @endforeach
         </tbody>
     </table>
-    <!-- Página 1: Resumen Ejecutivo -> Página 2: Página en Blanco -> Página 3: Detalle de Consultas -->
-    <div class="page-break"></div>
-    <div style="min-height: 400px; line-height: 1;">&nbsp;</div>
     <div class="page-break"></div>
 
     <!-- Detailed Query Sections -->
