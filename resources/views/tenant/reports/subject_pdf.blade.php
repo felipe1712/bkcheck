@@ -4,21 +4,24 @@
     <meta charset="UTF-8">
     <title>Reporte de Due Diligence: {{ $subject->name_or_company }}</title>
     <style>
+        @page {
+            margin: 18px 25px 40px 25px;
+        }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             color: #333333;
-            line-height: 1.5;
+            line-height: 1.35;
             margin: 0;
             padding: 0;
         }
         .header {
-            margin-bottom: 20px;
-            border-bottom: 3px solid #1877f2;
-            padding-bottom: 12px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #1877f2;
+            padding-bottom: 6px;
         }
         .logo-text {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: #141923;
             letter-spacing: -0.02em;
@@ -34,7 +37,7 @@
             text-transform: uppercase;
         }
         .report-title {
-            font-size: 15px;
+            font-size: 13.5px;
             font-weight: bold;
             text-align: right;
             color: #141923;
@@ -42,45 +45,48 @@
         }
         .metadata-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
             border-collapse: collapse;
         }
         .metadata-table td {
-            padding: 4px 0;
+            padding: 2px 0;
+            font-size: 9.5px;
         }
         .section-title {
-            font-size: 12px;
+            font-size: 10.5px;
             font-weight: bold;
             background-color: #f1f5f9;
             color: #141923;
-            padding: 6px 10px;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            padding: 3px 6px;
+            margin-top: 8px;
+            margin-bottom: 4px;
             text-transform: uppercase;
-            border-left: 4px solid #1877f2;
+            border-left: 3px solid #1877f2;
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
         .data-table th {
             background-color: #f1f5f9;
             color: #141923;
             font-weight: bold;
             text-align: left;
-            padding: 6px 8px;
-            border: 1px solid #e2e8f0;
+            padding: 3px 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 8.5px;
         }
         .data-table td {
-            padding: 6px 8px;
-            border: 1px solid #e2e8f0;
+            padding: 3px 6px;
+            border: 1px solid #cbd5e1;
             vertical-align: top;
+            font-size: 8.5px;
         }
         .badge {
             display: inline-block;
-            padding: 3px 6px;
-            font-size: 9px;
+            padding: 2px 5px;
+            font-size: 8.5px;
             font-weight: bold;
             border-radius: 3px;
             text-transform: uppercase;
@@ -107,15 +113,15 @@
         }
         .footer {
             position: fixed;
-            bottom: 0px;
+            bottom: -25px;
             left: 0px;
             right: 0px;
-            height: 30px;
+            height: 20px;
             text-align: center;
             font-size: 8px;
-            color: #56657e;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 5px;
+            color: #64748b;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 3px;
         }
         .page-break {
             page-break-after: always;
@@ -123,25 +129,27 @@
         .disclaimer-box {
             border: 1px solid #fef3c7;
             background-color: #fffbeb;
-            padding: 10px;
-            margin-top: 30px;
+            padding: 8px;
+            margin-top: 15px;
             border-radius: 4px;
         }
         .disclaimer-title {
             font-weight: bold;
             color: #b45309;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
+            font-size: 9px;
         }
         .disclaimer-text {
             color: #666;
-            font-size: 9px;
+            font-size: 8.5px;
             text-align: justify;
         }
         code {
             font-family: Courier, monospace;
             background-color: #f1f5f9;
-            padding: 2px 4px;
+            padding: 1px 3px;
             border-radius: 3px;
+            font-size: 8.5px;
         }
     </style>
 </head>
@@ -191,14 +199,14 @@
 
     <!-- Risk Assessment Executive Summary -->
     <div class="section-title">Índice de Confiabilidad y Evaluación de Riesgo</div>
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
         <tr>
             <!-- Gauge Chart PNG (DomPDF 100% Compatible) -->
-            <td style="width: 38%; text-align: center; padding: 12px 10px; border-right: 1px solid #cbd5e1; vertical-align: middle;">
-                <div style="font-size: 10px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-bottom: 3px;">Índice de Confiabilidad</div>
+            <td style="width: 35%; text-align: center; padding: 8px 6px; border-right: 1px solid #cbd5e1; vertical-align: middle;">
+                <div style="font-size: 9px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-bottom: 2px;">Índice de Confiabilidad</div>
                 
                 @if(!empty($riskAssessment['gauge_base64']))
-                    <img src="{{ $riskAssessment['gauge_base64'] }}" style="width: 160px; height: auto; display: block; margin: 0 auto;" />
+                    <img src="{{ $riskAssessment['gauge_base64'] }}" style="width: 130px; height: auto; display: block; margin: 0 auto;" />
                 @endif
 
                 <div style="font-size: 20px; font-weight: bold; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; margin-top: 2px;">
