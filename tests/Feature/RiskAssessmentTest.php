@@ -41,7 +41,7 @@ class RiskAssessmentTest extends TestCase
         $this->assertEquals(100, $risk['score']);
         $this->assertEquals('Bajo / Mínimo', $risk['nivel_riesgo']);
         $this->assertEquals('MUY ALTA', $risk['confiabilidad_label']);
-        $this->assertEquals(0.0, $risk['needle_angle']);
+        $this->assertEquals(180.0, $risk['needle_angle']);
         $this->assertEmpty($risk['penalties']);
     }
 

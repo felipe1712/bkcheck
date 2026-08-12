@@ -146,8 +146,8 @@ class RiskAssessmentService
             $statusText = 'Alto Riesgo Detectado';
         }
 
-        // Ángulo de la aguja en el Gauge semicircular (180° = Izquierda/Rojo, 0° = Derecha/Verde)
-        $needleAngle = round(180 - ($score * 1.8), 2);
+        // Ángulo de rotación horaria de la aguja desde la izquierda (0° = Izquierda/Rojo, 180° = Derecha/Verde)
+        $needleAngle = round($score * 1.8, 2);
         $gaugeBase64 = $this->generateGaugePngBase64($score);
 
         return [
@@ -166,28 +166,32 @@ class RiskAssessmentService
     }
 
     /**
-     * Genera una imagen PNG base64 del velocímetro (Gauge Meter) compatible al 100% con DomPDF y navegadores.
+     * Genera una imagen PNG base64 de alta resolución del velocímetro (Gauge Meter) compatible con DomPDF y navegadores.
      */
     public function generateGaugePngBase64(int $score): string
     {
-        $w = 360;
-        $h = 210;
+        $w = 600;
+        $h = 320;
         $img = imagecreatetruecolor($w, $h);
 
-        // Fondo suave
+        if (function_exists('imageantialias')) {
+            imageantialias($img, true);
+        }
+
+        // Fondo suave (#f8fafc)
         $bg = imagecolorallocate($img, 248, 250, 252);
         imagefill($img, 0, 0, $bg);
 
         // Colores de los 5 segmentos
-        $cRed    = imagecolorallocate($img, 211, 47, 47);   // #d32f2f
-        $cOrange = imagecolorallocate($img, 240, 101, 72);  // #f06548
-        $cYellow = imagecolorallocate($img, 247, 184, 75);  // #f7b84b
-        $cLGreen = imagecolorallocate($img, 132, 200, 53);  // #84c835
-        $cGreen  = imagecolorallocate($img, 10, 179, 156);  // #0ab39c
+        $cRed    = imagecolorallocate($img, 211, 47, 47);   // #d32f2f (0-20%)
+        $cOrange = imagecolorallocate($img, 240, 101, 72);  // #f06548 (20-40%)
+        $cYellow = imagecolorallocate($img, 247, 184, 75);  // #f7b84b (40-60%)
+        $cLGreen = imagecolorallocate($img, 132, 200, 53);  // #84c835 (60-80%)
+        $cGreen  = imagecolorallocate($img, 10, 179, 156);  // #0ab39c (80-100%)
 
-        $cx = 180;
-        $cy = 175;
-        $r = 240;
+        $cx = 300;
+        $cy = 270;
+        $rBase = 400; // Diámetro base
 
         $segments = [
             ['start' => 180, 'end' => 216, 'color' => $cRed],
@@ -197,26 +201,33 @@ class RiskAssessmentService
             ['start' => 324, 'end' => 360, 'color' => $cGreen],
         ];
 
-        imagesetthickness($img, 24);
-        foreach ($segments as $seg) {
-            imagearc($img, $cx, $cy, $r, $r, $seg['start'], $seg['end'], $seg['color']);
+        // Dibujar arcos concéntricos suavizados
+        imagesetthickness($img, 2);
+        for ($t = -20; $t <= 20; $t++) {
+            $r = $rBase + $t;
+            foreach ($segments as $seg) {
+                imagearc($img, $cx, $cy, $r, $r, $seg['start'], $seg['end'], $seg['color']);
+            }
         }
 
-        // Calcular ángulo de la aguja: 180° (0%) a 360° (100%)
+        // Ángulo aguja en GD (180° = 0% Izquierda/Rojo -> 360° = 100% Derecha/Verde)
         $gdAngle = 180 + ($score * 1.8);
         $rad = deg2rad($gdAngle);
 
-        $needleLen = 100;
+        $needleLen = 160;
         $nx = $cx + (int)round($needleLen * cos($rad));
         $ny = $cy + (int)round($needleLen * sin($rad));
 
-        // Dibujar aguja y pivote central
+        // Dibujar aguja oscura y pivote central
         $dark = imagecolorallocate($img, 20, 25, 35);
-        imagesetthickness($img, 6);
+        imagesetthickness($img, 8);
         imageline($img, $cx, $cy, $nx, $ny, $dark);
-        imagefilledellipse($img, $cx, $cy, 22, 22, $dark);
 
-        // Capturar buffer de la imagen PNG a Base64
+        // Pivote exterior e interior
+        imagefilledellipse($img, $cx, $cy, 28, 28, $dark);
+        imagefilledellipse($img, $cx, $cy, 12, 12, $bg);
+
+        // Buffer de salida PNG Base64
         ob_start();
         imagepng($img);
         $data = ob_get_clean();
