@@ -59,12 +59,13 @@ class RiskAssessmentTest extends TestCase
             'consent_granted' => true,
         ]);
 
-        // Sanciones Alert (-40)
+        // Sanciones Alert (CONFIRMADO_NEGATIVO)
         $qSanc = SourceQuery::create([
             'tenant_id' => $user->tenant_id,
             'subject_id' => $subject->id,
             'source_type' => 'sanciones',
             'status' => 'completed',
+            'estado_evaluado' => 'CONFIRMADO_NEGATIVO',
         ]);
         SourceResult::create([
             'source_query_id' => $qSanc->id,
@@ -80,12 +81,13 @@ class RiskAssessmentTest extends TestCase
             ]
         ]);
 
-        // Litigios Alert (-25)
+        // Litigios Alert (CONFIRMADO_NEGATIVO)
         $qLit = SourceQuery::create([
             'tenant_id' => $user->tenant_id,
             'subject_id' => $subject->id,
             'source_type' => 'litigios',
             'status' => 'completed',
+            'estado_evaluado' => 'CONFIRMADO_NEGATIVO',
         ]);
         SourceResult::create([
             'source_query_id' => $qLit->id,
@@ -95,13 +97,23 @@ class RiskAssessmentTest extends TestCase
             ]
         ]);
 
+        // Failed API query (NO_CONCLUYENTE - Should NOT decrease points!)
+        $qFailed = SourceQuery::create([
+            'tenant_id' => $user->tenant_id,
+            'subject_id' => $subject->id,
+            'source_type' => 'lista_nominal',
+            'status' => 'failed',
+            'estado_evaluado' => 'NO_CONCLUYENTE',
+            'error_message' => 'API Timeout 504',
+        ]);
+
         $service = new RiskAssessmentService();
         $risk = $service->calculateRisk($subject);
 
-        // 100 - 40 - 25 = 35 score
-        $this->assertEquals(35, $risk['score']);
-        $this->assertEquals('Alto', $risk['nivel_riesgo']);
-        $this->assertEquals('BAJA', $risk['confiabilidad_label']);
+        // Cumplimiento PLD index = 100 - 45 - 25 = 30%
+        // Global score = 100 * 0.35 + 30 * 0.35 + 100 * 0.15 + 100 * 0.15 = 35 + 10.5 + 15 + 15 = 76% (rounded to 76)
+        $this->assertCount(1, $risk['fuentes_pendientes']);
         $this->assertEquals(2, $risk['total_penalties']);
+        $this->assertStringContainsString('Validar manualmente', $risk['recomendacion']);
     }
 }

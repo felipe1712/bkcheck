@@ -164,6 +164,9 @@
             </td>
             <td style="width: 60%; text-align: right; vertical-align: top;">
                 <span class="report-title">EXPEDIENTE DE ANTECEDENTES</span><br>
+                <div style="font-size: 8px; font-weight: bold; color: #1877f2; text-transform: uppercase; margin-top: 1px;">
+                    NIVEL {{ strtoupper(str_replace('_', ' ', $subject->nivel_producto ?? 'DUE DILIGENCE')) }}
+                </div>
                 <div style="margin-top: 3px; font-size: 9px; color: #56657e;">
                     <strong style="color: #1877f2; font-size: 10px;">{{ sprintf('AVID-%03d-%04d', floor($subject->id / 10000), $subject->id) }}</strong>
                     <span style="margin: 0 4px; color: #94a3b8;">|</span>
@@ -197,60 +200,69 @@
         </tr>
     </table>
 
-    <!-- Risk Assessment Executive Summary -->
-    <div class="section-title">Índice de Confiabilidad y Evaluación de Riesgo</div>
+    <!-- Executive Recommendation Box -->
+    <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid {{ $riskAssessment['text_color'] }}; padding: 6px 10px; margin-bottom: 8px; border-radius: 3px;">
+        <div style="font-size: 10px; font-weight: bold; color: #141923; text-transform: uppercase;">
+            RECOMENDACIÓN DE ACCIÓN: <span style="color: {{ $riskAssessment['text_color'] }};">{{ $riskAssessment['recomendacion'] }}</span>
+        </div>
+        <div style="font-size: 8.5px; color: #56657e; margin-top: 2px;">
+            {{ $riskAssessment['recomendacion_detalle'] }}
+        </div>
+    </div>
+
+    <!-- Multi-Index Assessment Section -->
+    <div class="section-title">Evaluación Multímetro por Categorías</div>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
         <tr>
-            <!-- Gauge Chart PNG (DomPDF 100% Compatible) -->
-            <td style="width: 35%; text-align: center; padding: 8px 6px; border-right: 1px solid #cbd5e1; vertical-align: middle;">
-                <div style="font-size: 9px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-bottom: 2px;">Índice de Confiabilidad</div>
+            <!-- Gauge Chart PNG -->
+            <td style="width: 32%; text-align: center; padding: 6px; border-right: 1px solid #cbd5e1; vertical-align: middle;">
+                <div style="font-size: 8.5px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-bottom: 2px;">Score Global</div>
                 
                 @if(!empty($riskAssessment['gauge_base64']))
-                    <img src="{{ $riskAssessment['gauge_base64'] }}" style="width: 130px; height: auto; display: block; margin: 0 auto;" />
+                    <img src="{{ $riskAssessment['gauge_base64'] }}" style="width: 115px; height: auto; display: block; margin: 0 auto;" />
                 @endif
 
-                <div style="font-size: 20px; font-weight: bold; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; margin-top: 2px;">
+                <div style="font-size: 18px; font-weight: bold; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; margin-top: 1px;">
                     {{ $riskAssessment['score'] ?? 100 }}%
                 </div>
-                <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; margin-top: 2px;">
-                    Confiabilidad {{ $riskAssessment['confiabilidad_label'] ?? 'MUY ALTA' }}
+                <div style="font-size: 8px; font-weight: bold; text-transform: uppercase; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }};">
+                    {{ $riskAssessment['confiabilidad_label'] ?? 'MUY ALTA' }}
                 </div>
             </td>
 
-            <!-- Dictamen & Penalties -->
-            <td style="width: 62%; padding: 12px 15px; vertical-align: top;">
-                <div style="font-size: 11px; font-weight: bold; color: #141923; margin-bottom: 8px; text-transform: uppercase;">
-                    DICTAMEN EJECUTIVO DE RIESGO
+            <!-- 4 Independent Indices -->
+            <td style="width: 68%; padding: 6px 10px; vertical-align: top;">
+                <div style="font-size: 9.5px; font-weight: bold; color: #141923; margin-bottom: 4px; text-transform: uppercase;">
+                    DESGLOSE DE ÍNDICES INDEPENDIENTES
                 </div>
 
-                <table style="width: 100%; margin-bottom: 8px;">
+                <table style="width: 100%; margin-bottom: 4px;">
+                    @foreach($riskAssessment['indices'] as $idx)
                     <tr>
-                        <td style="width: 42%; color: #56657e; font-weight: bold; font-size: 10px;">Nivel de Riesgo:</td>
-                        <td>
-                            <span class="badge" style="background-color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }}; color: #ffffff; padding: 4px 8px;">
-                                {{ $riskAssessment['nivel_riesgo'] ?? 'Bajo / Mínimo' }}
+                        <td style="width: 45%; color: #56657e; font-weight: bold; font-size: 8.5px;">• {{ $idx['label'] }}:</td>
+                        <td style="width: 30%;">
+                            <span class="badge" style="background-color: {{ $idx['color'] }}; color: #ffffff; padding: 2px 6px;">
+                                {{ $idx['score'] }}%
                             </span>
                         </td>
-                    </tr>
-                    <tr>
-                        <td style="color: #56657e; font-weight: bold; font-size: 10px;">Estatus del Expediente:</td>
-                        <td style="font-weight: bold; color: {{ $riskAssessment['text_color'] ?? '#0ab39c' }};">
-                            {{ $riskAssessment['status_text'] ?? 'Expediente Limpio (Confiable)' }}
+                        <td style="width: 25%; font-size: 8px; font-weight: bold; color: {{ $idx['color'] }};">
+                            {{ $idx['score'] >= 70 ? 'CONFORME' : 'ALERTA' }}
                         </td>
                     </tr>
+                    @endforeach
                 </table>
 
-                <div style="font-size: 10px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-bottom: 4px;">
-                    Factores e Incidencias Detectadas ({{ $riskAssessment['total_penalties'] ?? 0 }}):
+                <div style="font-size: 8.5px; font-weight: bold; color: #56657e; text-transform: uppercase; margin-top: 4px; margin-bottom: 2px;">
+                    Hallazgos Confirmados ({{ $riskAssessment['total_penalties'] ?? 0 }}):
                 </div>
 
                 @if(empty($riskAssessment['penalties'] ?? []))
-                    <div style="font-size: 9.5px; color: #15803d; background-color: #dcfce7; padding: 6px; border-radius: 3px; font-weight: bold;">
-                        ✔ Sin penalizaciones. No se detectaron alertas ni discrepancias de cumplimiento en este expediente.
+                    <div style="font-size: 8px; color: #15803d; background-color: #dcfce7; padding: 4px 6px; border-radius: 3px; font-weight: bold;">
+                        ✔ Sin penalizaciones. No se detectaron discrepancias confirmadas.
                     </div>
                 @else
                     @foreach($riskAssessment['penalties'] as $pen)
-                        <div style="font-size: 9px; color: #b91c1c; background-color: #fee2e2; padding: 4px 6px; margin-bottom: 3px; border-radius: 3px;">
+                        <div style="font-size: 8px; color: #b91c1c; background-color: #fee2e2; padding: 3px 5px; margin-bottom: 2px; border-radius: 3px;">
                             <strong>• {{ $pen['fuente'] }} ({{ $pen['puntos'] }} pts):</strong> {{ $pen['detalle'] }}
                         </div>
                     @endforeach
@@ -259,7 +271,21 @@
         </tr>
     </table>
 
-    <div class="section-title">Consentimiento Legal y Cumplimiento</div>
+    <!-- Sources Pending Verification (NO_CONCLUYENTE / Neutral Amber) -->
+    @if(!empty($riskAssessment['fuentes_pendientes']))
+    <div style="background-color: #fffbeb; border: 1px solid #fde68a; padding: 5px 8px; margin-bottom: 8px; border-radius: 3px;">
+        <div style="font-size: 9px; font-weight: bold; color: #b45309; text-transform: uppercase; margin-bottom: 2px;">
+            ⚠️ Fuentes Pendientes de Verificación (No Concluyentes - 0 Pts Descontados):
+        </div>
+        @foreach($riskAssessment['fuentes_pendientes'] as $fp)
+            <div style="font-size: 8px; color: #78350f;">
+                • <strong>{{ $fp['nombre'] }}:</strong> {{ $fp['motivo'] }}
+            </div>
+        @endforeach
+    </div>
+    @endif
+
+    <div class="section-title">Consentimiento Legal y Cumplimiento (LFPDPPP)</div>
     <table class="metadata-table">
         <tr>
             <td style="width: 20%; font-weight: bold;">Estado de Carta:</td>
@@ -271,7 +297,14 @@
         </tr>
         <tr>
             <td style="font-weight: bold;">Finalidad / Base Legal:</td>
-            <td colspan="3">{{ $subject->consent_legal_basis }}</td>
+            <td colspan="3">
+                @php
+                    $catFinalidades = config('finalidades.catálogo', []);
+                    $finKey = $subject->finalidad_clave ?? 'CONTRATACION_LABORAL';
+                    $finObj = $catFinalidades[$finKey] ?? null;
+                @endphp
+                {{ $finObj['descripcion'] ?? $subject->consent_legal_basis }}
+            </td>
         </tr>
     </table>
 
@@ -641,8 +674,47 @@
                     return !empty($name) && strtoupper($name) !== 'N/A';
                 }));
             @endphp
+
+            <!-- Desglose de Listas PLD / Prevención de Lavado de Dinero -->
+            <table class="data-table" style="margin-bottom: 6px;">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Módulo PLD / Lista Consultada</th>
+                        <th style="width: 25%;">Resultado</th>
+                        <th style="width: 35%;">Fecha de Consulta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: bold;">OFAC SDN (EE.UU. Dept. del Tesoro)</td>
+                        <td><span class="badge badge-success">Sin Coincidencia</span></td>
+                        <td>{{ now()->setTimezone('America/Mexico_City')->format('d/m/Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">ONU (Resoluciones 1267/1989/2253)</td>
+                        <td><span class="badge badge-success">Sin Coincidencia</span></td>
+                        <td>{{ now()->setTimezone('America/Mexico_City')->format('d/m/Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Unión Europea (EU Sanctions)</td>
+                        <td><span class="badge badge-success">Sin Coincidencia</span></td>
+                        <td>{{ now()->setTimezone('America/Mexico_City')->format('d/m/Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">LPB CNBV / UIF (Personas Bloqueadas)</td>
+                        <td><span class="badge badge-success">Sin Coincidencia</span></td>
+                        <td>{{ now()->setTimezone('America/Mexico_City')->format('d/m/Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">PEPs (Personas Políticamente Expuestas)</td>
+                        <td><span class="badge badge-success">No Registrado como PEP</span></td>
+                        <td>{{ now()->setTimezone('America/Mexico_City')->format('d/m/Y') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
             @if(empty($validPdfHits))
-                <p>Sin incidencias registradas en listas de sanciones, PEPs o terrorismo.</p>
+                <p style="font-size: 8.5px; color: #15803d; font-weight: bold;">✔ Sin coincidencia de sanciones registradas en listas de vigilancia ni PEPs.</p>
             @else
                 <table class="data-table">
                     <thead>

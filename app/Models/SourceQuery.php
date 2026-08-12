@@ -15,6 +15,8 @@ class SourceQuery extends Model
         'subject_id',
         'source_type',
         'status',
+        'estado_evaluado',
+        'retry_count',
         'error_message',
     ];
 

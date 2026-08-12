@@ -40,6 +40,9 @@ class ProcessConnectorQuery implements ShouldQueue
     public int $userId;
     public ?string $ipAddress;
 
+    public int $tries = 3;
+    public int $backoff = 2;
+
     /**
      * Create a new job instance.
      */
@@ -51,12 +54,55 @@ class ProcessConnectorQuery implements ShouldQueue
     }
 
     /**
+     * Helper to evaluate 3-state classification from payload data.
+     */
+    public static function evaluateQueryState(string $type, array $payload): string
+    {
+        switch ($type) {
+            case 'sat_listas':
+                if (!empty($payload['en_lista_69b'])) return 'CONFIRMADO_NEGATIVO';
+                break;
+
+            case 'sanciones':
+                $hits = $payload['hits'] ?? [];
+                $validHits = array_filter($hits, fn($h) => !empty($h['nombre_encontrado']) && strtoupper($h['nombre_encontrado']) !== 'N/A');
+                if (!empty($payload['encontrado']) && count($validHits) > 0) return 'CONFIRMADO_NEGATIVO';
+                break;
+
+            case 'litigios':
+                if (!empty($payload['tiene_juicios'])) return 'CONFIRMADO_NEGATIVO';
+                break;
+
+            case 'ine_vs_selfie':
+                if (isset($payload['coincide_rostro']) && !$payload['coincide_rostro']) return 'CONFIRMADO_NEGATIVO';
+                break;
+
+            case 'lista_nominal':
+                if (isset($payload['valida']) && !$payload['valida']) return 'CONFIRMADO_NEGATIVO';
+                break;
+
+            case 'csd':
+                if (isset($payload['valido']) && !$payload['valido']) return 'CONFIRMADO_NEGATIVO';
+                break;
+
+            case 'rfc':
+                if (isset($payload['valido']) && !$payload['valido']) return 'CONFIRMADO_NEGATIVO';
+                break;
+        }
+
+        return 'CONFIRMADO_POSITIVO';
+    }
+
+    /**
      * Execute the job.
      */
     public function handle(): void
     {
         // Update query status to processing
-        $this->sourceQuery->update(['status' => 'processing']);
+        $this->sourceQuery->update([
+            'status' => 'processing',
+            'retry_count' => $this->attempts(),
+        ]);
 
         try {
             $subject = $this->sourceQuery->subject;
@@ -97,7 +143,7 @@ class ProcessConnectorQuery implements ShouldQueue
                     'processed_data' => $payload,
                 ]);
 
-                // Mark query as completed successfully (or keep processing if async)
+                // Mark query as completed successfully and evaluate 3-state
                 $status = 'completed';
                 if ($type === 'csd' && isset($payload['uuid'])) {
                     $status = 'processing';
@@ -105,7 +151,12 @@ class ProcessConnectorQuery implements ShouldQueue
                     $status = 'processing';
                 }
                 
-                $this->sourceQuery->update(['status' => $status]);
+                $estadoEvaluado = self::evaluateQueryState($type, $payload);
+
+                $this->sourceQuery->update([
+                    'status' => $status,
+                    'estado_evaluado' => $estadoEvaluado,
+                ]);
             } catch (\Throwable $e) {
                 // Save log even if it failed
                 SourceResult::create([
@@ -155,6 +206,7 @@ class ProcessConnectorQuery implements ShouldQueue
             
             $this->sourceQuery->update([
                 'status' => 'failed',
+                'estado_evaluado' => 'NO_CONCLUYENTE',
                 'error_message' => $e->getMessage(),
             ]);
 

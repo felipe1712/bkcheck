@@ -59,11 +59,13 @@ class SubjectController extends Controller
             'consent_document'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'ine_front'            => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             'ine_back'             => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
-            // Tier 2
-            'username'             => 'nullable|string|max:100',
-            'nss'                  => 'nullable|digits:11',
-            'proof_of_address'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // Tier 2 & v2 fields
+            'username'               => 'nullable|string|max:100',
+            'nss'                    => 'nullable|digits:11',
+            'proof_of_address'       => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'credit_consent_granted' => 'nullable|boolean',
+            'finalidad_clave'        => 'nullable|string|max:50',
+            'nivel_producto'         => 'nullable|string|max:50',
         ]);
 
         $consentPath = null;
@@ -89,6 +91,10 @@ class SubjectController extends Controller
 
         $creditConsent = (bool) $request->input('credit_consent_granted', false);
 
+        $catFinalidades = config('finalidades.catálogo', []);
+        $finKey = $request->input('finalidad_clave', 'CONTRATACION_LABORAL');
+        $finDesc = $catFinalidades[$finKey]['descripcion'] ?? $request->consent_legal_basis;
+
         $subject = Subject::create([
             'project_id'             => $request->project_id,
             'tipo'                   => $request->tipo,
@@ -98,16 +104,18 @@ class SubjectController extends Controller
             'address'                => $request->address,
             'consent_granted'        => $request->consent_granted,
             'consent_date'           => now(),
-            'consent_legal_basis'    => $request->consent_legal_basis,
+            'consent_legal_basis'    => $finDesc,
             'consent_document_path'  => $consentPath,
             'ine_front_path'         => $ineFrontPath,
             'ine_back_path'          => $ineBackPath,
-            // Tier 2
+            // Tier 2 & v2
             'username'               => $request->username ?: null,
             'nss'                    => $request->nss ?: null,
             'proof_of_address_path'  => $proofOfAddressPath,
             'credit_consent_granted' => $creditConsent,
             'credit_consent_at'      => $creditConsent ? now() : null,
+            'finalidad_clave'        => $finKey,
+            'nivel_producto'         => $request->input('nivel_producto', 'due_diligence'),
         ]);
 
         // Generar token de enrolamiento automáticamente (válido 24h)

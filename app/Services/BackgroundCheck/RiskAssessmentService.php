@@ -8,7 +8,7 @@ use App\Models\SourceQuery;
 class RiskAssessmentService
 {
     /**
-     * Evalúa el nivel de riesgo e índice de confiabilidad de un sujeto basado en sus consultas.
+     * Evalúa el nivel de riesgo e índices independientes de un sujeto basado en sus consultas.
      *
      * @param Subject $subject
      * @return array
@@ -18,151 +18,211 @@ class RiskAssessmentService
         $queries = SourceQuery::where('subject_id', $subject->id)->get();
         $completedQueries = $queries->where('status', 'completed');
 
-        $score = 100; // Puntaje base (100% Confiable / Riesgo Mínimo)
-        $penalties = [];
+        // ----------------------------------------------------
+        // ÍNDICE 1: IDENTIDAD (Base 100%)
+        // ----------------------------------------------------
+        $scoreIdentidad = 100;
+        $identityPenalties = [];
+        $hasPrimaryIdentityIssue = false;
 
-        // 1. Sanciones Internacionales / OFAC / PEPs (-40 pts)
-        $sancionesQuery = $completedQueries->firstWhere('source_type', 'sanciones');
-        if ($sancionesQuery) {
-            $sancData = $sancionesQuery->result?->processed_data ?? [];
-            $rawHits = $sancData['hits'] ?? [];
-            $validHits = array_filter($rawHits, function($h) {
-                $name = trim($h['nombre_encontrado'] ?? '');
-                return !empty($name) && strtoupper($name) !== 'N/A';
-            });
-            if (!empty($sancData['encontrado']) && count($validHits) > 0) {
-                $score -= 40;
-                $penalties[] = [
-                    'fuente' => 'Listas Negras / OFAC / PEPs',
-                    'puntos' => -40,
-                    'detalle' => 'Coincidencia localizada en listas de sanciones o vigilancia internacional.',
+        // Biometría Facial INE vs Selfie (-30 pts)
+        $bioQ = $completedQueries->firstWhere('source_type', 'ine_vs_selfie');
+        if ($bioQ && $bioQ->estado_evaluado === 'CONFIRMADO_NEGATIVO') {
+            $scoreIdentidad -= 30;
+            $hasPrimaryIdentityIssue = true;
+            $identityPenalties[] = [
+                'fuente' => 'Biometría Facial (Rostro vs INE)',
+                'puntos' => -30,
+                'detalle' => 'El rostro del candidato no coincide con la credencial presentada.',
+            ];
+        }
+
+        // Lista Nominal INE (-25 pts)
+        $lnQ = $completedQueries->firstWhere('source_type', 'lista_nominal');
+        if ($lnQ && $lnQ->estado_evaluado === 'CONFIRMADO_NEGATIVO') {
+            $scoreIdentidad -= 25;
+            $hasPrimaryIdentityIssue = true;
+            $identityPenalties[] = [
+                'fuente' => 'Padrón Electoral / Lista Nominal INE',
+                'puntos' => -25,
+                'detalle' => 'Credencial no localizada o no vigente en el Padrón Electoral.',
+            ];
+        }
+
+        // RFC Inválido (-20 pts)
+        $rfcQ = $completedQueries->firstWhere('source_type', 'rfc');
+        if ($rfcQ && $rfcQ->estado_evaluado === 'CONFIRMADO_NEGATIVO') {
+            $scoreIdentidad -= 20;
+            $hasPrimaryIdentityIssue = true;
+            $identityPenalties[] = [
+                'fuente' => 'Validación de RFC ante SAT',
+                'puntos' => -20,
+                'detalle' => 'RFC no registrado o inactivo en los sistemas del SAT.',
+            ];
+        }
+
+        $scoreIdentidad = max(0, min(100, $scoreIdentidad));
+        if ($hasPrimaryIdentityIssue && $scoreIdentidad > 70) {
+            $scoreIdentidad = 69;
+        }
+
+        // ----------------------------------------------------
+        // ÍNDICE 2: CUMPLIMIENTO & PLD (Base 100%)
+        // ----------------------------------------------------
+        $scoreCumplimiento = 100;
+        $compliancePenalties = [];
+
+        // Sanciones OFAC / ONU / UE / PEPs (-45 pts)
+        $sancQ = $completedQueries->firstWhere('source_type', 'sanciones');
+        if ($sancQ && $sancQ->estado_evaluado === 'CONFIRMADO_NEGATIVO') {
+            $scoreCumplimiento -= 45;
+            $compliancePenalties[] = [
+                'fuente' => 'Listas PLD / OFAC / ONU / UE / PEPs / Sanciones',
+                'puntos' => -45,
+                'detalle' => 'Coincidencia confirmada en listas de sanciones o boletines gubernamentales.',
+            ];
+        }
+
+        // Listas SAT 69/69-B (-40 pts)
+        $satQ = $completedQueries->firstWhere('source_type', 'sat_listas');
+        if ($satQ && $satQ->estado_evaluado === 'CONFIRMADO_NEGATIVO') {
+            $scoreCumplimiento -= 40;
+            $compliancePenalties[] = [
+                'fuente' => 'SAT Listas 69 / 69-B (EFOS/EDOS)',
+                'puntos' => -40,
+                'detalle' => 'Publicado en listado de EFOS / facturación simulada del SAT.',
+            ];
+        }
+
+        // Litigios y Juicios Activos (-25 pts)
+        $litQ = $completedQueries->firstWhere('source_type', 'litigios');
+        if ($litQ && $litQ->estado_evaluado === 'CONFIRMADO_NEGATIVO') {
+            $scoreCumplimiento -= 25;
+            $compliancePenalties[] = [
+                'fuente' => 'Litigios y Boletín Judicial',
+                'puntos' => -25,
+                'detalle' => 'Registra procesos o expedientes judiciales activos.',
+            ];
+        }
+
+        $scoreCumplimiento = max(0, min(100, $scoreCumplimiento));
+
+        // ----------------------------------------------------
+        // ÍNDICE 3: CONSISTENCIA DOCUMENTAL (Base 100%)
+        // ----------------------------------------------------
+        $scoreConsistencia = 100;
+        $consistencyPenalties = [];
+        $ineFrente = $completedQueries->firstWhere('source_type', 'ine_frente')?->result?->processed_data ?? [];
+        $curpData  = $completedQueries->firstWhere('source_type', 'curp')?->result?->processed_data ?? [];
+
+        if (!empty($ineFrente['curp']) && !empty($curpData['curp'])) {
+            if (strtoupper(trim($ineFrente['curp'])) !== strtoupper(trim($curpData['curp']))) {
+                $scoreConsistencia -= 30;
+                $consistencyPenalties[] = [
+                    'fuente' => 'Cotejo Cruzado INE vs RENAPO',
+                    'puntos' => -30,
+                    'detalle' => 'La CURP extraída del INE no coincide con el registro oficial de RENAPO.',
                 ];
             }
         }
+        $scoreConsistencia = max(0, min(100, $scoreConsistencia));
 
-        // 2. Lista SAT 69/69-B (-35 pts)
-        $satQuery = $completedQueries->firstWhere('source_type', 'sat_listas');
-        if ($satQuery) {
-            $satData = $satQuery->result?->processed_data ?? [];
-            if (!empty($satData['en_lista_69b'])) {
-                $score -= 35;
-                $penalties[] = [
-                    'fuente' => 'SAT Listas 69 / 69-B',
-                    'puntos' => -35,
-                    'detalle' => 'Publicado en listado de EFOS o presuntos/definitivos del SAT.',
-                ];
-            }
+        // ----------------------------------------------------
+        // ÍNDICE 4: RIESGO REPUTACIONAL & OSINT (Base 100%)
+        // ----------------------------------------------------
+        $scoreReputacional = 100;
+        $reputationalPenalties = [];
+        $scoreReputacional = max(0, min(100, $scoreReputacional));
+
+        // ----------------------------------------------------
+        // SCORE GLOBAL Y RECOMENDACIÓN DE ACCIÓN
+        // ----------------------------------------------------
+        $allPenalties = array_merge($identityPenalties, $compliancePenalties, $consistencyPenalties, $reputationalPenalties);
+
+        $scoreGlobal = (int)round(($scoreIdentidad * 0.35) + ($scoreCumplimiento * 0.35) + ($scoreConsistencia * 0.15) + ($scoreReputacional * 0.15));
+        if ($hasPrimaryIdentityIssue && $scoreGlobal > 70) {
+            $scoreGlobal = 69;
         }
 
-        // 3. Litigios y Juicios Activos (-25 pts)
-        $litigiosQuery = $completedQueries->firstWhere('source_type', 'litigios');
-        if ($litigiosQuery) {
-            $litData = $litigiosQuery->result?->processed_data ?? [];
-            if (!empty($litData['tiene_juicios'])) {
-                $score -= 25;
-                $penalties[] = [
-                    'fuente' => 'Litigios y Boletín Judicial',
-                    'puntos' => -25,
-                    'detalle' => 'Registra procesos o expedientes judiciales activos.',
-                ];
-            }
-        }
-
-        // 4. Biometría Facial (INE vs Selfie) (-20 pts si no coincide)
-        $bioQuery = $completedQueries->firstWhere('source_type', 'ine_vs_selfie');
-        if ($bioQuery) {
-            $bioData = $bioQuery->result?->processed_data ?? [];
-            if (isset($bioData['coincide_rostro']) && !$bioData['coincide_rostro']) {
-                $score -= 20;
-                $penalties[] = [
-                    'fuente' => 'Comparación Biométrica Facial',
-                    'puntos' => -20,
-                    'detalle' => 'El rostro del candidato no coincide con la fotografía del INE.',
-                ];
-            }
-        }
-
-        // 5. Lista Nominal del INE (-15 pts si no está vigente o no fue localizada)
-        $lnQuery = $completedQueries->firstWhere('source_type', 'lista_nominal');
-        if ($lnQuery) {
-            $lnData = $lnQuery->result?->processed_data ?? [];
-            if (isset($lnData['valida']) && !$lnData['valida']) {
-                $score -= 15;
-                $penalties[] = [
-                    'fuente' => 'Lista Nominal del INE',
-                    'puntos' => -15,
-                    'detalle' => 'Credencial no localizada o no vigente en el Padrón Electoral.',
-                ];
-            }
-        }
-
-        // 6. Certificado CSD / SAT (-10 pts si está cancelado/inactivo)
-        $csdQuery = $completedQueries->firstWhere('source_type', 'csd');
-        if ($csdQuery) {
-            $csdData = $csdQuery->result?->processed_data ?? [];
-            if (isset($csdData['valido']) && !$csdData['valido']) {
-                $score -= 10;
-                $penalties[] = [
-                    'fuente' => 'Certificado Sellos Digitales (CSD)',
-                    'puntos' => -10,
-                    'detalle' => 'Certificado de sello digital no válido o revocado por el SAT.',
-                ];
-            }
-        }
-
-        // Limitar puntaje entre 0 y 100
-        $score = max(0, min(100, $score));
-
-        // Determinar Nivel de Riesgo y Colores
-        if ($score >= 90) {
+        // Recomendación de Acción Ejecutiva
+        if ($scoreGlobal >= 90 && !$hasPrimaryIdentityIssue) {
+            $recomendacion = '🟢 Proceder sin observaciones';
+            $recomendacionDetalle = 'El sujeto presenta credenciales de identidad verificadas y expediente limpio de sanciones.';
             $nivelRiesgo = 'Bajo / Mínimo';
-            $confiabilidadLabel = 'MUY ALTA';
             $badgeClass = 'bg-success text-white';
-            $textColor = '#0ab39c'; // Teal / Green
-            $statusText = 'Expediente Limpio (Confiable)';
-        } elseif ($score >= 75) {
-            $nivelRiesgo = 'Bajo';
-            $confiabilidadLabel = 'ALTA';
-            $badgeClass = 'bg-info text-white';
-            $textColor = '#299cdb'; // Light Blue
-            $statusText = 'Riesgo Controlado';
-        } elseif ($score >= 50) {
-            $nivelRiesgo = 'Medio / Moderado';
-            $confiabilidadLabel = 'MODERADA';
+            $textColor = '#0ab39c';
+            $confiabilidadLabel = 'MUY ALTA';
+        } elseif ($scoreGlobal >= 70 && !$hasPrimaryIdentityIssue) {
+            $recomendacion = '🟡 Validar manualmente antes de proceder';
+            $recomendacionDetalle = 'Se detectaron observaciones menores o fuentes pendientes que requieren revisión por el oficial de cumplimiento.';
+            $nivelRiesgo = 'Moderado';
             $badgeClass = 'bg-warning text-dark';
-            $textColor = '#f7b84b'; // Yellow / Orange
-            $statusText = 'Atención Requerida';
-        } elseif ($score >= 25) {
-            $nivelRiesgo = 'Alto';
-            $confiabilidadLabel = 'BAJA';
-            $badgeClass = 'bg-warning-subtle text-danger border border-danger';
-            $textColor = '#f06548'; // Dark Orange / Red
-            $statusText = 'Alerta de Cumplimiento';
+            $textColor = '#f7b84b';
+            $confiabilidadLabel = 'MODERADA';
         } else {
-            $nivelRiesgo = 'Crítico / No Confiable';
-            $confiabilidadLabel = 'NULA';
+            $recomendacion = '🔴 No se recomienda proceder sin autorización de nivel superior';
+            $recomendacionDetalle = 'El expediente presenta alertas de alta severidad en identidad primaria o boletinación en listas de sanciones.';
+            $nivelRiesgo = 'Alto / Crítico';
             $badgeClass = 'bg-danger text-white';
-            $textColor = '#d32f2f'; // Deep Red
-            $statusText = 'Alto Riesgo Detectado';
+            $textColor = '#d32f2f';
+            $confiabilidadLabel = 'ALTA INCIDENCIA';
         }
 
-        // Ángulo de rotación horaria de la aguja desde la izquierda (0° = Izquierda/Rojo, 180° = Derecha/Verde)
-        $needleAngle = round($score * 1.8, 2);
-        $gaugeBase64 = $this->generateGaugePngBase64($score);
+        // Fuentes pendientes de verificación (NO_CONCLUYENTE / Failed)
+        $fuentesPendientes = [];
+        foreach ($queries as $q) {
+            if ($q->estado_evaluado === 'NO_CONCLUYENTE' || in_array($q->status, ['failed', 'error'])) {
+                $fuentesPendientes[] = [
+                    'fuente' => $q->source_type,
+                    'nombre' => $this->getSourceLabel($q->source_type),
+                    'motivo' => $q->error_message ?: 'Respuesta no concluyente de la API. Pendiente de reintento automático.',
+                ];
+            }
+        }
 
         return [
-            'score'                => $score,
-            'nivel_riesgo'         => $nivelRiesgo,
-            'confiabilidad_label'  => $confiabilidadLabel,
-            'badge_class'          => $badgeClass,
-            'text_color'           => $textColor,
-            'status_text'          => $statusText,
-            'needle_angle'         => $needleAngle,
-            'gauge_base64'         => $gaugeBase64,
-            'penalties'            => $penalties,
-            'total_penalties'      => count($penalties),
-            'queries_evaluadas'    => $completedQueries->count(),
+            'score'                   => $scoreGlobal,
+            'nivel_riesgo'            => $nivelRiesgo,
+            'confiabilidad_label'     => $confiabilidadLabel,
+            'badge_class'             => $badgeClass,
+            'text_color'              => $textColor,
+            'recomendacion'           => $recomendacion,
+            'recomendacion_detalle'   => $recomendacionDetalle,
+            'indices' => [
+                'identidad'           => ['score' => $scoreIdentidad, 'label' => 'Identidad', 'color' => $scoreIdentidad >= 70 ? '#0ab39c' : '#d32f2f'],
+                'cumplimiento'        => ['score' => $scoreCumplimiento, 'label' => 'Cumplimiento PLD', 'color' => $scoreCumplimiento >= 70 ? '#0ab39c' : '#d32f2f'],
+                'consistencia'        => ['score' => $scoreConsistencia, 'label' => 'Consistencia', 'color' => $scoreConsistencia >= 70 ? '#0ab39c' : '#d32f2f'],
+                'reputacional'        => ['score' => $scoreReputacional, 'label' => 'Reputacional / OSINT', 'color' => $scoreReputacional >= 70 ? '#0ab39c' : '#d32f2f'],
+            ],
+            'needle_angle'            => round($scoreGlobal * 1.8, 2),
+            'gauge_base64'            => $this->generateGaugePngBase64($scoreGlobal),
+            'penalties'               => $allPenalties,
+            'total_penalties'         => count($allPenalties),
+            'fuentes_pendientes'      => $fuentesPendientes,
+            'queries_evaluadas'       => $completedQueries->count(),
         ];
+    }
+
+    /**
+     * Obtein label for a given source_type.
+     */
+    protected function getSourceLabel(string $sourceType): string
+    {
+        return match ($sourceType) {
+            'rfc' => 'Validación RFC (SAT)',
+            'csd' => 'Certificados CSD (SAT)',
+            'siger' => 'Registro Público (SIGER)',
+            'sat_listas' => 'Listas 69/69-B (SAT)',
+            'marcas' => 'Marcas Registradas (IMPI)',
+            'ine_frente' => 'INE Frontal (OCR)',
+            'ine_reverso' => 'INE Reverso (OCR)',
+            'lista_nominal' => 'Lista Nominal INE',
+            'ine_vs_selfie' => 'Biometría Facial',
+            'sanciones' => 'Sanciones / OFAC / PEPs',
+            'litigios' => 'Boletín Judicial / Litigios',
+            'curp' => 'Validación CURP (RENAPO)',
+            default => strtoupper($sourceType),
+        };
     }
 
     /**

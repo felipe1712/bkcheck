@@ -39,6 +39,8 @@ class Subject extends Model
         'credit_consent_granted',
         'credit_consent_at',
         'tier_level',
+        'finalidad_clave',
+        'nivel_producto',
     ];
 
     protected $casts = [

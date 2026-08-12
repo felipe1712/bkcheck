@@ -205,33 +205,41 @@
     </div>
 </div>
 
-<!-- ─────────── SECCIÓN: ÍNDICE DE CONFIABILIDAD Y NIVEL DE RIESGO (GAUGE CHART) ─────────── -->
+<!-- ─────────── SECCIÓN: ÍNDICE DE CONFIABILIDAD Y NIVEL DE RIESGO (GAUGE CHART & MULTÍMETRO) ─────────── -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
+                <!-- Executive Action Recommendation Box -->
+                <div class="alert mb-4 border-start border-4 shadow-sm" style="border-left-color: {{ $riskAssessment['text_color'] }} !important; background-color: #f8fafc;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="ri-shield-check-line fs-22" style="color: {{ $riskAssessment['text_color'] }};"></i>
+                        <div>
+                            <h6 class="fw-bold mb-1 text-dark text-uppercase">
+                                RECOMENDACIÓN DE ACCIÓN: <span style="color: {{ $riskAssessment['text_color'] }};">{{ $riskAssessment['recomendacion'] }}</span>
+                            </h6>
+                            <p class="mb-0 fs-13 text-muted">
+                                {{ $riskAssessment['recomendacion_detalle'] }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row align-items-center">
                     <!-- Gauge Velocímetro SVG -->
-                    <div class="col-lg-4 text-center border-end">
-                        <h6 class="text-muted fs-13 text-uppercase fw-semibold mb-2">Índice de Confiabilidad</h6>
+                    <div class="col-lg-3 text-center border-end">
+                        <h6 class="text-muted fs-12 text-uppercase fw-semibold mb-2">Score Global de Confiabilidad</h6>
                         
-                        <div class="position-relative d-inline-block" style="width: 220px; height: 130px;">
+                        <div class="position-relative d-inline-block" style="width: 180px; height: 110px;">
                             <svg viewBox="0 0 200 120" width="100%" height="100%">
-                                <!-- Segment 1: Red (0-20%) -->
                                 <path d="M 20 100 A 80 80 0 0 1 34.64 52.98" fill="none" stroke="#d32f2f" stroke-width="18" stroke-linecap="butt" />
-                                <!-- Segment 2: Orange (20-40%) -->
                                 <path d="M 34.64 52.98 A 80 80 0 0 1 75.28 23.95" fill="none" stroke="#f06548" stroke-width="18" stroke-linecap="butt" />
-                                <!-- Segment 3: Yellow (40-60%) -->
                                 <path d="M 75.28 23.95 A 80 80 0 0 1 124.72 23.95" fill="none" stroke="#f7b84b" stroke-width="18" stroke-linecap="butt" />
-                                <!-- Segment 4: Light Green (60-80%) -->
                                 <path d="M 124.72 23.95 A 80 80 0 0 1 165.36 52.98" fill="none" stroke="#84c835" stroke-width="18" stroke-linecap="butt" />
-                                <!-- Segment 5: Green (80-100%) -->
                                 <path d="M 165.36 52.98 A 80 80 0 0 1 180 100" fill="none" stroke="#0ab39c" stroke-width="18" stroke-linecap="butt" />
 
-                                <!-- Inner Circle Pivot -->
                                 <circle cx="100" cy="100" r="7" fill="#141923" />
                                 
-                                <!-- Needle -->
                                 <g transform="rotate({{ $riskAssessment['needle_angle'] }}, 100, 100)">
                                     <line x1="100" y1="100" x2="32" y2="100" stroke="#141923" stroke-width="4" stroke-linecap="round" />
                                     <polygon points="32,97 22,100 32,103" fill="#141923" />
@@ -243,63 +251,66 @@
                             <h2 class="display-6 fw-bold mb-0" style="color: {{ $riskAssessment['text_color'] }};">
                                 {{ $riskAssessment['score'] }}<span class="fs-18 text-muted">%</span>
                             </h2>
-                            <span class="badge {{ $riskAssessment['badge_class'] }} fs-12 px-3 py-1 mt-1 text-uppercase fw-bold">
+                            <span class="badge {{ $riskAssessment['badge_class'] }} fs-11 px-3 py-1 mt-1 text-uppercase fw-bold">
                                 Confiabilidad {{ $riskAssessment['confiabilidad_label'] }}
                             </span>
                         </div>
                     </div>
 
-                    <!-- Resumen del Dictamen y Nivel de Riesgo -->
-                    <div class="col-lg-4 border-end px-lg-4 my-3 my-lg-0">
-                        <div class="d-flex align-items-center gap-2 mb-2">
+                    <!-- Desglose de 4 Índices Independientes -->
+                    <div class="col-lg-5 border-end px-lg-4 my-3 my-lg-0">
+                        <div class="d-flex align-items-center gap-2 mb-3">
                             <i class="ri-dashboard-3-line fs-20 text-primary"></i>
-                            <h5 class="card-title text-dark fw-bold mb-0">Evaluación de Riesgo</h5>
+                            <h6 class="card-title text-dark fw-bold mb-0 text-uppercase fs-13">Multímetro de Índices Independientes</h6>
                         </div>
                         
-                        <div class="mb-3">
-                            <span class="text-muted fs-13 d-block">Estatus del Dictamen:</span>
-                            <span class="fs-15 fw-bold" style="color: {{ $riskAssessment['text_color'] }};">
-                                {{ $riskAssessment['status_text'] }}
-                            </span>
+                        @foreach($riskAssessment['indices'] as $idx)
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fs-12 fw-semibold text-muted">• {{ $idx['label'] }}:</span>
+                                <span class="badge fs-11" style="background-color: {{ $idx['color'] }}; color: #fff;">
+                                    {{ $idx['score'] }}%
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ $idx['score'] }}%; background-color: {{ $idx['color'] }};"></div>
+                            </div>
                         </div>
-
-                        <div class="mb-3">
-                            <span class="text-muted fs-13 d-block">Nivel de Riesgo Calculado:</span>
-                            <span class="badge fs-13 px-3 py-2 text-uppercase" style="background-color: {{ $riskAssessment['text_color'] }}; color: #fff;">
-                                {{ $riskAssessment['nivel_riesgo'] }}
-                            </span>
-                        </div>
-
-                        <div class="fs-12 text-muted">
-                            <i class="ri-information-line align-middle me-1 text-primary"></i>
-                            Basado en <strong>{{ $riskAssessment['queries_evaluadas'] }}</strong> fuentes de información auditadas.
-                        </div>
+                        @endforeach
                     </div>
 
-                    <!-- Desglose de Factores de Riesgo / Penalizaciones -->
+                    <!-- Penalizaciones & Fuentes Pendientes -->
                     <div class="col-lg-4 px-lg-4">
-                        <h6 class="text-muted fs-13 text-uppercase fw-semibold mb-3">
-                            Factores e Incidencias Detectadas ({{ $riskAssessment['total_penalties'] }})
+                        <h6 class="card-title text-dark fw-bold mb-2 text-uppercase fs-13">
+                            Hallazgos Confirmados ({{ $riskAssessment['total_penalties'] }})
                         </h6>
 
                         @if(empty($riskAssessment['penalties']))
-                            <div class="alert alert-success border-0 py-2 fs-12 mb-0">
-                                <i class="ri-checkbox-circle-line align-middle me-1"></i>
-                                <strong>Sin penalizaciones.</strong> No se detectaron alertas o discrepancias de cumplimiento en este expediente.
+                            <div class="alert alert-success fs-12 p-2 mb-2">
+                                <i class="ri-checkbox-circle-fill me-1"></i> No se detectaron penalizaciones confirmadas.
                             </div>
                         @else
-                            <div class="d-flex flex-column gap-2" style="max-height: 140px; overflow-y: auto;">
+                            <div class="overflow-auto pe-1" style="max-height: 120px;">
                                 @foreach($riskAssessment['penalties'] as $pen)
-                                    <div class="d-flex align-items-start justify-content-between p-2 rounded bg-light border border-danger-subtle">
-                                        <div>
-                                            <strong class="fs-12 text-danger d-block">{{ $pen['fuente'] }}</strong>
-                                            <span class="fs-11 text-muted">{{ $pen['detalle'] }}</span>
-                                        </div>
-                                        <span class="badge bg-danger-subtle text-danger fs-11 fw-bold ms-2">
-                                            {{ $pen['puntos'] }} pts
-                                        </span>
+                                    <div class="alert alert-danger p-2 mb-1 fs-11">
+                                        <strong>{{ $pen['fuente'] }} ({{ $pen['puntos'] }} pts):</strong> {{ $pen['detalle'] }}
                                     </div>
                                 @endforeach
+                            </div>
+                        @endif
+
+                        @if(!empty($riskAssessment['fuentes_pendientes']))
+                            <div class="mt-2">
+                                <span class="fs-11 fw-bold text-warning text-uppercase d-block mb-1">
+                                    ⚠️ Fuentes Pendientes (No Concluyentes):
+                                </span>
+                                <div class="overflow-auto pe-1" style="max-height: 80px;">
+                                    @foreach($riskAssessment['fuentes_pendientes'] as $fp)
+                                        <div class="badge bg-warning-subtle text-warning border border-warning fs-11 d-block text-start p-2 mb-1 text-wrap">
+                                            <strong>{{ $fp['nombre'] }}:</strong> {{ $fp['motivo'] }}
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     </div>
