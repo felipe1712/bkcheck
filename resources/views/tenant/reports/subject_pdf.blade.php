@@ -101,6 +101,10 @@
             background-color: #e0f2fe;
             color: #0369a1;
         }
+        .badge-secondary {
+            background-color: #e2e8f0;
+            color: #475569;
+        }
         .footer {
             position: fixed;
             bottom: 0px;
@@ -146,13 +150,23 @@
     <!-- Header Section -->
     <table style="width: 100%;" class="header">
         <tr>
-            <td>
+            <td style="width: 40%; vertical-align: top;">
                 <span class="logo-text">Aval <span>ID</span></span><br>
                 <span class="logo-slogan">LA CONFIANZA DE TU GENTE</span>
             </td>
-            <td style="text-align: right;">
-                <span class="report-title">Expediente de Validación</span><br>
-                <span style="color:#56657e; font-size:9px;">Fecha de Generación: {{ now()->setTimezone('America/Mexico_City')->format('d/m/Y H:i') }}</span>
+            <td style="width: 60%; text-align: right; vertical-align: top;">
+                <span class="report-title">EXPEDIENTE DE ANTECEDENTES</span><br>
+                <div style="margin-top: 3px; text-align: right;">
+                    <span style="font-size: 9px; color: #56657e; display: inline-block; margin-left: 10px;">
+                        Folio: <strong style="color: #1877f2;">{{ sprintf('AVID-%03d-%04d', floor($subject->id / 10000), $subject->id) }}</strong>
+                    </span>
+                    <span style="font-size: 9px; color: #56657e; display: inline-block; margin-left: 10px;">
+                        ID Cliente: <code style="font-size: 8px;">CLI-{{ strtoupper(substr(md5(($subject->tenant_id ?? '1') . 'avalid'), 0, 8)) }}</code>
+                    </span>
+                </div>
+                <div style="font-size: 8px; color: #64748b; margin-top: 2px;">
+                    Fecha de Generación: {{ now()->setTimezone('America/Mexico_City')->format('d/m/Y H:i') }} hrs
+                </div>
             </td>
         </tr>
     </table>
@@ -387,8 +401,8 @@
                             <td><code>{{ $cert['numero_serie'] ?? '' }}</code></td>
                             <td>{{ $cert['tipo'] ?? 'CSD' }}</td>
                             <td>
-                                <span class="badge {{ ($cert['estado'] ?? 'ACTIVO') === 'ACTIVO' ? 'badge-success' : 'badge-danger' }}">
-                                    {{ $cert['estado'] ?? 'CADUCO' }}
+                                <span class="badge {{ strtoupper($cert['estado'] ?? '') === 'ACTIVO' ? 'badge-success' : 'badge-secondary' }}">
+                                    {{ ucfirst(strtolower($cert['estado'] ?? 'Caduco')) }}
                                 </span>
                             </td>
                             <td>{{ isset($cert['fecha_inicio']) ? \Carbon\Carbon::parse($cert['fecha_inicio'])->format('d/m/Y H:i') : '' }}</td>

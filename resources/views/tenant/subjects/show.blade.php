@@ -1825,7 +1825,7 @@
                                                             <td><span class="badge bg-secondary-subtle text-secondary">{{ $cert['tipo'] ?? 'CSD' }}</span></td>
                                                             <td>
                                                                 @php $st = strtolower($cert['estado'] ?? ''); @endphp
-                                                                <span class="badge bg-{{ $st === 'activo' ? 'success' : ($st === 'revocado' ? 'danger' : 'warning') }}-subtle text-{{ $st === 'activo' ? 'success' : ($st === 'revocado' ? 'danger' : 'warning') }}">
+                                                                <span class="badge bg-{{ $st === 'activo' ? 'success' : 'secondary' }}-subtle text-{{ $st === 'activo' ? 'success' : 'secondary' }}">
                                                                     {{ ucfirst($cert['estado'] ?? 'Caduco') }}
                                                                 </span>
                                                             </td>
