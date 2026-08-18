@@ -66,7 +66,7 @@
 @endsection
 @section('script')
     <script src="{{ URL::asset('build/libs/prismjs/prism.js') }}"></script>
-    <script src="https://maps.google.com/maps/api/js?key=AIzaSyCtSAR45TFgZjOs4nBFFZnII-6mMHLfSYI"></script>
+    <script src="https://maps.google.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY', '') }}"></script>
 
     <script src="{{ URL::asset('build/libs/gmaps/gmaps.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/pages/gmaps.init.js') }}"></script>
