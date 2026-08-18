@@ -73,6 +73,8 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
 });
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
+Route::get('/landing', [App\Http\Controllers\LandingController::class, 'index'])->name('landing');
+Route::post('/contacto', [App\Http\Controllers\LandingController::class, 'storeContact'])->name('contacto.store');
 
 //Update User Details
 Route::post('/update-profile/{id}', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('updateProfile');

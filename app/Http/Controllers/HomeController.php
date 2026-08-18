@@ -47,7 +47,7 @@ class HomeController extends Controller
                 return redirect()->route('login')->withErrors(['email' => 'Tu usuario no tiene roles asignados en el sistema. Inicia sesión con una cuenta válida.']);
             }
         }
-        return redirect()->route('login');
+        return view('landing');
     }
 
     /*Language Translation*/

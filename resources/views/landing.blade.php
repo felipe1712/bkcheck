@@ -1,1902 +1,785 @@
-@extends('layouts.master-without-nav')
-@section('title')
-    Landing
-@endsection
-@section('css')
-    <link href="{{ URL::asset('build/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
-@endsection
-@section('body')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AvalID — Plataforma Inteligente de Due Diligence, Background Check & Scoring de Riesgo</title>
+    <meta name="description" content="SaaS Multitenant de Due Diligence en México. Verificación de identidad primaria, auditoría fiscal SAT (69/69-B), listas negras PLD/FT (OFAC, ONU, PEPs) y expedientes digitales con validez legal.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-    <body data-bs-spy="scroll" data-bs-target="#navbar-example">
-    @endsection
-    @section('content')
-        {{-- @component('components.breadcrumb')
-        @slot('li_1') Icons @endslot
-        @slot('title') Landing @endslot
-    @endcomponent --}}
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <style>
+        :root {
+            --bg-dark: #070913;
+            --bg-card: rgba(15, 23, 42, 0.65);
+            --bg-card-hover: rgba(30, 41, 59, 0.75);
+            --border-glow: rgba(56, 189, 248, 0.2);
+            --accent-blue: #1877f2;
+            --accent-cyan: #06b6d4;
+            --accent-teal: #0ab39c;
+            --accent-purple: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
 
-        <body data-bs-spy="scroll" data-bs-target="#navbar-example">
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
 
-            <!-- Begin page -->
-            <div class="layout-wrapper landing">
-                <nav class="navbar navbar-expand-lg navbar-landing fixed-top" id="navbar">
-                    <div class="container">
-                        <a class="navbar-brand" href="index">
-                            <img src="{{ URL::asset('build/images/logo-dark.png') }}" class="card-logo card-logo-dark"
-                                alt="logo dark" height="17">
-                            <img src="{{ URL::asset('build/images/logo-light.png') }}" class="card-logo card-logo-light"
-                                alt="logo light" height="17">
-                        </a>
-                        <button class="navbar-toggler py-0 fs-20 text-body" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                            aria-expanded="false" aria-label="Toggle navigation">
-                            <i class="mdi mdi-menu"></i>
-                        </button>
+        h1, h2, h3, h4, h5, h6, .brand-font {
+            font-family: 'Outfit', sans-serif;
+        }
 
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul class="navbar-nav mx-auto mt-2 mt-lg-0" id="navbar-example">
-                                <li class="nav-item">
-                                    <a class="nav-link active" href="#hero">Home</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#services">Services</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#features">Features</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#plans">Plans</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#reviews">Reviews</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#team">Team</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#contact">Contact</a>
-                                </li>
-                            </ul>
+        /* Ambient Glow Background Spheres */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-1 { top: -100px; left: -100px; background: radial-gradient(circle, var(--accent-blue), var(--accent-cyan)); }
+        .glow-2 { top: 40%; right: -150px; background: radial-gradient(circle, var(--accent-purple), var(--accent-blue)); }
+        .glow-3 { bottom: -100px; left: 30%; background: radial-gradient(circle, var(--accent-teal), var(--accent-cyan)); }
 
-                            <div class="">
-                                <a href="auth-signin-basic"
-                                    class="btn btn-link fw-medium text-decoration-none text-dark">Sign
-                                    in</a>
-                                <a href="auth-signup-basic" class="btn btn-primary">Sign Up</a>
-                            </div>
-                        </div>
+        /* Glassmorphism Navigation Header */
+        .navbar-glass {
+            background: rgba(7, 9, 19, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
 
-                    </div>
-                </nav>
-                <!-- end navbar -->
-                <div class="vertical-overlay" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent.show"></div>
+        .logo-text {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+        }
+        .logo-text span { color: var(--accent-cyan); }
+        .logo-badge {
+            font-size: 9px;
+            letter-spacing: 0.18em;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #000;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
 
-                <!-- start hero section -->
-                <section class="section pb-0 hero-section" id="hero">
-                    <div class="bg-overlay bg-overlay-pattern"></div>
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8 col-sm-10">
-                                <div class="text-center mt-lg-5 pt-5">
-                                    <h1 class="display-6 fw-semibold mb-3 lh-base">The better way to manage your website
-                                        with <span class="text-success">Velzon </span></h1>
-                                    <p class="lead text-muted lh-base">Velzon is a fully responsive, multipurpose and
-                                        premium Bootstrap 5 Admin & Dashboard Template built in multiple frameworks.</p>
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.12);
+        }
 
-                                    <div class="d-flex gap-2 justify-content-center mt-4">
-                                        <a href="auth-signup-basic" class="btn btn-primary">Get Started <i
-                                                class="ri-arrow-right-line align-middle ms-1"></i></a>
-                                        <a href="pages-pricing" class="btn btn-danger">View Plans <i
-                                                class="ri-eye-line align-middle ms-1"></i></a>
-                                    </div>
-                                </div>
+        /* Hero Text Gradient */
+        .text-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-                                <div class="mt-4 mt-sm-5 pt-sm-5 mb-sm-n5 demo-carousel">
-                                    <div class="demo-img-patten-top d-none d-sm-block">
-                                        <img src="{{ URL::asset('build/images/landing/img-pattern.png') }}"
-                                            class="d-block img-fluid" alt="...">
-                                    </div>
-                                    <div class="demo-img-patten-bottom d-none d-sm-block">
-                                        <img src="{{ URL::asset('build/images/landing/img-pattern.png') }}"
-                                            class="d-block img-fluid" alt="...">
-                                    </div>
-                                    <div class="carousel slide carousel-fade" data-bs-ride="carousel">
-                                        <div class="carousel-inner shadow-lg p-2 bg-white rounded">
-                                            <div class="carousel-item active" data-bs-interval="2000">
-                                                <img src="{{ URL::asset('build/images/demos/default.png') }}"
-                                                    class="d-block w-100" alt="...">
-                                            </div>
-                                            <div class="carousel-item" data-bs-interval="2000">
-                                                <img src="{{ URL::asset('build/images/demos/saas.png') }}"
-                                                    class="d-block w-100" alt="...">
-                                            </div>
-                                            <div class="carousel-item" data-bs-interval="2000">
-                                                <img src="{{ URL::asset('build/images/demos/material.png') }}"
-                                                    class="d-block w-100" alt="...">
-                                            </div>
-                                            <div class="carousel-item" data-bs-interval="2000">
-                                                <img src="{{ URL::asset('build/images/demos/minimal.png') }}"
-                                                    class="d-block w-100" alt="...">
-                                            </div>
-                                            <div class="carousel-item" data-bs-interval="2000">
-                                                <img src="{{ URL::asset('build/images/demos/creative.png') }}"
-                                                    class="d-block w-100" alt="...">
-                                            </div>
-                                            <div class="carousel-item" data-bs-interval="2000">
-                                                <img src="{{ URL::asset('build/images/demos/modern.png') }}"
-                                                    class="d-block w-100" alt="...">
-                                            </div>
-                                            <div class="carousel-item" data-bs-interval="2000">
-                                                <img src="{{ URL::asset('build/images/demos/interactive.png') }}"
-                                                    class="d-block w-100" alt="...">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                    <div class="position-absolute start-0 end-0 bottom-0 hero-shape-svg">
-                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
-                            viewBox="0 0 1440 120">
-                            <g mask="url(&quot;#SvgjsMask1003&quot;)" fill="none">
-                                <path d="M 0,118 C 288,98.6 1152,40.4 1440,21L1440 140L0 140z">
-                                </path>
-                            </g>
-                        </svg>
-                    </div>
-                    <!-- end shape -->
-                </section>
-                <!-- end hero section -->
+        .btn-cyan-gradient {
+            background: linear-gradient(135deg, #06b6d4, #1877f2);
+            color: #ffffff;
+            font-weight: 700;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(6, 182, 212, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-cyan-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(6, 182, 212, 0.45);
+            color: #ffffff;
+        }
 
-                <!-- start client section -->
-                <div class="pt-5 mt-5">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-lg-12">
+        .btn-glass-outline {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .btn-glass-outline:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent-cyan);
+            color: #ffffff;
+        }
 
-                                <div class="text-center mt-5">
-                                    <h5 class="fs-20">Trusted <span
-                                            class="text-primary text-decoration-underline">by</span> the world's best</h5>
+        /* Feature Icon Box */
+        .icon-box {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(24, 119, 242, 0.15));
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--accent-cyan);
+        }
 
-                                    <!-- Swiper -->
-                                    <div class="swiper trusted-client-slider mt-sm-5 mt-4 mb-sm-5 mb-4" dir="ltr">
-                                        <div class="swiper-wrapper">
-                                            <div class="swiper-slide">
-                                                <div class="client-images">
-                                                    <img src="{{ URL::asset('build/images/clients/amazon.svg') }}"
-                                                        alt="client-img" class="mx-auto img-fluid d-block">
-                                                </div>
-                                            </div>
-                                            <div class="swiper-slide">
-                                                <div class="client-images">
-                                                    <img src="{{ URL::asset('build/images/clients/walmart.svg') }}"
-                                                        alt="client-img" class="mx-auto img-fluid d-block">
-                                                </div>
-                                            </div>
-                                            <div class="swiper-slide">
-                                                <div class="client-images">
-                                                    <img src="{{ URL::asset('build/images/clients/lenovo.svg') }}"
-                                                        alt="client-img" class="mx-auto img-fluid d-block">
-                                                </div>
-                                            </div>
-                                            <div class="swiper-slide">
-                                                <div class="client-images">
-                                                    <img src="{{ URL::asset('build/images/clients/paypal.svg') }}"
-                                                        alt="client-img" class="mx-auto img-fluid d-block">
-                                                </div>
-                                            </div>
-                                            <div class="swiper-slide">
-                                                <div class="client-images">
-                                                    <img src="{{ URL::asset('build/images/clients/shopify.svg') }}"
-                                                        alt="client-img" class="mx-auto img-fluid d-block">
-                                                </div>
-                                            </div>
-                                            <div class="swiper-slide">
-                                                <div class="client-images">
-                                                    <img src="{{ URL::asset('build/images/clients/verizon.svg') }}"
-                                                        alt="client-img" class="mx-auto img-fluid d-block">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+        /* Input Styling */
+        .form-glass {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+        .form-glass:focus {
+            background: rgba(15, 23, 42, 0.95);
+            border-color: var(--accent-cyan);
+            color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        }
 
-                            </div>
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
+        /* Tier Featured Card Highlight */
+        .tier-featured {
+            border: 2px solid var(--accent-cyan) !important;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(6, 182, 212, 0.08)) !important;
+            position: relative;
+        }
+        .tier-badge-pop {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #06b6d4, #1877f2);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 14px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Glow Effects -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg fixed-top navbar-glass py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#inicio">
+                <span class="logo-text">Aval <span>ID</span></span>
+                <span class="logo-badge">PRO v2</span>
+            </a>
+            <button class="navbar-toggler text-white border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <i class="ri-menu-3-line fs-24"></i>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium">
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="#inicio">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="#soluciones">Soluciones</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="#demo">Demo Interactivo</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="#niveles">Niveles de Servicio</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="#cumplimiento">Cumplimiento Legal</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50 px-3" href="#contacto">Contacto</a></li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('login') }}" class="btn btn-cyan-gradient">
+                        <i class="ri-user-shared-line me-1"></i> Acceso a Plataforma
+                    </a>
                 </div>
-                <!-- end client section -->
-
-                <!-- start services -->
-                <section class="section" id="services">
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h1 class="mb-3 ff-secondary fw-semibold lh-base">A Digital web design studio creating
-                                        modern & engaging online</h1>
-                                    <p class="text-muted">To achieve this, it would be necessary to have uniform grammar,
-                                        pronunciation and more common words. If several languages coalesce the grammar</p>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-
-                        <div class="row g-3">
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-pencil-ruler-2-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Creative Design</h5>
-                                        <p class="text-muted my-3 ff-secondary">The creative design includes designs that
-                                            are unique, effective and memorable.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-palette-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Unlimited Colors</h5>
-                                        <p class="text-muted my-3 ff-secondary">The collection of rules and guidelines
-                                            which designers use to communicate with users through appealing.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-lightbulb-flash-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Strategy Solutions</h5>
-                                        <p class="text-muted my-3 ff-secondary">Business development firm that provides
-                                            strategic planning, market research services and project.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-customer-service-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Awesome Support</h5>
-                                        <p class="text-muted my-3 ff-secondary">Awesome Support is the most versatile and
-                                            feature-rich support plugin for all version.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-stack-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Truly Multipurpose</h5>
-                                        <p class="text-muted my-3 ff-secondary">You usually get a broad range of options to
-                                            play with. This enables you to use a single theme across multiple.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-settings-2-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Easy to customize</h5>
-                                        <p class="text-muted my-3 ff-secondary">Personalise your own website, no matter
-                                            what theme and what customization options.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-slideshow-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Responsive & Clean Design</h5>
-                                        <p class="text-muted my-3 ff-secondary">Responsive design is a graphic user
-                                            interface (GUI) design approach used to create content.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-google-fill fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Google Font Collection</h5>
-                                        <p class="text-muted my-3 ff-secondary">Google Fonts is a collection of 915 fonts,
-                                            all available to use for free on your website.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="d-flex p-3">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm icon-effect">
-                                            <div class="avatar-title bg-transparent text-success rounded-circle">
-                                                <i class="ri-briefcase-5-line fs-36"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-18">Top Industry Specialists</h5>
-                                        <p class="text-muted my-3 ff-secondary">An industrial specialist works with
-                                            industrial operations to ensure that manufacturing facilities work.</p>
-                                        <div>
-                                            <a href="#" class="fs-13 fw-medium">Learn More <i
-                                                    class="ri-arrow-right-s-line align-bottom"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end services -->
-
-                <!-- start features -->
-                <section class="section bg-light py-5" id="features">
-                    <div class="container">
-                        <div class="row align-items-center gy-4">
-                            <div class="col-lg-6 col-sm-7 mx-auto">
-                                <div>
-                                    <img src="{{ URL::asset('build/images/landing/features/img-1.png') }}"
-                                        alt="" class="img-fluid mx-auto">
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="text-muted">
-                                    <div class="avatar-sm icon-effect mb-4">
-                                        <div class="avatar-title bg-transparent rounded-circle text-success h1">
-                                            <i class="ri-collage-line fs-36"></i>
-                                        </div>
-                                    </div>
-                                    <h3 class="mb-3 fs-20">Huge collection of widgets</h3>
-                                    <p class="mb-4 ff-secondary fs-16">Collection widgets specialize in displaying many
-                                        elements of the same type, such as a collection of pictures from a collection of
-                                        articles from a news app or a collection of messages from a communication app.</p>
-
-                                    <div class="row pt-3">
-                                        <div class="col-3">
-                                            <div class="text-center">
-                                                <h4>5</h4>
-                                                <p>Dashboards</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-3">
-                                            <div class="text-center">
-                                                <h4>150+</h4>
-                                                <p>Pages</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="text-center">
-                                                <h4>7+</h4>
-                                                <p>Functional Apps</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end features -->
-
-                <!-- start cta -->
-                <section class="py-5 bg-primary position-relative">
-                    <div class="bg-overlay bg-overlay-pattern opacity-50"></div>
-                    <div class="container">
-                        <div class="row align-items-center gy-4">
-                            <div class="col-sm">
-                                <div>
-                                    <h4 class="text-white mb-0 fw-semibold">Build your web App/SaaS with Velzon dashboard
-                                    </h4>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-sm-auto">
-                                <div>
-                                    <a href="https://1.envato.market/velzon-admin" target="_blank"
-                                        class="btn bg-gradient btn-danger"><i
-                                            class="ri-shopping-cart-2-line align-middle me-1"></i> Buy Now</a>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end cta -->
-
-                <!-- start features -->
-                <section class="section">
-                    <div class="container">
-                        <div class="row align-items-center gy-4">
-                            <div class="col-lg-6 order-2 order-lg-1">
-                                <div class="text-muted">
-                                    <h5 class="fs-12 text-uppercase text-success">Design</h5>
-                                    <h4 class="mb-3">Well Designed Dashboards</h4>
-                                    <p class="mb-4 ff-secondary">Quality Dashboards (QD) is a condition-specific,
-                                        actionable web-based application for quality reporting and population
-                                        management that is integrated into the Electronic Health Record (EHR).</p>
-
-                                    <div class="row">
-                                        <div class="col-sm-5">
-                                            <div class="vstack gap-2">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 me-2">
-                                                        <div class="avatar-xs icon-effect">
-                                                            <div
-                                                                class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                                <i class="ri-check-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <h5 class="fs-14 mb-0">Ecommerce</h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 me-2">
-                                                        <div class="avatar-xs icon-effect">
-                                                            <div
-                                                                class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                                <i class="ri-check-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <h5 class="fs-14 mb-0">Analytics</h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 me-2">
-                                                        <div class="avatar-xs icon-effect">
-                                                            <div
-                                                                class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                                <i class="ri-check-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <h5 class="fs-14 mb-0">CRM</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-5">
-                                            <div class="vstack gap-2">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 me-2">
-                                                        <div class="avatar-xs icon-effect">
-                                                            <div
-                                                                class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                                <i class="ri-check-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <h5 class="fs-14 mb-0">Crypto</h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0 me-2">
-                                                        <div class="avatar-xs icon-effect">
-                                                            <div
-                                                                class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                                <i class="ri-check-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <h5 class="fs-14 mb-0">Projects</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <a href="index" class="btn btn-primary">Learn More <i
-                                                class="ri-arrow-right-line align-middle ms-1"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-6 col-sm-7 col-10 ms-auto order-1 order-lg-2">
-                                <div>
-                                    <img src="{{ URL::asset('build/images/landing/features/img-2.png') }}"
-                                        alt="" class="img-fluid">
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-
-                        <div class="row align-items-center mt-5 pt-lg-5 gy-4">
-                            <div class="col-lg-6 col-sm-7 col-10 mx-auto">
-                                <div>
-                                    <img src="{{ URL::asset('build/images/landing/features/img-3.png') }}"
-                                        alt="" class="img-fluid">
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="text-muted ps-lg-5">
-                                    <h5 class="fs-12 text-uppercase text-success">structure</h5>
-                                    <h4 class="mb-3">Well Documented</h4>
-                                    <p class="mb-4">used to describe something that is known about or known to be true
-                                        because there are many documents that describe it,
-                                        prove it, etc.</p>
-
-                                    <div class="vstack gap-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-shrink-0 me-2">
-                                                <div class="avatar-xs icon-effect">
-                                                    <div
-                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                        <i class="ri-check-fill"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0">Dynamic Conetnt</p>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-shrink-0 me-2">
-                                                <div class="avatar-xs icon-effect">
-                                                    <div
-                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                        <i class="ri-check-fill"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0">Setup plugin's information.</p>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-shrink-0 me-2">
-                                                <div class="avatar-xs icon-effect">
-                                                    <div
-                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
-                                                        <i class="ri-check-fill"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0">Themes customization information</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end features -->
-
-                <!-- start plan -->
-                <section class="section bg-light" id="plans">
-                    <div class="bg-overlay bg-overlay-pattern"></div>
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">Choose the plan that's right for you</h3>
-                                    <p class="text-muted mb-4">Simple pricing. No hidden fees. Advanced features for you
-                                        business.</p>
-
-                                    <div class="d-flex justify-content-center align-items-center">
-                                        <div>
-                                            <h5 class="fs-14 mb-0">Month</h5>
-                                        </div>
-                                        <div class="form-check form-switch fs-20 ms-3 " onclick="check()">
-                                            <input class="form-check-input" type="checkbox" id="plan-switch">
-                                            <label class="form-check-label" for="plan-switch"></label>
-                                        </div>
-                                        <div>
-                                            <h5 class="fs-14 mb-0">Annual <span class="badge bg-success-subtle text-success">Save
-                                                    20%</span></h5>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-
-                        <div class="row gy-4">
-                            <div class="col-lg-4">
-                                <div class="card plan-box mb-0">
-                                    <div class="card-body p-4 m-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <h5 class="mb-1 fw-semibold">Basic Plan</h5>
-                                                <p class="text-muted mb-0">For Startup</p>
-                                            </div>
-                                            <div class="avatar-sm">
-                                                <div class="avatar-title bg-light rounded-circle text-primary">
-                                                    <i class="ri-book-mark-line fs-20"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="py-4 text-center">
-                                            <h1 class="month"><sup><small>$</small></sup><span
-                                                    class="ff-secondary fw-bold">19</span> <span
-                                                    class="fs-13 text-muted">/Month</span></h1>
-                                            <h1 class="annual"><sup><small>$</small></sup><span
-                                                    class="ff-secondary fw-bold">171</span> <span
-                                                    class="fs-13 text-muted">/Year</span></h1>
-                                        </div>
-
-                                        <div>
-                                            <ul class="list-unstyled text-muted vstack gap-3 ff-secondary">
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Upto <b>3</b> Projects
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Upto <b>299</b> Customers
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Scalable Bandwidth
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>5</b> FTP Login
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-danger me-1">
-                                                            <i class="ri-close-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>24/7</b> Support
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-danger me-1">
-                                                            <i class="ri-close-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>Unlimited</b> Storage
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-danger me-1">
-                                                            <i class="ri-close-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Domain
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                            <div class="mt-4">
-                                                <a href="javascript:void(0);" class="btn btn-soft-success w-100">Get
-                                                    Started</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!--end col-->
-                            <div class="col-lg-4">
-                                <div class="card plan-box mb-0 ribbon-box right">
-                                    <div class="card-body p-4 m-2">
-                                        <div class="ribbon-two ribbon-two-danger"><span>Popular</span></div>
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <h5 class="mb-1 fw-semibold">Pro Business</h5>
-                                                <p class="text-muted mb-0">Professional plans</p>
-                                            </div>
-                                            <div class="avatar-sm">
-                                                <div class="avatar-title bg-light rounded-circle text-primary">
-                                                    <i class="ri-medal-fill fs-20"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="py-4 text-center">
-                                            <h1 class="month"><sup><small>$</small></sup><span
-                                                    class="ff-secondary fw-bold">29</span> <span
-                                                    class="fs-13 text-muted">/Month</span></h1>
-                                            <h1 class="annual"><sup><small>$</small></sup><span
-                                                    class="ff-secondary fw-bold">261</span> <span
-                                                    class="fs-13 text-muted">/Year</span></h1>
-                                        </div>
-
-                                        <div>
-                                            <ul class="list-unstyled text-muted vstack gap-3 ff-secondary">
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Upto <b>15</b> Projects
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>Unlimited</b> Customers
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Scalable Bandwidth
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>12</b> FTP Login
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>24/7</b> Support
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-danger me-1">
-                                                            <i class="ri-close-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>Unlimited</b> Storage
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-danger me-1">
-                                                            <i class="ri-close-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Domain
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                            <div class="mt-4">
-                                                <a href="javascript:void(0);" class="btn btn-soft-success w-100">Get
-                                                    Started</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!--end col-->
-                            <div class="col-lg-4">
-                                <div class="card plan-box mb-0">
-                                    <div class="card-body p-4 m-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <h5 class="mb-1 fw-semibold">Platinum Plan</h5>
-                                                <p class="text-muted mb-0">Enterprise Businesses</p>
-                                            </div>
-                                            <div class="avatar-sm">
-                                                <div class="avatar-title bg-light rounded-circle text-primary">
-                                                    <i class="ri-stack-fill fs-20"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="py-4 text-center">
-                                            <h1 class="month"><sup><small>$</small></sup><span
-                                                    class="ff-secondary fw-bold">39</span> <span
-                                                    class="fs-13 text-muted">/Month</span></h1>
-                                            <h1 class="annual"><sup><small>$</small></sup><span
-                                                    class="ff-secondary fw-bold">351</span> <span
-                                                    class="fs-13 text-muted">/Year</span></h1>
-                                        </div>
-
-                                        <div>
-                                            <ul class="list-unstyled text-muted vstack gap-3 ff-secondary">
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>Unlimited</b> Projects
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>Unlimited</b> Customers
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Scalable Bandwidth
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>Unlimited</b> FTP Login
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>24/7</b> Support
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            <b>Unlimited</b> Storage
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0 text-success me-1">
-                                                            <i class="ri-checkbox-circle-fill fs-15 align-middle"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            Domain
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                            <div class="mt-4">
-                                                <a href="javascript:void(0);" class="btn btn-soft-success w-100">Get
-                                                    Started</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!--end col-->
-                        </div>
-                        <!--end row-->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end plan -->
-
-                <!-- start faqs -->
-                <section class="section">
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">Frequently Asked Questions</h3>
-                                    <p class="text-muted mb-4 ff-secondary">If you can not find answer to your question in
-                                        our FAQ, you can
-                                        always contact us or email us. We will answer you shortly!</p>
-
-                                    <div class="hstack gap-2 justify-content-center">
-                                        <button type="button" class="btn btn-primary btn-label rounded-pill"><i
-                                                class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i>
-                                            Email Us</button>
-                                        <button type="button" class="btn btn-info btn-label rounded-pill"><i
-                                                class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i>
-                                            Send Us Tweet</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-
-                        <div class="row g-lg-5 g-4">
-                            <div class="col-lg-6">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="flex-shrink-0 me-1">
-                                        <i class="ri-question-line fs-24 align-middle text-success me-1"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-0 fw-semibold">General Questions</h5>
-                                    </div>
-                                </div>
-                                <div class="accordion custom-accordionwithicon custom-accordion-border accordion-border-box"
-                                    id="genques-accordion">
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="genques-headingOne">
-                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#genques-collapseOne" aria-expanded="true"
-                                                aria-controls="genques-collapseOne">
-                                                What is the purpose of using themes ?
-                                            </button>
-                                        </h2>
-                                        <div id="genques-collapseOne" class="accordion-collapse collapse show"
-                                            aria-labelledby="genques-headingOne" data-bs-parent="#genques-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                A theme is a set of colors, fonts, effects, and more that can be applied to
-                                                your entire presentation to give it a
-                                                consistent, professional look. You've already been using a theme, even if
-                                                you didn't know it: the default Office theme,
-                                                which consists.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="genques-headingTwo">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#genques-collapseTwo"
-                                                aria-expanded="false" aria-controls="genques-collapseTwo">
-                                                Can a theme have more than one theme?
-                                            </button>
-                                        </h2>
-                                        <div id="genques-collapseTwo" class="accordion-collapse collapse"
-                                            aria-labelledby="genques-headingTwo" data-bs-parent="#genques-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                A story can have as many themes as the reader can identify based on
-                                                recurring patterns and parallels within the story
-                                                itself. In looking at ways to separate themes into a hierarchy, we might
-                                                find it useful to follow the example of a
-                                                single book.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="genques-headingThree">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#genques-collapseThree"
-                                                aria-expanded="false" aria-controls="genques-collapseThree">
-                                                What are theme features?
-                                            </button>
-                                        </h2>
-                                        <div id="genques-collapseThree" class="accordion-collapse collapse"
-                                            aria-labelledby="genques-headingThree" data-bs-parent="#genques-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                Theme features is a set of specific functionality that may be enabled by
-                                                theme authors. Themes must register each
-                                                individual Theme Feature that the author wishes to support. Theme support
-                                                functions should be called in the theme's
-                                                functions.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="genques-headingFour">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#genques-collapseFour"
-                                                aria-expanded="false" aria-controls="genques-collapseFour">
-                                                What is simple theme?
-                                            </button>
-                                        </h2>
-                                        <div id="genques-collapseFour" class="accordion-collapse collapse"
-                                            aria-labelledby="genques-headingFour" data-bs-parent="#genques-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                Simple is a free WordPress theme, by Themify, built exactly what it is named
-                                                for: simplicity. Immediately upgrade the
-                                                quality of your WordPress site with the simple theme To use the built-in
-                                                Chrome theme editor.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end accordion-->
-
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-6">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="flex-shrink-0 me-1">
-                                        <i class="ri-shield-keyhole-line fs-24 align-middle text-success me-1"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-0 fw-semibold">Privacy &amp; Security</h5>
-                                    </div>
-                                </div>
-
-                                <div class="accordion custom-accordionwithicon custom-accordion-border accordion-border-box"
-                                    id="privacy-accordion">
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="privacy-headingOne">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#privacy-collapseOne"
-                                                aria-expanded="false" aria-controls="privacy-collapseOne">
-                                                Does Word have night mode?
-                                            </button>
-                                        </h2>
-                                        <div id="privacy-collapseOne" class="accordion-collapse collapse"
-                                            aria-labelledby="privacy-headingOne" data-bs-parent="#privacy-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                You can run Microsoft Word in dark mode, which uses a dark color palette to
-                                                help reduce eye strain in low light
-                                                settings. You can choose to make the document white or black using the
-                                                Switch Modes button in the ribbon's View tab.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="privacy-headingTwo">
-                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                data-bs-target="#privacy-collapseTwo" aria-expanded="true"
-                                                aria-controls="privacy-collapseTwo">
-                                                Is theme an opinion?
-                                            </button>
-                                        </h2>
-                                        <div id="privacy-collapseTwo" class="accordion-collapse collapse show"
-                                            aria-labelledby="privacy-headingTwo" data-bs-parent="#privacy-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                A theme is an opinion the author expresses on the subject, for instance, the
-                                                author's dissatisfaction with the narrow
-                                                confines of French bourgeois marriage during that period theme is an idea
-                                                that a writer repeats.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="privacy-headingThree">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#privacy-collapseThree"
-                                                aria-expanded="false" aria-controls="privacy-collapseThree">
-                                                How do you develop a theme?
-                                            </button>
-                                        </h2>
-                                        <div id="privacy-collapseThree" class="accordion-collapse collapse"
-                                            aria-labelledby="privacy-headingThree" data-bs-parent="#privacy-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                A short story, novella, or novel presents a narrative to its reader. Perhaps
-                                                that narrative involves mystery, terror,
-                                                romance, comedy, or all of the above. These works of fiction may also
-                                                contain memorable characters, vivid
-                                                world-building, literary devices.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="privacy-headingFour">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#privacy-collapseFour"
-                                                aria-expanded="false" aria-controls="privacy-collapseFour">
-                                                Do stories need themes?
-                                            </button>
-                                        </h2>
-                                        <div id="privacy-collapseFour" class="accordion-collapse collapse"
-                                            aria-labelledby="privacy-headingFour" data-bs-parent="#privacy-accordion">
-                                            <div class="accordion-body ff-secondary">
-                                                A story can have as many themes as the reader can identify based on
-                                                recurring patterns and parallels within the story
-                                                itself. In looking at ways to separate themes into a hierarchy, we might
-                                                find it useful to follow the example of a
-                                                single book.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end accordion-->
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end faqs -->
-
-                <!-- start review -->
-                <section class="section bg-primary" id="reviews">
-                    <div class="bg-overlay bg-overlay-pattern"></div>
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-10">
-                                <div class="text-center">
-                                    <div>
-                                        <i class="ri-double-quotes-l text-success display-3"></i>
-                                    </div>
-                                    <h4 class="text-white mb-5"><span class="text-success">19k</span>+ Satisfied clients
-                                    </h4>
-
-                                    <!-- Swiper -->
-                                    <div class="swiper client-review-swiper rounded" dir="ltr">
-                                        <div class="swiper-wrapper">
-                                            <div class="swiper-slide">
-                                                <div class="row justify-content-center">
-                                                    <div class="col-10">
-                                                        <div class="text-white-50">
-                                                            <p class="fs-20 ff-secondary mb-4">" I am givng 5 stars. Theme
-                                                                is great and everyone one stuff everything in theme. Future
-                                                                request should not affect current
-                                                                state of theme. "</p>
-
-                                                            <div>
-                                                                <h5 class="text-white">gregoriusus</h5>
-                                                                <p>- Skote User</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- end slide -->
-                                            <div class="swiper-slide">
-                                                <div class="row justify-content-center">
-                                                    <div class="col-10">
-                                                        <div class="text-white-50">
-                                                            <p class="fs-20 ff-secondary mb-4">" Awesome support. Had few
-                                                                issues while setting up because of my device, the support
-                                                                team helped me fix them up in a day.
-                                                                Everything looks clean and good. Highly recommended! "</p>
-
-                                                            <div>
-                                                                <h5 class="text-white">GeekyGreenOwl</h5>
-                                                                <p>- Skote User</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- end slide -->
-                                            <div class="swiper-slide">
-                                                <div class="row justify-content-center">
-                                                    <div class="col-10">
-                                                        <div class="text-white-50">
-                                                            <p class="fs-20 ff-secondary mb-4">" Amazing template, Redux
-                                                                store and components is nicely designed.
-                                                                It's a great start point for an admin based project. Clean
-                                                                Code and good documentation. Template is
-                                                                completely in React and absolutely no usage of jQuery "</p>
-
-                                                            <div>
-                                                                <h5 class="text-white">sreeks456</h5>
-                                                                <p>- Veltrix User</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- end slide -->
-                                        </div>
-                                        <div class="swiper-button-next bg-white rounded-circle"></div>
-                                        <div class="swiper-button-prev bg-white rounded-circle"></div>
-                                        <div class="swiper-pagination position-relative mt-2"></div>
-                                    </div>
-                                    <!-- end slider -->
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end review -->
-
-                <!-- start counter -->
-                <section class="py-5 position-relative bg-light">
-                    <div class="container">
-                        <div class="row text-center gy-4">
-                            <div class="col-lg-3 col-6">
-                                <div>
-                                    <h2 class="mb-2"><span class="counter-value" data-target="100">0</span>+</h2>
-                                    <div class="text-muted">Projects Completed</div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-
-                            <div class="col-lg-3 col-6">
-                                <div>
-                                    <h2 class="mb-2"><span class="counter-value" data-target="24">0</span></h2>
-                                    <div class="text-muted">Win Awards</div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-
-                            <div class="col-lg-3 col-6">
-                                <div>
-                                    <h2 class="mb-2"><span class="counter-value" data-target="20.3">0</span>k</h2>
-                                    <div class="text-muted">Satisfied Clients</div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-6">
-                                <div>
-                                    <h2 class="mb-2"><span class="counter-value" data-target="50">0</span></h2>
-                                    <div class="text-muted">Employees</div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end counter -->
-
-                <!-- start Work Process -->
-                <section class="section">
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">Our Work Process</h3>
-                                    <p class="text-muted mb-4 ff-secondary">In an ideal world this website wouldn’t exist,
-                                        a client would
-                                        acknowledge the importance of having web copy before the Proin vitae ipsum vel ex
-                                        finibus semper design starts.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-
-                        <div class="row text-center">
-                            <div class="col-lg-4">
-                                <div class="process-card mt-4">
-                                    <div class="process-arrow-img d-none d-lg-block">
-                                        <img src="{{ URL::asset('build/images/landing/process-arrow-img.png') }}"
-                                            alt="" class="img-fluid">
-                                    </div>
-                                    <div class="avatar-sm icon-effect mx-auto mb-4">
-                                        <div class="avatar-title bg-transparent text-success rounded-circle h1">
-                                            <i class="ri-quill-pen-line"></i>
-                                        </div>
-                                    </div>
-
-                                    <h5>Tell us what you need</h5>
-                                    <p class="text-muted ff-secondary">The profession and the employer and your desire to
-                                        make your mark.</p>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="process-card mt-4">
-                                    <div class="process-arrow-img d-none d-lg-block">
-                                        <img src="{{ URL::asset('build/images/landing/process-arrow-img.png') }}"
-                                            alt="" class="img-fluid">
-                                    </div>
-                                    <div class="avatar-sm icon-effect mx-auto mb-4">
-                                        <div class="avatar-title bg-transparent text-success rounded-circle h1">
-                                            <i class="ri-user-follow-line"></i>
-                                        </div>
-                                    </div>
-
-                                    <h5>Get free quotes</h5>
-                                    <p class="text-muted ff-secondary">The most important aspect of beauty was, therefore,
-                                        an inherent part.</p>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-4">
-                                <div class="process-card mt-4">
-                                    <div class="avatar-sm icon-effect mx-auto mb-4">
-                                        <div class="avatar-title bg-transparent text-success rounded-circle h1">
-                                            <i class="ri-book-mark-line"></i>
-                                        </div>
-                                    </div>
-
-                                    <h5>Deliver high quality product</h5>
-                                    <p class="text-muted ff-secondary">We quickly learn to fear and thus automatically
-                                        avoid potentially.</p>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end Work Process -->
-
-                <!-- start team -->
-                <section class="section bg-light" id="team">
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">Our <span class="text-danger">Team</span></h3>
-                                    <p class="text-muted mb-4 ff-secondary">To achieve this, it would be necessary to have
-                                        uniform grammar,
-                                        pronunciation and more common words. If several languages coalesce the grammar.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-                        <div class="row">
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-2.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Nancy Martino</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">Team Leader</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-10.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Henry Baird</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">Full Stack Developer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Frank Hook</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">Project Manager</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-8.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Donald Palmer</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">UI/UX Designer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                        <div class="row">
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-5.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Erica Kernan</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">Web Designer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-4.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Alexis Clarke</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">Backend Developer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-6.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Marie Ward</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">Full Stack Developer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-7.jpg') }}"
-                                                alt="" class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Jack Gough</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">React Js Developer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="text-center mt-2">
-                                    <a href="pages-team" class="btn btn-primary">View All Members <i
-                                            class="ri-arrow-right-line ms-1 align-bottom"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end team -->
-
-                <!-- start contact -->
-                <section class="section" id="contact">
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">Get In Touch</h3>
-                                    <p class="text-muted mb-4 ff-secondary">We thrive when coming up with innovative ideas
-                                        but also
-                                        understand that a smart concept should be supported with faucibus sapien odio
-                                        measurable
-                                        results.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-
-                        <div class="row gy-4">
-                            <div class="col-lg-4">
-                                <div>
-                                    <div class="mt-4">
-                                        <h5 class="fs-13 text-muted text-uppercase">Office Address 1:</h5>
-                                        <div class="ff-secondary fw-semibold">4461 Cedar Street Moro, <br />AR 72368</div>
-                                    </div>
-                                    <div class="mt-4">
-                                        <h5 class="fs-13 text-muted text-uppercase">Office Address 2:</h5>
-                                        <div class="ff-secondary fw-semibold">2467 Swick Hill Street <br />New Orleans, LA
-                                        </div>
-                                    </div>
-                                    <div class="mt-4">
-                                        <h5 class="fs-13 text-muted text-uppercase">Working Hours:</h5>
-                                        <div class="ff-secondary fw-semibold">9:00am to 6:00pm</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-8">
-                                <div>
-                                    <form>
-                                        <div class="row">
-                                            <div class="col-lg-6">
-                                                <div class="mb-4">
-                                                    <label for="name" class="form-label fs-13">Name</label>
-                                                    <input name="name" id="name" type="text"
-                                                        class="form-control bg-light border-light"
-                                                        placeholder="Your name*">
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="mb-4">
-                                                    <label for="email" class="form-label fs-13">Email</label>
-                                                    <input name="email" id="email" type="email"
-                                                        class="form-control bg-light border-light"
-                                                        placeholder="Your email*">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-12">
-                                                <div class="mb-4">
-                                                    <label for="subject" class="form-label fs-13">Subject</label>
-                                                    <input type="text" class="form-control bg-light border-light"
-                                                        id="subject" name="subject" placeholder="Your Subject.." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="comments" class="form-label fs-13">Message</label>
-                                                    <textarea name="comments" id="comments" rows="3" class="form-control bg-light border-light"
-                                                        placeholder="Your message..."></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-12 text-end">
-                                                <input type="submit" id="submit" name="send"
-                                                    class="submitBnt btn btn-primary" value="Send Message">
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end contact -->
-
-                <!-- start cta -->
-                <section class="py-5 bg-primary position-relative">
-                    <div class="bg-overlay bg-overlay-pattern opacity-50"></div>
-                    <div class="container">
-                        <div class="row align-items-center gy-4">
-                            <div class="col-sm">
-                                <div>
-                                    <h4 class="text-white mb-0 fw-semibold">Build your web App/SaaS with Velzon dashboard
-                                    </h4>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-sm-auto">
-                                <div>
-                                    <a href="https://1.envato.market/velzon-admin" target="_blank"
-                                        class="btn bg-gradient btn-danger"><i
-                                            class="ri-shopping-cart-2-line align-middle me-1"></i> Buy Now</a>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end cta -->
-
-                <!-- Start footer -->
-                <footer class="custom-footer bg-dark py-5 position-relative">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-lg-4 mt-4">
-                                <div>
-                                    <div>
-                                        <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="logo light"
-                                            height="17">
-                                    </div>
-                                    <div class="mt-4 fs-13">
-                                        <p>Premium Multipurpose Admin & Dashboard Template</p>
-                                        <p class="ff-secondary">You can build any type of web application like eCommerce,
-                                            CRM, CMS, Project
-                                            management apps, Admin Panels, etc using Velzon.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-7 ms-lg-auto">
-                                <div class="row">
-                                    <div class="col-sm-4 mt-4">
-                                        <h5 class="text-white mb-0">Company</h5>
-                                        <div class="text-muted mt-3">
-                                            <ul class="list-unstyled ff-secondary footer-list">
-                                                <li><a href="pages-profile">About Us</a></li>
-                                                <li><a href="pages-gallery">Gallery</a></li>
-                                                <li><a href="apps-projects-overview">Projects</a></li>
-                                                <li><a href="pages-timeline">Timeline</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4 mt-4">
-                                        <h5 class="text-white mb-0">Apps Pages</h5>
-                                        <div class="text-muted mt-3">
-                                            <ul class="list-unstyled ff-secondary footer-list">
-                                                <li><a href="pages-pricing">Calendar</a></li>
-                                                <li><a href="apps-mailbox">Mailbox</a></li>
-                                                <li><a href="apps-chat">Chat</a></li>
-                                                <li><a href="apps-crm-deals">Deals</a></li>
-                                                <li><a href="apps-tasks-kanban">Kanban Board</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4 mt-4">
-                                        <h5 class="text-white mb-0">Support</h5>
-                                        <div class="text-muted mt-3">
-                                            <ul class="list-unstyled ff-secondary footer-list">
-                                                <li><a href="pages-faqs">FAQ</a></li>
-                                                <li><a href="pages-faqs">Contact</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="row text-center text-sm-start align-items-center mt-5">
-                            <div class="col-sm-6">
-
-                                <div>
-                                    <p class="copy-rights mb-0">
-                                        <script>
-                                            document.write(new Date().getFullYear())
-                                        </script> © Velzon - Themesbrand
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="text-sm-end mt-3 mt-sm-0">
-                                    <ul class="list-inline mb-0 footer-social-link">
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-facebook-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-github-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-linkedin-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-google-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-dribbble-line"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-                <!-- end footer -->
-
-                <!--start back-to-top-->
-                <button onclick="topFunction()" class="btn btn-danger btn-icon landing-back-top" id="back-to-top">
-                    <i class="ri-arrow-up-line"></i>
-                </button>
-                <!--end back-to-top-->
-
             </div>
-            <!-- end layout wrapper -->
+        </div>
+    </nav>
 
-        </body>
-    @endsection
-    @section('script')
-        <script src="{{ URL::asset('build/libs/swiper/swiper-bundle.min.js') }}"></script>
-        <script src="{{ URL::asset('build/js/pages/landing.init.js') }}"></script>
-    @endsection
+    <!-- HERO SECTION -->
+    <section id="inicio" class="min-vh-100 d-flex align-items-center pt-5 mt-4 position-relative">
+        <div class="container py-5">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7">
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3);">
+                        <i class="ri-shield-flash-line text-info fs-18"></i>
+                        <span class="fs-13 fw-semibold text-info">Motor de Verificación & Scoring v2 en México</span>
+                    </div>
+
+                    <h1 class="display-4 fw-extrabold mb-3 leading-tight text-gradient">
+                        Due Diligence, Background Check & Inteligencia de Riesgo.
+                    </h1>
+
+                    <p class="fs-18 text-muted mb-4 pe-lg-4" style="line-height: 1.6;">
+                        Consolide investigaciones exhaustivas sobre Personas Físicas y Morales en segundos. Auditoría de Identidad Primaria, Sat listas 69/69-B (EFOS/EDOS), listas negras PLD/FT (OFAC, ONU, PEPs) y expedientes digitales con validez legal.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-3 mb-5">
+                        <a href="#contacto" class="btn btn-cyan-gradient btn-lg fs-16">
+                            <i class="ri-mail-send-line me-2"></i>Solicitar Demostración
+                        </a>
+                        <a href="#demo" class="btn btn-glass-outline btn-lg fs-16">
+                            <i class="ri-play-circle-line me-2"></i> Probar Simulador de Riesgo
+                        </a>
+                    </div>
+
+                    <!-- Live Key Metrics -->
+                    <div class="row g-3 pt-3 border-top border-secondary-subtle">
+                        <div class="col-6 col-md-3">
+                            <div class="fs-28 fw-bold text-white mb-0">99.8%</div>
+                            <div class="fs-12 text-muted">Precisión Identidad</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="fs-28 fw-bold text-cyan mb-0" style="color: var(--accent-cyan);">&lt; 3 seg</div>
+                            <div class="fs-12 text-muted">Tiempo Consulta</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="fs-28 fw-bold text-white mb-0">100%</div>
+                            <div class="fs-12 text-muted">LFPDPPP & PLD</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="fs-28 fw-bold text-cyan mb-0" style="color: var(--accent-cyan);">+50K</div>
+                            <div class="fs-12 text-muted">Expedientes Emitidos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Live Risk Preview Box -->
+                <div class="col-lg-5">
+                    <div class="glass-card p-4 text-center">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fs-12 fw-bold text-uppercase text-muted">Vista Previa Expediente AVID-000-0001</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">EN VIVO</span>
+                        </div>
+
+                        <div class="p-3 mb-3 rounded-3" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06);">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="fs-13 fw-bold text-white">Pablo Caudillo Martínez</span>
+                                <code class="text-info fs-12">CAMP761025NV8</code>
+                            </div>
+                            <div class="fs-12 text-muted text-start">Persona Física · Due Diligence Comercial</div>
+                        </div>
+
+                        <!-- Mini SVG Gauge -->
+                        <div class="position-relative my-2 d-inline-block" style="width: 200px; height: 115px;">
+                            <svg viewBox="0 0 200 120" width="100%" height="100%">
+                                <path d="M 20 100 A 80 80 0 0 1 34.64 52.98" fill="none" stroke="#d32f2f" stroke-width="16" />
+                                <path d="M 34.64 52.98 A 80 80 0 0 1 75.28 23.95" fill="none" stroke="#f06548" stroke-width="16" />
+                                <path d="M 75.28 23.95 A 80 80 0 0 1 124.72 23.95" fill="none" stroke="#f7b84b" stroke-width="16" />
+                                <path d="M 124.72 23.95 A 80 80 0 0 1 165.36 52.98" fill="none" stroke="#84c835" stroke-width="16" />
+                                <path d="M 165.36 52.98 A 80 80 0 0 1 180 100" fill="none" stroke="#0ab39c" stroke-width="16" />
+                                <circle cx="100" cy="100" r="7" fill="#ffffff" />
+                                <g transform="rotate(162, 100, 100)">
+                                    <line x1="100" y1="100" x2="32" y2="100" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+                                    <polygon points="32,97 22,100 32,103" fill="#ffffff" />
+                                </g>
+                            </svg>
+                        </div>
+
+                        <h3 class="fw-extrabold mb-0 text-cyan" style="color: var(--accent-cyan);">90%</h3>
+                        <span class="badge bg-success fs-12 px-3 py-1 text-uppercase fw-bold mb-3">Confiabilidad Muy Alta</span>
+
+                        <!-- Recommendation Banner -->
+                        <div class="p-2 rounded-3 text-start mb-3" style="background: rgba(10, 179, 156, 0.15); border-left: 3px solid var(--accent-teal);">
+                            <div class="fs-12 fw-bold text-white">🟢 Proceder sin observaciones</div>
+                            <div class="fs-11 text-muted">Credenciales verificadas y expediente limpio de sanciones.</div>
+                        </div>
+
+                        <a href="#contacto" class="btn btn-cyan-gradient w-100 btn-sm py-2">Probar con tus Candidatos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOLUCIONES Y MÓDULOS DE VERIFICACIÓN -->
+    <section id="soluciones" class="py-5 position-relative">
+        <div class="container py-5">
+            <div class="text-center max-w-700 mx-auto mb-5">
+                <span class="fs-13 fw-bold text-info text-uppercase tracking-wider">Módulos de Auditoría Integra</span>
+                <h2 class="display-5 fw-extrabold mt-2 text-gradient">Fuentes Oficiales y Cobertura 360°</h2>
+                <p class="text-muted fs-16">Nuestra arquitectura de conectores consulta y consolida directamente las bases de datos gubernamentales e internacionales más críticas.</p>
+            </div>
+
+            <div class="row g-4">
+                <!-- Feature 1 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100">
+                        <div class="icon-box mb-3"><i class="ri-user-vcard-line"></i></div>
+                        <h4 class="fw-bold fs-18 text-white mb-2">Identidad Primaria & Biometría</h4>
+                        <p class="text-muted fs-14 mb-3">Lectura OCR de INE frontal y reverso, validación de Padrón Electoral, RENAPO CURP y cotejo de certeza biométrica facial (INE vs Selfie).</p>
+                        <span class="badge bg-dark border border-secondary text-info fs-11">INE · RENAPO · FACIAL</span>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100">
+                        <div class="icon-box mb-3"><i class="ri-bank-card-line"></i></div>
+                        <h4 class="fw-bold fs-18 text-white mb-2">Auditoría Fiscal & EFOS / EDOS</h4>
+                        <p class="text-muted fs-14 mb-3">Validación de estatus de RFC en tiempo real ante el SAT, certificados CSD/e-Firma y monitoreo de listas 69 y 69-B (operaciones simuladas).</p>
+                        <span class="badge bg-dark border border-secondary text-info fs-11">SAT 69 · 69-B · CSD</span>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100">
+                        <div class="icon-box mb-3"><i class="ri-shield-cross-line"></i></div>
+                        <h4 class="fw-bold fs-18 text-white mb-2">Prevención de Lavado de Dinero (PLD)</h4>
+                        <p class="text-muted fs-14 mb-3">Búsqueda nombrada en OFAC SDN (EE.UU.), Resoluciones de la ONU, listas consolidadas de la UE, Personas Bloqueadas (LPB CNBV/UIF) y PEPs.</p>
+                        <span class="badge bg-dark border border-secondary text-info fs-11">OFAC · ONU · PEPs</span>
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100">
+                        <div class="icon-box mb-3"><i class="ri-scales-3-line"></i></div>
+                        <h4 class="fw-bold fs-18 text-white mb-2">Antecedentes Judiciales & Mercantiles</h4>
+                        <p class="text-muted fs-14 mb-3">Rastreo de boletines judiciales a nivel local y federal, consultas al Registro Público de Comercio (SIGER) y marcas registradas ante el IMPI.</p>
+                        <span class="badge bg-dark border border-secondary text-info fs-11">BOLETÍN JUDICIAL · SIGER</span>
+                    </div>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100">
+                        <div class="icon-box mb-3"><i class="ri-building-4-line"></i></div>
+                        <h4 class="fw-bold fs-18 text-white mb-2">Geolocalización & INEGI DENUE</h4>
+                        <p class="text-muted fs-14 mb-3">Directorio Nacional de Unidades Económicas (DENUE). Verificación de domicilio físico, actividad SCIAN, estrato de empleados y mapas oficiales.</p>
+                        <span class="badge bg-dark border border-secondary text-info fs-11">INEGI · SCIAN · MAPS</span>
+                    </div>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100">
+                        <div class="icon-box mb-3"><i class="ri-file-lock-line"></i></div>
+                        <h4 class="fw-bold fs-18 text-white mb-2">Consistencia & Criptografía Inmutable</h4>
+                        <p class="text-muted fs-14 mb-3">Motor de coherencia cruzada entre nombres, RFC, CURP y fechas de nacimiento. Bitácora inmutable de auditoría con sello SHA-256 por consulta.</p>
+                        <span class="badge bg-dark border border-secondary text-info fs-11">AUDIT LOG · LFPDPPP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DEMO INTERACTIVO / SIMULADOR DE RIESGO -->
+    <section id="demo" class="py-5 position-relative">
+        <div class="container py-5">
+            <div class="glass-card p-4 p-md-5">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6">
+                        <span class="fs-13 fw-bold text-info text-uppercase tracking-wider">Simulador en Tiempo Real</span>
+                        <h2 class="display-6 fw-extrabold mt-2 text-white">Experimenta la Lógica del Multímetro AvalID</h2>
+                        <p class="text-muted fs-15 mb-4">
+                            Mueve el control deslizante para simular el puntaje global de un candidato y observa cómo se recalculan automáticamente los 4 índices independientes y la recomendación de acción.
+                        </p>
+
+                        <!-- Range Slider Input -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="fs-14 fw-bold text-white">Ajustar Puntaje Simulado:</label>
+                                <span id="sliderValueText" class="fs-20 fw-extrabold text-cyan" style="color: var(--accent-cyan);">85%</span>
+                            </div>
+                            <input type="range" class="form-range" id="scoreSimSlider" min="0" max="100" value="85" style="cursor: pointer;">
+                        </div>
+
+                        <div class="p-3 rounded-3 mb-3" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="fs-12 fw-bold text-uppercase text-muted mb-1">Recomendación Ejecutiva Generada:</div>
+                            <div id="simRecTitle" class="fs-15 fw-bold text-white mb-1">🟢 Proceder sin observaciones</div>
+                            <div id="simRecDesc" class="fs-13 text-muted">El sujeto presenta credenciales de identidad verificadas y expediente limpio.</div>
+                        </div>
+                    </div>
+
+                    <!-- Live Dynamic Gauges & Multi-index Cards -->
+                    <div class="col-lg-6">
+                        <div class="p-4 rounded-4 text-center" style="background: rgba(7, 9, 19, 0.9); border: 1px solid rgba(255,255,255,0.1);">
+                            <!-- Dynamic Gauge SVG -->
+                            <div class="position-relative mb-2 d-inline-block" style="width: 220px; height: 125px;">
+                                <svg viewBox="0 0 200 120" width="100%" height="100%">
+                                    <path d="M 20 100 A 80 80 0 0 1 34.64 52.98" fill="none" stroke="#d32f2f" stroke-width="18" />
+                                    <path d="M 34.64 52.98 A 80 80 0 0 1 75.28 23.95" fill="none" stroke="#f06548" stroke-width="18" />
+                                    <path d="M 75.28 23.95 A 80 80 0 0 1 124.72 23.95" fill="none" stroke="#f7b84b" stroke-width="18" />
+                                    <path d="M 124.72 23.95 A 80 80 0 0 1 165.36 52.98" fill="none" stroke="#84c835" stroke-width="18" />
+                                    <path d="M 165.36 52.98 A 80 80 0 0 1 180 100" fill="none" stroke="#0ab39c" stroke-width="18" />
+                                    <circle cx="100" cy="100" r="7" fill="#ffffff" />
+                                    <g id="simNeedleGroup" transform="rotate(153, 100, 100)">
+                                        <line x1="100" y1="100" x2="32" y2="100" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+                                        <polygon points="32,97 22,100 32,103" fill="#ffffff" />
+                                    </g>
+                                </svg>
+                            </div>
+
+                            <h3 id="simScoreText" class="display-6 fw-bold mb-1" style="color: #0ab39c;">85%</h3>
+                            <span id="simRiskBadge" class="badge bg-success fs-12 px-3 py-1 text-uppercase fw-bold mb-4">Riesgo Bajo / Confiable</span>
+
+                            <!-- 4 Indices Progress Bars -->
+                            <div class="text-start px-2">
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between fs-12 text-muted mb-1">
+                                        <span>• Identidad Primaria:</span>
+                                        <strong id="idxIdentidadText" class="text-white">90%</strong>
+                                    </div>
+                                    <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                        <div id="idxIdentidadBar" class="progress-bar bg-success" style="width: 90%;"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between fs-12 text-muted mb-1">
+                                        <span>• Cumplimiento PLD / SAT:</span>
+                                        <strong id="idxCumplimientoText" class="text-white">85%</strong>
+                                    </div>
+                                    <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                        <div id="idxCumplimientoBar" class="progress-bar bg-success" style="width: 85%;"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between fs-12 text-muted mb-1">
+                                        <span>• Consistencia Documental:</span>
+                                        <strong id="idxConsistenciaText" class="text-white">100%</strong>
+                                    </div>
+                                    <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                        <div id="idxConsistenciaBar" class="progress-bar bg-info" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NIVELES DE SERVICIO / PRODUCT TIERS -->
+    <section id="niveles" class="py-5 position-relative">
+        <div class="container py-5">
+            <div class="text-center max-w-700 mx-auto mb-5">
+                <span class="fs-13 fw-bold text-info text-uppercase tracking-wider">Escalabilidad de Producto</span>
+                <h2 class="display-5 fw-extrabold mt-2 text-gradient">Planes Adaptables a tu Empresa</h2>
+                <p class="text-muted fs-16">Una misma infraestructura base que escala según la profundidad de auditoría requerida.</p>
+            </div>
+
+            <div class="row g-4 align-items-stretch">
+                <!-- Tier 1 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="fs-12 fw-bold text-uppercase text-muted">Nivel 1</span>
+                            <h3 class="fw-bold text-white fs-20 mt-1 mb-3">Identidad Base</h3>
+                            <ul class="list-unstyled fs-13 text-muted mb-4 space-y-2">
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>Validación RFC (SAT)</li>
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>RENAPO CURP</li>
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>OCR INE Frente / Reverso</li>
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>Padrón Electoral INE</li>
+                            </ul>
+                        </div>
+                        <a href="#contacto" class="btn btn-glass-outline w-100">Solicitar Nivel 1</a>
+                    </div>
+                </div>
+
+                <!-- Tier 2 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="fs-12 fw-bold text-uppercase text-muted">Nivel 2</span>
+                            <h3 class="fw-bold text-white fs-20 mt-1 mb-3">Verificación Plus</h3>
+                            <ul class="list-unstyled fs-13 text-muted mb-4 space-y-2">
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>Todo lo de Nivel 1</li>
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>Certificados CSD / e-Firma</li>
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>SAT Listas 69 / 69-B (EFOS)</li>
+                                <li class="mb-2"><i class="ri-check-line text-info me-2"></i>Biometría Facial (Selfie)</li>
+                            </ul>
+                        </div>
+                        <a href="#contacto" class="btn btn-glass-outline w-100">Solicitar Nivel 2</a>
+                    </div>
+                </div>
+
+                <!-- Tier 3 (Featured) -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="glass-card tier-featured p-4 h-100 d-flex flex-column justify-content-between">
+                        <span class="tier-badge-pop">Más Popular</span>
+                        <div>
+                            <span class="fs-12 fw-bold text-uppercase text-info">Nivel 3</span>
+                            <h3 class="fw-bold text-white fs-20 mt-1 mb-3">Due Diligence</h3>
+                            <ul class="list-unstyled fs-13 text-muted mb-4 space-y-2">
+                                <li class="mb-2"><i class="ri-check-line text-cyan me-2" style="color: var(--accent-cyan);"></i>Todo lo de Nivel 2</li>
+                                <li class="mb-2"><i class="ri-check-line text-cyan me-2" style="color: var(--accent-cyan);"></i>Boletín Judicial & Litigios</li>
+                                <li class="mb-2"><i class="ri-check-line text-cyan me-2" style="color: var(--accent-cyan);"></i>SIGER & Registro Mercantil</li>
+                                <li class="mb-2"><i class="ri-check-line text-cyan me-2" style="color: var(--accent-cyan);"></i>Marcas IMPI & DENUE INEGI</li>
+                                <li class="mb-2"><i class="ri-check-line text-cyan me-2" style="color: var(--accent-cyan);"></i>PLD / OFAC / ONU / PEPs</li>
+                            </ul>
+                        </div>
+                        <a href="#contacto" class="btn btn-cyan-gradient w-100">Solicitar Due Diligence</a>
+                    </div>
+                </div>
+
+                <!-- Tier 4 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="fs-12 fw-bold text-uppercase text-purple" style="color: var(--accent-purple);">Nivel 4</span>
+                            <h3 class="fw-bold text-white fs-20 mt-1 mb-3">Seguridad Reforzada</h3>
+                            <ul class="list-unstyled fs-13 text-muted mb-4 space-y-2">
+                                <li class="mb-2"><i class="ri-check-line text-purple me-2" style="color: var(--accent-purple);"></i>Todo lo de Nivel 3</li>
+                                <li class="mb-2"><i class="ri-check-line text-purple me-2" style="color: var(--accent-purple);"></i>Adverse Media & Noticioso</li>
+                                <li class="mb-2"><i class="ri-check-line text-purple me-2" style="color: var(--accent-purple);"></i>Huella Digital & OSINT</li>
+                                <li class="mb-2"><i class="ri-check-line text-purple me-2" style="color: var(--accent-purple);"></i>Monitoreo Activo 24/7</li>
+                            </ul>
+                        </div>
+                        <a href="#contacto" class="btn btn-glass-outline w-100">Solicitar Nivel 4</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CUMPLIMIENTO LEGAL & SEGURIDAD -->
+    <section id="cumplimiento" class="py-5 position-relative">
+        <div class="container py-5">
+            <div class="glass-card p-4 p-md-5">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <span class="fs-13 fw-bold text-info text-uppercase tracking-wider">Cumplimiento Legal Obligatorio</span>
+                        <h2 class="display-6 fw-extrabold text-white mt-1 mb-3">Alineación LFPDPPP & Garantía de Privacidad</h2>
+                        <p class="text-muted fs-15 mb-0" style="line-height: 1.6;">
+                            AvalID opera estrictamente bajo el marco de la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP). Cada investigación requiere captura explícita de consentimiento con catálogo cerrado de finalidades legales, resguardo inmutable de auditoría y cifrado AES-256 en reposo.
+                        </p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <div class="p-3 rounded-3 d-inline-block text-start" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3);">
+                            <div class="fs-12 fw-bold text-info"><i class="ri-lock-password-line me-1"></i> Cifrado de Grado Bancario</div>
+                            <div class="fs-11 text-muted mt-1">Global Scope Multitenant Aislado por Tenant</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FORMULARIO DE CONTACTO / SOLICITUD DE DEMO -->
+    <section id="contacto" class="py-5 position-relative">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="glass-card p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <span class="fs-13 fw-bold text-info text-uppercase tracking-wider">Atención a Clientes & Ventas</span>
+                            <h2 class="display-6 fw-extrabold text-white mt-1">Solicita una Demostración de AvalID</h2>
+                            <p class="text-muted fs-15">Déjanos tus datos y un consultor especialista te mostrará cómo integrar AvalID en tu organización.</p>
+                        </div>
+
+                        <!-- Feedback Alert -->
+                        <div id="contactAlert" class="alert d-none fs-14 mb-4"></div>
+
+                        @if(session('contact_success'))
+                            <div class="alert alert-success fs-14 mb-4">
+                                {{ session('contact_success') }}
+                            </div>
+                        @endif
+
+                        <form id="contactForm" action="{{ route('contacto.store') }}" method="POST">
+                            @csrf
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fs-13 fw-bold text-white">Nombre Completo *</label>
+                                    <input type="text" name="name" class="form-control form-glass" placeholder="Ej. Lic. Roberto Gómez" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-13 fw-bold text-white">Correo Corporativo *</label>
+                                    <input type="email" name="email" class="form-control form-glass" placeholder="rgomez@empresa.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-13 fw-bold text-white">Empresa / Despacho</label>
+                                    <input type="text" name="company" class="form-control form-glass" placeholder="Consultores Alfa S.C.">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-13 fw-bold text-white">Teléfono de Contacto</label>
+                                    <input type="text" name="phone" class="form-control form-glass" placeholder="+52 55 1234 5678">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fs-13 fw-bold text-white">Nivel de Servicio de Interés</label>
+                                    <select name="service_tier" class="form-select form-glass">
+                                        <option value="due_diligence" selected>Nivel 3: Due Diligence Corporativo (Recomendado)</option>
+                                        <option value="base">Nivel 1: Identidad Base</option>
+                                        <option value="plus">Nivel 2: Verificación Plus</option>
+                                        <option value="seguridad_reforzada">Nivel 4: Seguridad Reforzada & OSINT</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fs-13 fw-bold text-white">Mensaje o Requerimientos *</label>
+                                    <textarea name="message" rows="4" class="form-control form-glass" placeholder="Describe brevemente tus requerimientos o número aproximado de investigaciones mensuales..." required></textarea>
+                                </div>
+                                <div class="col-12 mt-4 text-center">
+                                    <button type="submit" id="btnSubmitContact" class="btn btn-cyan-gradient btn-lg w-100 py-3">
+                                        <i class="ri-send-plane-fill me-2"></i>Enviar Solicitud de Demostración
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-4 border-top border-secondary-subtle position-relative" style="background: #04060d;">
+        <div class="container text-center">
+            <div class="mb-3">
+                <a class="logo-text text-white text-decoration-none fs-22" href="#inicio">
+                    Aval <span>ID</span>
+                </a>
+            </div>
+            <p class="fs-13 text-muted mb-2">
+                Plataforma SaaS Multitenant de Background Check & Due Diligence en México.
+            </p>
+            <p class="fs-12 text-muted mb-0">
+                &copy; {{ date('Y') }} AvalID. La Confianza de tu Gente. Todos los derechos reservados.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Interactive Live Demo & AJAX Contact Form Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Interactive Risk Score Simulator Logic
+            const slider = document.getElementById('scoreSimSlider');
+            const sliderValueText = document.getElementById('sliderValueText');
+            const simScoreText = document.getElementById('simScoreText');
+            const simRiskBadge = document.getElementById('simRiskBadge');
+            const simNeedleGroup = document.getElementById('simNeedleGroup');
+            const simRecTitle = document.getElementById('simRecTitle');
+            const simRecDesc = document.getElementById('simRecDesc');
+
+            const idxIdentidadText = document.getElementById('idxIdentidadText');
+            const idxIdentidadBar = document.getElementById('idxIdentidadBar');
+            const idxCumplimientoText = document.getElementById('idxCumplimientoText');
+            const idxCumplimientoBar = document.getElementById('idxCumplimientoBar');
+            const idxConsistenciaText = document.getElementById('idxConsistenciaText');
+            const idxConsistenciaBar = document.getElementById('idxConsistenciaBar');
+
+            if (slider) {
+                slider.addEventListener('input', function() {
+                    const score = parseInt(this.value);
+                    sliderValueText.textContent = score + '%';
+                    simScoreText.textContent = score + '%';
+
+                    // Calculate Needle Rotation Angle (0% -> 0deg, 100% -> 180deg)
+                    const angle = score * 1.8;
+                    simNeedleGroup.setAttribute('transform', `rotate(${angle}, 100, 100)`);
+
+                    // Update 4 Indices simulation
+                    const idScore = Math.min(100, Math.max(0, score + 5));
+                    const cumpScore = Math.min(100, Math.max(0, score - 5));
+                    const consScore = score >= 50 ? 100 : 60;
+
+                    idxIdentidadText.textContent = idScore + '%';
+                    idxIdentidadBar.style.width = idScore + '%';
+                    idxCumplimientoText.textContent = cumpScore + '%';
+                    idxCumplimientoBar.style.width = cumpScore + '%';
+                    idxConsistenciaText.textContent = consScore + '%';
+                    idxConsistenciaBar.style.width = consScore + '%';
+
+                    // Update Status Colors & Recommendation
+                    if (score >= 90) {
+                        simScoreText.style.color = '#0ab39c';
+                        simRiskBadge.className = 'badge bg-success fs-12 px-3 py-1 text-uppercase fw-bold mb-4';
+                        simRiskBadge.textContent = 'Riesgo Mínimo / Confiable';
+                        simRecTitle.textContent = '🟢 Proceder sin observaciones';
+                        simRecDesc.textContent = 'El sujeto presenta credenciales de identidad verificadas y expediente limpio.';
+                    } else if (score >= 70) {
+                        simScoreText.style.color = '#f7b84b';
+                        simRiskBadge.className = 'badge bg-warning text-dark fs-12 px-3 py-1 text-uppercase fw-bold mb-4';
+                        simRiskBadge.textContent = 'Riesgo Moderado';
+                        simRecTitle.textContent = '🟡 Validar manualmente antes de proceder';
+                        simRecDesc.textContent = 'Se detectaron observaciones menores o fuentes pendientes de revisión.';
+                    } else {
+                        simScoreText.style.color = '#d32f2f';
+                        simRiskBadge.className = 'badge bg-danger fs-12 px-3 py-1 text-uppercase fw-bold mb-4';
+                        simRiskBadge.textContent = 'Alto Riesgo Detectado';
+                        simRecTitle.textContent = '🔴 No se recomienda proceder sin autorización';
+                        simRecDesc.textContent = 'El expediente presenta alertas de alta severidad o boletinación en sanciones.';
+                    }
+                });
+            }
+
+            // AJAX Contact Form Handler
+            const contactForm = document.getElementById('contactForm');
+            const contactAlert = document.getElementById('contactAlert');
+            const btnSubmit = document.getElementById('btnSubmitContact');
+
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = '<i class="ri-loader-4-line ri-spin me-2"></i>Enviando Solicitud...';
+
+                    const formData = new FormData(this);
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = '<i class="ri-send-plane-fill me-2"></i>Enviar Solicitud de Demostración';
+
+                        contactAlert.classList.remove('d-none', 'alert-danger');
+                        contactAlert.classList.add('alert-success');
+                        contactAlert.textContent = data.message || '¡Gracias por contactarnos! Tu mensaje fue recibido.';
+                        contactForm.reset();
+                    })
+                    .catch(err => {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = '<i class="ri-send-plane-fill me-2"></i>Enviar Solicitud de Demostración';
+
+                        contactAlert.classList.remove('d-none', 'alert-success');
+                        contactAlert.classList.add('alert-danger');
+                        contactAlert.textContent = 'Ocurrió un error al enviar el formulario. Por favor intenta de nuevo.';
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
