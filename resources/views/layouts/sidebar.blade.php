@@ -123,36 +123,52 @@
                     </a>
                 </li>
 
-                <li class="menu-title"><span>Módulo PLD / EBR</span></li>
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ request()->routeIs('tenant.pld.expedientes.*') ? 'active' : '' }}" href="{{ route('tenant.pld.expedientes.index') }}">
                         <i class="ri-shield-check-line"></i> <span>Expedientes y Monitoreo PLD</span>
                     </a>
                 </li>
-                @role('tenant_admin')
-                <li class="nav-item">
-                    <a class="nav-link menu-link {{ request()->routeIs('tenant.pld.policy*') ? 'active' : '' }}" href="{{ route('tenant.pld.policy') }}">
-                        <i class="ri-equalizer-line"></i> <span>Política y Webhooks PLD</span>
-                    </a>
-                </li>
-                @endrole
 
                 @role('tenant_admin')
+                @php
+                    $isConfigActive = request()->routeIs('tenant.settings*')
+                        || request()->routeIs('tenant.pld.policy*')
+                        || request()->routeIs('tenant.users.*');
+                @endphp
                 <li class="menu-title"><span>Administración</span></li>
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.users.index') }}">
-                        <i class="ri-group-line"></i> <span>Usuarios</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.consumption') }}">
+                    <a class="nav-link menu-link {{ request()->routeIs('tenant.consumption*') ? 'active' : '' }}" href="{{ route('tenant.consumption') }}">
                         <i class="ri-money-dollar-circle-line"></i> <span>Consultas / Consumo</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.settings') }}">
+                    <a class="nav-link menu-link {{ $isConfigActive ? 'active' : '' }}"
+                       href="#sidebarTenantConfig"
+                       data-bs-toggle="collapse"
+                       role="button"
+                       aria-expanded="{{ $isConfigActive ? 'true' : 'false' }}"
+                       aria-controls="sidebarTenantConfig">
                         <i class="ri-settings-3-line"></i> <span>Configuración</span>
                     </a>
+                    <div class="collapse menu-dropdown {{ $isConfigActive ? 'show' : '' }}" id="sidebarTenantConfig">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('tenant.settings') }}" class="nav-link {{ request()->routeIs('tenant.settings*') ? 'active' : '' }}">
+                                    Términos &amp; Condiciones
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('tenant.pld.policy') }}" class="nav-link {{ request()->routeIs('tenant.pld.policy*') ? 'active' : '' }}">
+                                    Políticas de PLD
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('tenant.users.index') }}" class="nav-link {{ request()->routeIs('tenant.users.*') ? 'active' : '' }}">
+                                    Usuarios
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 @endrole
                 @endhasanyrole
