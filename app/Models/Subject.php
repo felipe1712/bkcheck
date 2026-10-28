@@ -166,9 +166,14 @@ class Subject extends Model
         return $this->hasMany(PldExpedienteVersion::class, 'subject_id')->orderBy('version');
     }
 
+    public function pldExpedienteVersiones()
+    {
+        return $this->hasMany(PldExpedienteVersion::class, 'subject_id')->orderBy('version');
+    }
+
     public function pldSuscripcion()
     {
-        return $this->hasOne(PldSuscripcion::class, 'subject_id')->latestOfMany('created_at');
+        return $this->hasOne(PldSuscripcion::class, 'subject_id');
     }
 
     /**

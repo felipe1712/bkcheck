@@ -702,4 +702,51 @@ class PldModuleAcceptanceTest extends TestCase
         $this->assertNotNull($expBio['corroboracion_personal']);
         PLDScoringService::assertNoForbiddenPhrases(json_encode($expBio['corroboracion_personal'], JSON_UNESCAPED_UNICODE));
     }
+
+    /**
+     * Prueba UI: Todas las pantallas web del módulo PLD para Cliente (Tenant) y SuperAdmin cargan con HTTP 200.
+     */
+    public function test_11_pantallas_web_tenant_y_superadmin_pld_cargan_con_200(): void
+    {
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'tenant_admin', 'guard_name' => 'web']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+
+        $tenantAdmin = \App\Models\User::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'activo'    => true,
+            'avatar'    => 'avatar-1.jpg',
+        ]);
+        $tenantAdmin->assignRole('tenant_admin');
+
+        $superAdmin = \App\Models\User::factory()->create([
+            'tenant_id' => null,
+            'activo'    => true,
+            'avatar'    => 'avatar-1.jpg',
+        ]);
+        $superAdmin->assignRole('super_admin');
+
+        /** @var PLDVersioningService $versioning */
+        $versioning = app(PLDVersioningService::class);
+        $versioning->generateVersion($this->subject, 'INICIAL', $this->baseCleanSources());
+
+        $this->actingAs($tenantAdmin)
+            ->get(route('tenant.pld.expedientes.index'))
+            ->assertStatus(200)
+            ->assertSee($this->subject->name_or_company);
+
+        $this->actingAs($tenantAdmin)
+            ->get(route('tenant.pld.expedientes.show', $this->subject->id))
+            ->assertStatus(200)
+            ->assertSee('NIVEL DE RIESGO PERSONA');
+
+        $this->actingAs($tenantAdmin)
+            ->get(route('tenant.pld.policy'))
+            ->assertStatus(200)
+            ->assertSee('NORMA FIJA');
+
+        $this->actingAs($superAdmin)
+            ->get(route('superadmin.pld-catalogo.index'))
+            ->assertStatus(200)
+            ->assertSee('lista_nominal');
+    }
 }
