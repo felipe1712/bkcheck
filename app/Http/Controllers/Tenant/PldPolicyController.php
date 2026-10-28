@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Models\PldEvento;
 use App\Models\PldScoringPolicy;
 use App\Models\PldWebhookEndpoint;
 use App\Models\Tenant;
-use App\Services\Pld\PldCryptoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,8 +28,12 @@ class PldPolicyController extends Controller
             ->keyBy('categoria');
 
         $webhooks = PldWebhookEndpoint::where('tenant_id', $tenantId)->get();
+        $recentEventos = PldEvento::where('tenant_id', $tenantId)
+            ->orderByDesc('fecha')
+            ->limit(25)
+            ->get();
 
-        return view('tenant.pld.policy', compact('tenant', 'policies', 'webhooks'));
+        return view('tenant.pld.policy', compact('tenant', 'policies', 'webhooks', 'recentEventos'));
     }
 
     public function update(Request $request)
@@ -37,14 +41,14 @@ class PldPolicyController extends Controller
         $tenantId = (int) Auth::user()->tenant_id;
 
         $validated = $request->validate([
-            'pesos'                             => 'required|array',
-            'pesos.IDENTIDAD'                   => 'required|integer|min:0|max:100',
-            'pesos.PLD'                         => 'required|integer|min:0|max:100',
-            'pesos.CONSISTENCIA'                => 'required|integer|min:0|max:100',
-            'pesos.REPUTACIONAL'                => 'required|integer|min:0|max:100',
-            'intervalo_bajo_medio'              => 'required|integer|min:1|max:6',
-            'intervalo_alto'                    => 'required|integer|min:1|max:6',
-            'triggers'                          => 'nullable|array',
+            'pesos'                    => 'required|array',
+            'pesos.IDENTIDAD'          => 'required|integer|min:0|max:100',
+            'pesos.PLD'                => 'required|integer|min:0|max:100',
+            'pesos.CONSISTENCIA'       => 'required|integer|min:0|max:100',
+            'pesos.REPUTACIONAL'       => 'required|integer|min:0|max:100',
+            'intervalo_bajo_medio'     => 'required|integer|min:1|max:6',
+            'intervalo_alto'           => 'required|integer|min:1|max:6',
+            'triggers'                 => 'nullable|array',
         ]);
 
         $sumaPesos = array_sum($validated['pesos']);
@@ -78,15 +82,44 @@ class PldPolicyController extends Controller
             }
 
             $policy->update([
-                'peso_porcentual'                        => (int) $validated['pesos'][$cat],
-                'triggers_config'                        => $triggersCfg,
-                'intervalo_reevaluacion_bajo_medio_meses'=> (int) $validated['intervalo_bajo_medio'],
-                'intervalo_reevaluacion_alto_meses'      => (int) $validated['intervalo_alto'],
+                'peso_porcentual'                         => (int) $validated['pesos'][$cat],
+                'triggers_config'                         => $triggersCfg,
+                'intervalo_reevaluacion_bajo_medio_meses' => (int) $validated['intervalo_bajo_medio'],
+                'intervalo_reevaluacion_alto_meses'       => (int) $validated['intervalo_alto'],
             ]);
         }
 
         return redirect()->route('tenant.pld.policy')
             ->with('success', 'Política de puntuación y parámetros PLD/EBR actualizados para su organización.');
+    }
+
+    public function storeWebhook(Request $request)
+    {
+        $tenantId = (int) Auth::user()->tenant_id;
+
+        $validated = $request->validate([
+            'url'                 => 'required|url|max:500',
+            'secreto'             => 'required|string|min:16|max:255',
+            'eventos_suscritos'   => 'required|array|min:1',
+            'eventos_suscritos.*' => 'string|in:*,NIVEL_CAMBIO,HALLAZGO_CRITICO,RECOMENDACION_CAMBIO,REEVALUACION_VENCIDA,FUENTE_CAIDA_PERSISTENTE,REEVALUACION_SIN_CAMBIOS',
+            'incluir_sin_cambios' => 'nullable|boolean',
+        ]);
+
+        PldWebhookEndpoint::updateOrCreate(
+            [
+                'tenant_id' => $tenantId,
+                'url'       => $validated['url'],
+            ],
+            [
+                'secreto'             => $validated['secreto'],
+                'eventos_suscritos'   => $validated['eventos_suscritos'],
+                'incluir_sin_cambios' => $request->boolean('incluir_sin_cambios', false),
+                'activo'              => true,
+            ]
+        );
+
+        return redirect()->route('tenant.pld.policy')
+            ->with('success', 'Endpoint de Webhook PLD registrado y cifrado con AES-256-GCM exitosamente.');
     }
 
     public function rotateApiKey()

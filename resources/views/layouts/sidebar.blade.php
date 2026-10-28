@@ -96,6 +96,13 @@
                         <i class="ri-code-s-slash-line"></i> <span>Log de APIs</span>
                     </a>
                 </li>
+
+                <li class="menu-title"><span>Cumplimiento PLD / LFPIORPI</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ request()->routeIs('superadmin.pld-catalogo.*') ? 'active' : '' }}" href="{{ route('superadmin.pld-catalogo.index') }}">
+                        <i class="ri-scales-3-line"></i> <span>Catálogo y Control PLD</span>
+                    </a>
+                </li>
                 @endrole
 
                 @hasanyrole('tenant_admin|investigador')
@@ -115,7 +122,23 @@
                         <i class="ri-user-search-line"></i> <span>Sujetos (Consultas)</span>
                     </a>
                 </li>
+
+                <li class="menu-title"><span>Módulo PLD / EBR</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ request()->routeIs('tenant.pld.expedientes.*') ? 'active' : '' }}" href="{{ route('tenant.pld.expedientes.index') }}">
+                        <i class="ri-shield-check-line"></i> <span>Expedientes y Monitoreo PLD</span>
+                    </a>
+                </li>
                 @role('tenant_admin')
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ request()->routeIs('tenant.pld.policy*') ? 'active' : '' }}" href="{{ route('tenant.pld.policy') }}">
+                        <i class="ri-equalizer-line"></i> <span>Política y Webhooks PLD</span>
+                    </a>
+                </li>
+                @endrole
+
+                @role('tenant_admin')
+                <li class="menu-title"><span>Administración</span></li>
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('tenant.users.index') }}">
                         <i class="ri-group-line"></i> <span>Usuarios</span>

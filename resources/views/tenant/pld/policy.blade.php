@@ -5,11 +5,11 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Política de Puntuación y Monitoreo PLD/EBR (Tenant Admin)</h4>
+            <h4 class="mb-sm-0">Política de Puntuación, API y Webhooks PLD/EBR (Tenant Admin)</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{{ route('tenant.dashboard') }}">Panel</a></li>
-                    <li class="breadcrumb-item active">Política PLD/EBR</li>
+                    <li class="breadcrumb-item"><a href="{{ route('tenant.pld.expedientes.index') }}">Expedientes PLD</a></li>
+                    <li class="breadcrumb-item active">Política y Webhooks PLD</li>
                 </ol>
             </div>
         </div>
@@ -17,7 +17,10 @@
 </div>
 
 @if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
+    <div class="alert alert-success alert-dismissible fade show">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 @endif
 @if($errors->any())
     <div class="alert alert-danger">
@@ -29,7 +32,7 @@
     </div>
 @endif
 
-<!-- BLOQUE 1: MARCO NORMATIVO FIJO (NO EDITABLE) VS POLÍTICA DEL TENANT (EDITABLE) -->
+<!-- BLOQUE 1: MARCO NORMATIVO FIJO (NO EDITABLE) VS CREDENCIALES API Y WEBHOOKS -->
 <div class="row">
     <div class="col-lg-6">
         <div class="card border-secondary">
@@ -75,8 +78,8 @@
     <div class="col-lg-6">
         <div class="card border-primary">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title text-white mb-0">Credenciales API y Webhooks del Tenant</h5>
-                <span class="badge bg-light text-primary">Integración M10</span>
+                <h5 class="card-title text-white mb-0">Credenciales API y Configuración de Webhooks HMAC</h5>
+                <span class="badge bg-light text-primary">M9 / M10</span>
             </div>
             <div class="card-body">
                 <label class="form-label fw-bold">API Key de Tenant (Header <code>X-Tenant-Api-Key</code>):</label>
@@ -87,11 +90,41 @@
                         <button type="submit" class="btn btn-outline-danger">Rotar Key</button>
                     </form>
                 </div>
-                <p class="small text-muted mb-0">
-                    Use esta clave para consumir los endpoints de monitoreo y verificación JCS (RFC 8785):
-                    <code>POST /api/personas/{id}/monitoreo</code>, <code>GET /api/expedientes/{folio}</code>,
-                    <code>POST /api/expedientes/verificar</code> y <code>POST /api/webhooks</code>.
-                </p>
+
+                <hr>
+                <h6 class="fw-bold mb-2"><i class="ri-webhook-line me-1"></i> Registrar / Actualizar Endpoint de Webhook</h6>
+                <form method="POST" action="{{ route('tenant.pld.policy.webhook') }}">
+                    @csrf
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <label class="form-label fs-12 mb-1">URL HTTPS receptora</label>
+                            <input type="url" name="url" class="form-control form-control-sm" value="{{ $webhooks->first()?->url }}" placeholder="https://su-sistema.com/webhooks/avalid" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fs-12 mb-1">Secreto HMAC-SHA256 (mín. 16 chars)</label>
+                            <input type="password" name="secreto" class="form-control form-control-sm" placeholder="whsec_****************" minlength="16" required>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <label class="form-label fs-12 mb-1 d-block">Eventos Suscritos:</label>
+                            @php $currEvts = $webhooks->first()?->eventos_suscritos ?? ['HALLAZGO_CRITICO', 'NIVEL_CAMBIO', 'RECOMENDACION_CAMBIO', 'FUENTE_CAIDA_PERSISTENTE', 'REEVALUACION_VENCIDA']; @endphp
+                            <div class="d-flex flex-wrap gap-3 fs-12">
+                                @foreach(['HALLAZGO_CRITICO', 'NIVEL_CAMBIO', 'RECOMENDACION_CAMBIO', 'FUENTE_CAIDA_PERSISTENTE', 'REEVALUACION_VENCIDA'] as $evName)
+                                    <label class="form-check-label">
+                                        <input type="checkbox" name="eventos_suscritos[]" value="{{ $evName }}" class="form-check-input me-1" @checked(in_array($evName, $currEvts, true) || in_array('*', $currEvts, true))>
+                                        <code>{{ $evName }}</code>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex justify-content-between align-items-center mt-2">
+                            <label class="form-check-label fs-12">
+                                <input type="checkbox" name="incluir_sin_cambios" value="1" class="form-check-input me-1" @checked($webhooks->first()?->incluir_sin_cambios)>
+                                Notificar también <code>REEVALUACION_SIN_CAMBIOS</code>
+                            </label>
+                            <button type="submit" class="btn btn-sm btn-primary">Guardar Webhook</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -119,15 +152,15 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Peso IDENTIDAD (%)</label>
-                    <input type="number" name="pesos[IDENTIDAD]" class="form-control" min="0" max="100" value="{{ $policies->get('IDENTIDAD')?->peso_porcentual ?? 25 }}" required>
+                    <input type="number" name="pesos[IDENTIDAD]" class="form-control" min="0" max="100" value="{{ $policies->get('IDENTIDAD')?->peso_porcentual ?? 40 }}" required>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Peso CUMPLIMIENTO PLD (%)</label>
-                    <input type="number" name="pesos[PLD]" class="form-control" min="0" max="100" value="{{ $policies->get('PLD')?->peso_porcentual ?? 35 }}" required>
+                    <input type="number" name="pesos[PLD]" class="form-control" min="0" max="100" value="{{ $policies->get('PLD')?->peso_porcentual ?? 30 }}" required>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Peso CONSISTENCIA (%)</label>
-                    <input type="number" name="pesos[CONSISTENCIA]" class="form-control" min="0" max="100" value="{{ $policies->get('CONSISTENCIA')?->peso_porcentual ?? 25 }}" required>
+                    <input type="number" name="pesos[CONSISTENCIA]" class="form-control" min="0" max="100" value="{{ $policies->get('CONSISTENCIA')?->peso_porcentual ?? 15 }}" required>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Peso REPUTACIONAL / OSINT (%)</label>
@@ -187,4 +220,53 @@
         </div>
     </div>
 </form>
+
+<!-- BLOQUE 3: BITÁCORA RECIENTE DE EVENTOS WEBHOOK EMITIDOS -->
+<div class="card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0"><i class="ri-notification-badge-line me-1 text-primary"></i> Bitácora de Eventos PLD / Webhooks Emitidos (Sin PII)</h5>
+        <span class="badge bg-secondary">GET /api/eventos</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle fs-12 mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Evento</th>
+                        <th>Tipo</th>
+                        <th>Folio Origen</th>
+                        <th>Nivel Previo &rarr; Actual</th>
+                        <th>Fecha</th>
+                        <th class="text-center">Estado Entrega</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($recentEventos ?? [] as $evt)
+                        <tr>
+                            <td><code>{{ $evt->evento_id }}</code></td>
+                            <td><span class="badge bg-dark">{{ $evt->tipo }}</span></td>
+                            <td><code>{{ $evt->folio_origen }}</code></td>
+                            <td>
+                                {{ $evt->payload_webhook['nivel_previo'] ?? 'N/A' }} &rarr;
+                                <strong>{{ $evt->payload_webhook['nivel_actual'] ?? 'N/A' }}</strong>
+                            </td>
+                            <td>{{ $evt->fecha?->format('d/m/Y H:i:s') }}</td>
+                            <td class="text-center">
+                                @if($evt->entregado_en)
+                                    <span class="badge bg-success-subtle text-success">Entregado ({{ $evt->entregado_en->format('H:i:s') }})</span>
+                                @else
+                                    <span class="badge bg-warning-subtle text-warning">Pendiente ({{ $evt->intentos }} int.)</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">Sin eventos de cambio o hallazgos críticos emitidos aún.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 @endsection

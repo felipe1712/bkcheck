@@ -21,7 +21,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('superadmin')->name('sup
     Route::patch('users/{id}/toggle-status', [App\Http\Controllers\SuperAdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::resource('users', App\Http\Controllers\SuperAdminUserController::class);
 
-    // Catálogo Global de Fuentes PLD/EBR (M1)
+    // Catálogo Global y Centro de Control PLD/EBR (M1)
     Route::get('/pld-catalogo', [App\Http\Controllers\SuperAdmin\PldCatalogoController::class, 'index'])->name('pld-catalogo.index');
     Route::post('/pld-catalogo', [App\Http\Controllers\SuperAdmin\PldCatalogoController::class, 'store'])->name('pld-catalogo.store');
     Route::put('/pld-catalogo/{id}', [App\Http\Controllers\SuperAdmin\PldCatalogoController::class, 'update'])->name('pld-catalogo.update');
@@ -40,7 +40,10 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
     Route::post('/subjects/{id}/investigate/{source_type}', [App\Http\Controllers\InvestigationController::class, 'investigateSource'])->name('subjects.investigate.source');
     Route::get('/subjects/{id}/report', [App\Http\Controllers\ReportController::class, 'downloadReport'])->name('subjects.report');
 
-    // Expediente PLD/EBR web actions (M6, M8)
+    // Tablero, Visor y Acciones de Expedientes PLD/EBR (M6, M8)
+    Route::get('/pld-expedientes', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'index'])->name('pld.expedientes.index');
+    Route::get('/pld-expedientes/{id}', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'show'])->whereNumber('id')->name('pld.expedientes.show');
+    Route::post('/pld-expedientes/{id}/monitoring', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'toggleMonitoring'])->whereNumber('id')->name('pld.expedientes.monitoring');
     Route::post('/subjects/{id}/pld-expediente', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'generate'])->name('subjects.pld-expediente.generate');
     Route::get('/pld-expedientes/{folio}/pdf', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'downloadPdf'])->name('pld.expediente.pdf');
     Route::get('/pld-expedientes/{folio}/json', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'downloadJson'])->name('pld.expediente.json');
@@ -56,9 +59,10 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
         Route::get('/settings',  [App\Http\Controllers\TenantSettingsController::class, 'index']) ->name('settings');
         Route::post('/settings', [App\Http\Controllers\TenantSettingsController::class, 'update'])->name('settings.update');
 
-        // Política de Puntuación y Monitoreo PLD/EBR por Tenant (M1)
+        // Política de Puntuación, API Key y Webhooks PLD/EBR por Tenant (M1, M9)
         Route::get('/pld-policy', [App\Http\Controllers\Tenant\PldPolicyController::class, 'index'])->name('pld.policy');
         Route::post('/pld-policy', [App\Http\Controllers\Tenant\PldPolicyController::class, 'update'])->name('pld.policy.update');
+        Route::post('/pld-policy/webhook', [App\Http\Controllers\Tenant\PldPolicyController::class, 'storeWebhook'])->name('pld.policy.webhook');
         Route::post('/pld-policy/rotate-key', [App\Http\Controllers\Tenant\PldPolicyController::class, 'rotateApiKey'])->name('pld.policy.rotate-key');
     });
 

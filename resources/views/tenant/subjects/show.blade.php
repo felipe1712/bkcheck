@@ -205,6 +205,8 @@
     </div>
 </div>
 
+@include('tenant.subjects.partials.pld_banner')
+
 <!-- ─────────── SECCIÓN: ÍNDICE DE CONFIABILIDAD Y NIVEL DE RIESGO (GAUGE CHART & MULTÍMETRO) ─────────── -->
 <div class="row mb-4">
     <div class="col-12">
