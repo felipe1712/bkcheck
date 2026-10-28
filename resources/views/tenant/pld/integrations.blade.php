@@ -5,10 +5,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">
-                API &amp; Webhooks de Monitoreo PLD/EBR
-                <span class="badge bg-primary-subtle text-primary fs-12 ms-2 align-middle">Módulo Enterprise / Tier Avanzado</span>
-            </h4>
+            <h4 class="mb-sm-0">API &amp; Webhooks de Monitoreo PLD/EBR</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('tenant.dashboard') }}">Inicio</a></li>
@@ -36,14 +33,13 @@
     </div>
 @endif
 
-<!-- BLOQUE 1: EXPLICACIÓN FIJA DEL ALCANCE DE INTEGRACIÓN Y VALOR DEL TIER -->
+<!-- BLOQUE 1: CONECTORES -->
 <div class="card border-primary border-opacity-25 shadow-sm mb-4">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="card-title text-white mb-0">
             <i class="ri-links-line me-1 align-middle"></i>
-            ¿Para qué sirven la API y los Webhooks PLD y cómo alimentan su cumplimiento?
+            Conectores
         </h5>
-        <span class="badge bg-light text-primary">Insumo Automatizado (Art. 41 LFPIORPI)</span>
     </div>
     <div class="card-body">
         <div class="row g-3">
