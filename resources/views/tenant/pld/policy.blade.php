@@ -77,11 +77,23 @@
 
     <div class="col-lg-6">
         <div class="card border-primary">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title text-white mb-0">Credenciales API y Configuración de Webhooks HMAC</h5>
-                <span class="badge bg-light text-primary">M9 / M10</span>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+                 style="cursor: help;"
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="top"
+                 data-bs-html="true"
+                 title="<strong>¿Qué puede hacer aquí?</strong><br>1. <strong>API Key:</strong> Conectar su ERP, CRM o sistema interno para consultar expedientes firmados (JSON/PDF), activar monitoreos y verificar la cadena de hashes SHA-256.<br>2. <strong>Webhooks HMAC:</strong> Recibir alertas automáticas en tiempo real cuando una reconsulta periódica detecte un nuevo PEP, lista 69-B, sanción o cambio en el Nivel de Riesgo.<br><br><strong>¿Por qué está en esta página?</strong><br>Porque los pesos, topes e intervalos de reevaluación (3 o 6 meses) que usted define en esta política son los que gobiernan cuándo se disparan estas alertas hacia el mecanismo automatizado de su organización (Art. 41 LFPIORPI).">
+                <h5 class="card-title text-white mb-0 d-flex align-items-center gap-2">
+                    <span>Credenciales API y Configuración de Webhooks HMAC</span>
+                    <i class="ri-question-line fs-18 text-white-50"></i>
+                </h5>
+                <span class="badge bg-light text-primary">Integración Automatizada <i class="ri-information-line align-middle"></i></span>
             </div>
             <div class="card-body">
+                <div class="alert alert-primary bg-primary-subtle border-0 text-dark fs-12 py-2 px-3 mb-3">
+                    <i class="ri-links-line me-1 align-middle text-primary fs-14"></i>
+                    <strong>Propósito de esta sección:</strong> Permite conectar el sistema interno de su organización para alimentar su expediente único y recibir alertas firmadas en cuanto las reglas y plazos de reconsulta de esta política detecten un cambio de riesgo.
+                </div>
                 <label class="form-label fw-bold">API Key de Tenant (Header <code>X-Tenant-Api-Key</code>):</label>
                 <div class="input-group mb-3">
                     <input type="text" class="form-control font-monospace" value="{{ $tenant->api_key }}" readonly>
@@ -358,4 +370,15 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+</script>
 @endsection
