@@ -40,7 +40,9 @@ return [
         'comprobante_domicilio' => 1.00,
         'nss_imss'            => 0.80,
         'score_crediticio'    => 2.50,
+        'identidad_digital'   => 1.50,
         'denue'               => 0.00,   // INEGI — API pública gratuita
+        'pld_expediente'      => 0.00,   // Motor determinístico PHP — costo marginal cero
     ],
 
     // Tarifas cobradas ficticiamente al tenant por consulta para margen/ingreso
@@ -62,7 +64,9 @@ return [
         'comprobante_domicilio' => 3.00,
         'nss_imss'            => 2.00,
         'score_crediticio'    => 6.00,
+        'identidad_digital'   => 4.00,
         'denue'               => 0.00,   // INEGI — sin margen, valor añadido gratuito
+        'pld_expediente'      => 15.00,  // Expediente PLD/EBR estructurado y firmado
     ],
 
     /*
@@ -95,5 +99,3 @@ return [
         'mock'  => env('INEGI_DENUE_MOCK', true),
     ],
 ];
-
-

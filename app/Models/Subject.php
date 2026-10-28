@@ -41,6 +41,16 @@ class Subject extends Model
         'tier_level',
         'finalidad_clave',
         'nivel_producto',
+        // PLD/EBR context fields
+        'nacionalidad',
+        'entidad_nacimiento',
+        'actividad_economica',
+        'fuentes_ingreso',
+        'perfil_transaccional',
+        'origen_destino_recursos',
+        'declaracion_personal',
+        'estructura_accionaria',
+        'jurisdiccion_riesgo',
     ];
 
     protected $casts = [
@@ -52,6 +62,9 @@ class Subject extends Model
         'enrollment_tc_accepted_at' => 'datetime',
         'credit_consent_granted'    => 'boolean',
         'credit_consent_at'         => 'datetime',
+        'declaracion_personal'      => 'array',
+        'estructura_accionaria'     => 'array',
+        'jurisdiccion_riesgo'       => 'boolean',
     ];
 
     public function getRfcAttribute($value)
@@ -143,6 +156,21 @@ class Subject extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function expedientePld()
+    {
+        return $this->hasOne(ExpedientePldSujeto::class, 'subject_id');
+    }
+
+    public function pldVersiones()
+    {
+        return $this->hasMany(PldExpedienteVersion::class, 'subject_id')->orderBy('version');
+    }
+
+    public function pldSuscripcion()
+    {
+        return $this->hasOne(PldSuscripcion::class, 'subject_id')->latestOfMany('created_at');
+    }
+
     /**
      * Generate a unique enrollment token with a 24-hour expiration.
      */
@@ -217,4 +245,3 @@ class Subject extends Model
         return 'pendiente';
     }
 }
-

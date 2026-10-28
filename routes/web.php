@@ -2,15 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
 */
 
 Auth::routes();
@@ -24,6 +20,11 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('superadmin')->name('sup
     Route::resource('tenants', App\Http\Controllers\SuperAdminController::class);
     Route::patch('users/{id}/toggle-status', [App\Http\Controllers\SuperAdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::resource('users', App\Http\Controllers\SuperAdminUserController::class);
+
+    // Catálogo Global de Fuentes PLD/EBR (M1)
+    Route::get('/pld-catalogo', [App\Http\Controllers\SuperAdmin\PldCatalogoController::class, 'index'])->name('pld-catalogo.index');
+    Route::post('/pld-catalogo', [App\Http\Controllers\SuperAdmin\PldCatalogoController::class, 'store'])->name('pld-catalogo.store');
+    Route::put('/pld-catalogo/{id}', [App\Http\Controllers\SuperAdmin\PldCatalogoController::class, 'update'])->name('pld-catalogo.update');
 });
 
 //Language Translation
@@ -33,12 +34,17 @@ Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang'
 Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')->name('tenant.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\TenantDashboardController::class, 'index'])->name('dashboard');
     Route::resource('projects', App\Http\Controllers\ProjectController::class);
-    
+
     // Background check execution and report endpoints
     Route::post('/subjects/{id}/investigate', [App\Http\Controllers\InvestigationController::class, 'investigate'])->name('subjects.investigate');
     Route::post('/subjects/{id}/investigate/{source_type}', [App\Http\Controllers\InvestigationController::class, 'investigateSource'])->name('subjects.investigate.source');
     Route::get('/subjects/{id}/report', [App\Http\Controllers\ReportController::class, 'downloadReport'])->name('subjects.report');
-    
+
+    // Expediente PLD/EBR web actions (M6, M8)
+    Route::post('/subjects/{id}/pld-expediente', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'generate'])->name('subjects.pld-expediente.generate');
+    Route::get('/pld-expedientes/{folio}/pdf', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'downloadPdf'])->name('pld.expediente.pdf');
+    Route::get('/pld-expedientes/{folio}/json', [App\Http\Controllers\Tenant\PldExpedienteWebController::class, 'downloadJson'])->name('pld.expediente.json');
+
     Route::post('/subjects/{id}/tier', [App\Http\Controllers\SubjectController::class, 'updateTierLevel'])->name('subjects.update-tier');
     Route::resource('subjects', App\Http\Controllers\SubjectController::class);
 
@@ -49,6 +55,11 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
         // Configuración del tenant: Términos y Condiciones de enrolamiento
         Route::get('/settings',  [App\Http\Controllers\TenantSettingsController::class, 'index']) ->name('settings');
         Route::post('/settings', [App\Http\Controllers\TenantSettingsController::class, 'update'])->name('settings.update');
+
+        // Política de Puntuación y Monitoreo PLD/EBR por Tenant (M1)
+        Route::get('/pld-policy', [App\Http\Controllers\Tenant\PldPolicyController::class, 'index'])->name('pld.policy');
+        Route::post('/pld-policy', [App\Http\Controllers\Tenant\PldPolicyController::class, 'update'])->name('pld.policy.update');
+        Route::post('/pld-policy/rotate-key', [App\Http\Controllers\Tenant\PldPolicyController::class, 'rotateApiKey'])->name('pld.policy.rotate-key');
     });
 
     // Regenerar token de enrolamiento (tenant_admin e investigador)
