@@ -133,6 +133,7 @@
                 @php
                     $isConfigActive = request()->routeIs('tenant.settings*')
                         || request()->routeIs('tenant.pld.policy*')
+                        || request()->routeIs('tenant.pld.integrations*')
                         || request()->routeIs('tenant.users.*');
                 @endphp
                 <li class="menu-title"><span>Administración</span></li>
@@ -158,8 +159,13 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('tenant.pld.policy') }}" class="nav-link {{ request()->routeIs('tenant.pld.policy*') ? 'active' : '' }}">
+                                <a href="{{ route('tenant.pld.policy') }}" class="nav-link {{ request()->routeIs('tenant.pld.policy') ? 'active' : '' }}">
                                     Políticas de PLD
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('tenant.pld.integrations') }}" class="nav-link {{ request()->routeIs('tenant.pld.integrations*') ? 'active' : '' }}">
+                                    API &amp; Webhook
                                 </a>
                             </li>
                             <li class="nav-item">

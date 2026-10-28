@@ -62,6 +62,7 @@ Route::middleware(['auth', 'role:tenant_admin|investigador'])->prefix('tenant')-
         // Política de Puntuación, API Key y Webhooks PLD/EBR por Tenant (M1, M9)
         Route::get('/pld-policy', [App\Http\Controllers\Tenant\PldPolicyController::class, 'index'])->name('pld.policy');
         Route::post('/pld-policy', [App\Http\Controllers\Tenant\PldPolicyController::class, 'update'])->name('pld.policy.update');
+        Route::get('/pld-integrations', [App\Http\Controllers\Tenant\PldPolicyController::class, 'integrations'])->name('pld.integrations');
         Route::post('/pld-policy/webhook', [App\Http\Controllers\Tenant\PldPolicyController::class, 'storeWebhook'])->name('pld.policy.webhook');
         Route::post('/pld-policy/rotate-key', [App\Http\Controllers\Tenant\PldPolicyController::class, 'rotateApiKey'])->name('pld.policy.rotate-key');
     });

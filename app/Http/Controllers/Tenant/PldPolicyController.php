@@ -18,14 +18,26 @@ class PldPolicyController extends Controller
         PldScoringPolicy::seedDefaultsForTenant($tenantId);
 
         $tenant = Tenant::findOrFail($tenantId);
-        if (empty($tenant->api_key)) {
-            $tenant->api_key = 'avalid_live_' . bin2hex(random_bytes(24));
-            $tenant->save();
-        }
 
         $policies = PldScoringPolicy::where('tenant_id', $tenantId)
             ->get()
             ->keyBy('categoria');
+
+        return view('tenant.pld.policy', compact('tenant', 'policies'));
+    }
+
+    /**
+     * Página independiente: API & Webhook (Integración Automatizada Enterprise / Tier Avanzado).
+     */
+    public function integrations()
+    {
+        $tenantId = (int) Auth::user()->tenant_id;
+        $tenant = Tenant::findOrFail($tenantId);
+
+        if (empty($tenant->api_key)) {
+            $tenant->api_key = 'avalid_live_' . bin2hex(random_bytes(24));
+            $tenant->save();
+        }
 
         $webhooks = PldWebhookEndpoint::where('tenant_id', $tenantId)->get();
         $recentEventos = PldEvento::where('tenant_id', $tenantId)
@@ -33,7 +45,7 @@ class PldPolicyController extends Controller
             ->limit(25)
             ->get();
 
-        return view('tenant.pld.policy', compact('tenant', 'policies', 'webhooks', 'recentEventos'));
+        return view('tenant.pld.integrations', compact('tenant', 'webhooks', 'recentEventos'));
     }
 
     public function update(Request $request)
@@ -118,7 +130,7 @@ class PldPolicyController extends Controller
             ]
         );
 
-        return redirect()->route('tenant.pld.policy')
+        return redirect()->route('tenant.pld.integrations')
             ->with('success', 'Endpoint de Webhook PLD registrado y cifrado con AES-256-GCM exitosamente.');
     }
 
@@ -128,7 +140,7 @@ class PldPolicyController extends Controller
         $tenant->api_key = 'avalid_live_' . bin2hex(random_bytes(24));
         $tenant->save();
 
-        return redirect()->route('tenant.pld.policy')
+        return redirect()->route('tenant.pld.integrations')
             ->with('success', 'API Key de integración PLD regenerada exitosamente.');
     }
 }

@@ -744,6 +744,11 @@ class PldModuleAcceptanceTest extends TestCase
             ->assertStatus(200)
             ->assertSee('NORMA FIJA');
 
+        $this->actingAs($tenantAdmin)
+            ->get(route('tenant.pld.integrations'))
+            ->assertStatus(200)
+            ->assertSee('API &amp; Webhooks de Monitoreo PLD/EBR', false);
+
         $this->actingAs($superAdmin)
             ->get(route('superadmin.pld-catalogo.index'))
             ->assertStatus(200)
