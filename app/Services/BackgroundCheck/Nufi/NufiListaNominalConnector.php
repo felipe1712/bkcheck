@@ -27,9 +27,15 @@ class NufiListaNominalConnector extends NufiConnector
         return $subject->tipo === 'persona_fisica';
     }
 
-    protected function callApi(Subject $subject): array
+    /**
+     * Construye el payload estricto por tipo_identificacion según la especificación oficial de NuFi
+     * (/lista_nominal/validar/v2):
+     * - Tipo C: tipo_identificacion, clave_de_elector, numero_de_emision, ocr
+     * - Tipo D: tipo_identificacion, cic, ocr
+     * - Tipo E, F, G, H: tipo_identificacion, cic (9 dígitos), identificador_del_ciudadano (9 dígitos)
+     */
+    protected function buildListaNominalPayload(Subject $subject): array
     {
-        // Extract extracted OCR data from ine_frente and ine_reverso queries if present
         $frenteQuery = SourceQuery::withoutGlobalScopes()
             ->where('subject_id', $subject->id)
             ->where('source_type', 'ine_frente')
@@ -47,39 +53,93 @@ class NufiListaNominalConnector extends NufiConnector
         $fData = $frenteQuery?->result?->processed_data ?? [];
         $rData = $reversoQuery?->result?->processed_data ?? [];
 
-        $model = $rData['model'] ?? $fData['model'] ?? '';
+        $model = (string) ($rData['model'] ?? $fData['model'] ?? '');
         $tipo = 'G';
-        if (preg_match('/Tipo([A-H])/i', $model, $m)) {
+        if (preg_match('/Tipo\s*([A-J])/i', $model, $m)) {
             $tipo = strtoupper($m[1]);
-        } elseif (!empty($fData['tipo']) && in_array(strtoupper($fData['tipo']), ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])) {
-            $tipo = strtoupper($fData['tipo']);
+        } elseif (!empty($fData['tipo']) && in_array(strtoupper(trim((string) $fData['tipo'])), ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'])) {
+            $tipo = strtoupper(trim((string) $fData['tipo']));
         }
 
-        $cic = (string)($rData['cic'] ?? $rData['numero_identificador'] ?? $fData['cic'] ?? '');
+        $mrzRaw = (string) ($rData['mrz'] ?? $rData['codigo_ocr'] ?? $rData['ocr'] ?? $fData['ocr'] ?? '');
+        $cic = (string) ($rData['cic'] ?? $rData['numero_identificador'] ?? $fData['cic'] ?? '');
         $cic = preg_replace('/\D/', '', $cic);
 
-        $claveElector = (string)($fData['clave_elector'] ?? $fData['clave'] ?? '');
-        $claveElector = strtoupper(trim($claveElector));
+        $ocrNumeric = (string) ($rData['ocr'] ?? $rData['codigo_ocr'] ?? $fData['ocr'] ?? '');
+        $identificador = (string) ($rData['identificador_del_ciudadano'] ?? '');
+        $emisionMrz = null;
 
-        $emision = (string)($fData['numero_emision'] ?? $fData['emision'] ?? '01');
-        $emision = preg_replace('/\D/', '', $emision);
-        if (strlen($emision) > 2) {
-            $emision = '01';
+        // Si tenemos cadena MRZ completa (ej. IDMEX1927756324<<4314002317638 7804012H2912316MEX<02<<39774<6 ...)
+        if (preg_match('/IDMEX(\d{9})\d?<+(\d{12,13})/i', $mrzRaw, $m)) {
+            // Los primeros 9 dígitos tras IDMEX son el CIC; el 10° dígito es el verificador
+            if (empty($cic) || strlen($cic) === 10) {
+                $cic = $m[1];
+            }
+            // Los 13 dígitos tras << son el OCR; los últimos 9 dígitos son el identificador_del_ciudadano
+            $ocrNumeric = $m[2];
+            $identificador = substr($m[2], -9);
         } else {
-            $emision = str_pad($emision ?: '01', 2, '0', STR_PAD_LEFT);
+            if (strlen($cic) === 10 && str_contains($mrzRaw, 'IDMEX' . $cic)) {
+                $cic = substr($cic, 0, 9);
+            }
+            // Si ocrNumeric contiene letras (como IDMEX...), limpiar o extraer bloque de 12-13 dígitos
+            if (preg_match('/<<(\d{12,13})/', $ocrNumeric, $mOcr)) {
+                $ocrNumeric = $mOcr[1];
+            } else {
+                $ocrNumeric = preg_replace('/\D/', '', $ocrNumeric);
+            }
+
+            if (empty($identificador) || $identificador === $cic || strlen(preg_replace('/\D/', '', $identificador)) === 10) {
+                if (strlen($ocrNumeric) >= 9) {
+                    $identificador = substr($ocrNumeric, -9);
+                } else {
+                    $identificador = $cic;
+                }
+            }
         }
 
-        $ocr = (string)($rData['codigo_ocr'] ?? $rData['ocr'] ?? $fData['ocr'] ?? '');
-        $identificador = (string)($rData['identificador_del_ciudadano'] ?? $cic);
+        if (preg_match('/MEX<+(\d{2})/i', $mrzRaw, $mEm)) {
+            $emisionMrz = $mEm[1];
+        }
 
-        $body = [
+        $claveElector = strtoupper(trim((string) ($fData['clave_elector'] ?? $fData['clave'] ?? '')));
+
+        $emision = preg_replace('/\D/', '', (string) ($fData['numero_emision'] ?? $fData['emision'] ?? ''));
+        if (strlen($emision) > 2 || empty($emision)) {
+            $emision = $emisionMrz ?: '01';
+        } else {
+            $emision = str_pad($emision, 2, '0', STR_PAD_LEFT);
+        }
+
+        // Enviar únicamente las variables correspondientes al tipo de identificación
+        if ($tipo === 'C') {
+            return [
+                'tipo_identificacion' => 'C',
+                'clave_de_elector'    => $claveElector,
+                'numero_de_emision'   => $emision,
+                'ocr'                 => $ocrNumeric,
+            ];
+        }
+
+        if ($tipo === 'D') {
+            return [
+                'tipo_identificacion' => 'D',
+                'cic'                 => $cic,
+                'ocr'                 => $ocrNumeric,
+            ];
+        }
+
+        // Tipos E, F, G, H (y posteriores): requieren únicamente tipo_identificacion, cic e identificador_del_ciudadano
+        return [
             'tipo_identificacion'        => $tipo,
             'cic'                        => $cic,
             'identificador_del_ciudadano' => $identificador,
-            'ocr'                        => $ocr,
-            'clave_de_elector'           => $claveElector,
-            'numero_de_emision'          => $emision,
         ];
+    }
+
+    protected function callApi(Subject $subject): array
+    {
+        $body = $this->buildListaNominalPayload($subject);
 
         try {
             $response = $this->postRequest('/lista_nominal/validar/v2', $body);
@@ -150,9 +210,6 @@ class NufiListaNominalConnector extends NufiConnector
             'tipo_identificacion'        => 'G',
             'cic'                        => '183657717',
             'identificador_del_ciudadano' => '116375842',
-            'ocr'                        => '1023123491540',
-            'clave_de_elector'           => 'HGLPLS92090914H200',
-            'numero_de_emision'          => '00',
         ];
     }
 }

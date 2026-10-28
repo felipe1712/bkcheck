@@ -65,33 +65,62 @@ class NufiIneReversoConnector extends NufiConnector
             $mrz = $rawData['ocr'];
         }
 
-        $cic = $rawData['cic'] 
-            ?? $rawData['numero_identificador'] 
-            ?? $ocrData['cic'] 
-            ?? $ocrData['numero_identificador'] 
+        $cic = $rawData['cic']
+            ?? $rawData['numero_identificador']
+            ?? $ocrData['cic']
+            ?? $ocrData['numero_identificador']
             ?? null;
 
-        // Extraer automáticamente el número CIC de 9 a 10 dígitos del código MRZ si no viene explícito
-        if (empty($cic) && !empty($mrz)) {
-            if (preg_match('/IDMEX(\d{9,10})/i', $mrz, $matches)) {
+        $ocrNumeric = $rawData['ocr_numero']
+            ?? $ocrData['ocr_numero']
+            ?? null;
+
+        $identificadorCiudadano = $rawData['identificador_del_ciudadano']
+            ?? $ocrData['identificador_del_ciudadano']
+            ?? null;
+
+        // Extraer de la primera línea del MRZ: IDMEX + CIC (9 dígitos) + Dígito Verificador (1) + << + OCR (12-13 dígitos)
+        if (!empty($mrz)) {
+            if (preg_match('/IDMEX(\d{9})\d?<+(\d{12,13})/i', $mrz, $m)) {
+                if (empty($cic) || strlen(preg_replace('/\D/', '', (string) $cic)) === 10) {
+                    $cic = $m[1];
+                }
+                if (empty($ocrNumeric)) {
+                    $ocrNumeric = $m[2];
+                }
+                if (empty($identificadorCiudadano)) {
+                    $identificadorCiudadano = substr($m[2], -9);
+                }
+            } elseif (empty($cic) && preg_match('/IDMEX(\d{9})/i', $mrz, $matches)) {
                 $cic = $matches[1];
             }
         }
 
+        if (!empty($cic)) {
+            $cicClean = preg_replace('/\D/', '', (string) $cic);
+            if (strlen($cicClean) === 10 && !empty($mrz) && str_contains($mrz, 'IDMEX' . $cicClean)) {
+                $cic = substr($cicClean, 0, 9);
+            } else {
+                $cic = $cicClean ?: $cic;
+            }
+        }
+
         return [
-            'codigo_ocr'           => $mrz ?: 'N/A',
-            'mrz'                  => $mrz ?: 'N/A',
-            'cic'                  => $cic ?: 'N/A',
-            'numero_identificador' => $cic ?: 'N/A',
-            'model'                => $ocrData['model'] ?? $rawData['model'] ?? 'N/A',
-            'raw_ocr'              => $ocrData,
+            'codigo_ocr'                  => $mrz ?: 'N/A',
+            'ocr'                         => $ocrNumeric ?: ($mrz ?: 'N/A'),
+            'mrz'                         => $mrz ?: 'N/A',
+            'cic'                         => $cic ?: 'N/A',
+            'numero_identificador'        => $cic ?: 'N/A',
+            'identificador_del_ciudadano' => $identificadorCiudadano ?: ($cic ?: 'N/A'),
+            'model'                       => $ocrData['model'] ?? $rawData['model'] ?? 'N/A',
+            'raw_ocr'                     => $ocrData,
         ];
     }
 
     protected function mockResponse(Subject $subject): array
     {
         $cic = (string)rand(100000000, 999999999);
-        $ocr = "IDMEX" . rand(100000000, 999999999) . "<<" . rand(1000, 9999) . "<<<<<<<<<<";
+        $ocr = "IDMEX" . $cic . "4<<" . rand(1000, 9999) . rand(100000000, 999999999);
         return [
             'cic' => $cic,
             'codigo_ocr' => $ocr,

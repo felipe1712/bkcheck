@@ -3,6 +3,7 @@
 namespace App\Services\BackgroundCheck\Nufi;
 
 use App\Models\Subject;
+use App\Models\SourceQuery;
 
 /**
  * Conector de Análisis de Perfil Digital y Enriquecimiento por Nombre.
@@ -11,9 +12,8 @@ use App\Models\Subject;
  *
  * Payload:
  * {
- *   "nombre": "Heriberto Zazueta Godoy",
- *   "telefono": "526221069217",
- *   "correo": "correo@ejemplo.com"
+ *   "nombre": "Pablo",
+ *   "apellidos": "Caudillo Martinez"
  * }
  */
 class NufiIdentidadDigitalConnector extends NufiConnector
@@ -40,32 +40,80 @@ class NufiIdentidadDigitalConnector extends NufiConnector
         return !empty($subject->name_or_company);
     }
 
+    /**
+     * Separa el nombre completo del sujeto en ['nombre' => ..., 'apellidos' => ...]
+     * priorizando datos estructurados de CURP o INE Frente si existen.
+     */
+    protected function buildNamePayload(Subject $subject): array
+    {
+        if (!empty($subject->id)) {
+            $curpQuery = SourceQuery::withoutGlobalScopes()
+                ->where('subject_id', $subject->id)
+                ->where('source_type', 'curp')
+                ->where('status', 'completed')
+                ->latest()
+                ->first();
+
+            $cData = $curpQuery?->result?->processed_data ?? [];
+            if (!empty($cData['nombre']) && (!empty($cData['primer_apellido']) || !empty($cData['segundo_apellido']))) {
+                return [
+                    'nombre'    => trim((string) $cData['nombre']),
+                    'apellidos' => trim(($cData['primer_apellido'] ?? '') . ' ' . ($cData['segundo_apellido'] ?? '')),
+                ];
+            }
+
+            $frenteQuery = SourceQuery::withoutGlobalScopes()
+                ->where('subject_id', $subject->id)
+                ->where('source_type', 'ine_frente')
+                ->where('status', 'completed')
+                ->latest()
+                ->first();
+
+            $fData = $frenteQuery?->result?->processed_data ?? [];
+            if (!empty($fData['nombre']) && (!empty($fData['apellido_paterno']) || !empty($fData['apellido_materno']))) {
+                return [
+                    'nombre'    => trim((string) $fData['nombre']),
+                    'apellidos' => trim(($fData['apellido_paterno'] ?? '') . ' ' . ($fData['apellido_materno'] ?? '')),
+                ];
+            }
+        }
+
+        if (!empty($subject->first_name) && (!empty($subject->father_surname) || !empty($subject->mother_surname))) {
+            return [
+                'nombre'    => trim((string) $subject->first_name),
+                'apellidos' => trim(($subject->father_surname ?? '') . ' ' . ($subject->mother_surname ?? '')),
+            ];
+        }
+
+        $rawName = trim(preg_replace('/\s+/', ' ', (string) $subject->name_or_company));
+        $parts = array_values(array_filter(explode(' ', $rawName)));
+        $count = count($parts);
+
+        if ($count >= 3) {
+            $nombre = implode(' ', array_slice($parts, 0, -2));
+            $apellidos = implode(' ', array_slice($parts, -2));
+        } elseif ($count === 2) {
+            $nombre = $parts[0];
+            $apellidos = $parts[1];
+        } else {
+            $nombre = $rawName;
+            $apellidos = '';
+        }
+
+        return [
+            'nombre'    => $nombre,
+            'apellidos' => $apellidos,
+        ];
+    }
+
     protected function callApi(Subject $subject): array
     {
-        $rawName = trim($subject->name_or_company);
-        if (empty($rawName) && !empty($subject->first_name)) {
-            $rawName = trim($subject->first_name . ' ' . $subject->father_surname . ' ' . $subject->mother_surname);
-        }
-
-        $payload = [
-            'nombre' => $rawName,
-        ];
-
-        if (!empty($subject->phone)) {
-            $phoneRaw = preg_replace('/[^0-9]/', '', $subject->phone);
-            if (strlen($phoneRaw) === 10) {
-                $phoneRaw = '52' . $phoneRaw;
-            }
-            $payload['telefono'] = $phoneRaw;
-        }
-
-        if (!empty($subject->email)) {
-            $payload['correo'] = $subject->email;
-        }
+        $payload = $this->buildNamePayload($subject);
 
         $response = $this->postRequest('/enriquecimientoidentidades/v3/nombre', $payload);
 
-        $data = $response['data'] ?? [];
+        $rawBody = $response['body'] ?? $response;
+        $data = $rawBody['data'] ?? $response['data'] ?? [];
         $query = $data['query'] ?? [];
         $person = $data['person'] ?? [];
 
@@ -78,7 +126,7 @@ class NufiIdentidadDigitalConnector extends NufiConnector
         $emails     = !empty($person['emails']) ? $person['emails'] : ($query['emails'] ?? []);
 
         return [
-            'status'           => $response['status'] ?? 'success',
+            'status'           => $rawBody['status'] ?? $response['status'] ?? 'success',
             'search_id'        => $data['@search_id'] ?? null,
             'top_match'        => $data['top_match'] ?? true,
             'persons_count'    => $data['@persons_count'] ?? 1,
@@ -147,8 +195,6 @@ class NufiIdentidadDigitalConnector extends NufiConnector
 
     protected function getMockBody(Subject $subject): array
     {
-        return [
-            'nombre' => $subject->name_or_company,
-        ];
+        return $this->buildNamePayload($subject);
     }
 }
