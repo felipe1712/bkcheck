@@ -1,0 +1,91 @@
+{
+  "public/assets/images/avtar/09.png": {
+    "file": "assets/09-B_tfevRM.png",
+    "src": "public/assets/images/avtar/09.png"
+  },
+  "public/assets/images/background/01.jpg": {
+    "file": "assets/01-BKlLzBR0.jpg",
+    "src": "public/assets/images/background/01.jpg"
+  },
+  "public/assets/images/background/06.png": {
+    "file": "assets/06-Dqc9ARCC.png",
+    "src": "public/assets/images/background/06.png"
+  },
+  "public/assets/images/background/box-bg.jpg": {
+    "file": "assets/box-bg-DjehiHBi.jpg",
+    "src": "public/assets/images/background/box-bg.jpg"
+  },
+  "public/assets/images/background/coming-soon.jpg": {
+    "file": "assets/coming-soon-B8EFNSW-.jpg",
+    "src": "public/assets/images/background/coming-soon.jpg"
+  },
+  "public/assets/images/dashboard/ecommerce-dashboard/background1.jpg": {
+    "file": "assets/background1-D1nFvnll.jpg",
+    "src": "public/assets/images/dashboard/ecommerce-dashboard/background1.jpg"
+  },
+  "public/assets/images/dashboard/ecommerce-dashboard/card-1.png": {
+    "file": "assets/card-1-C99P7S6W.png",
+    "src": "public/assets/images/dashboard/ecommerce-dashboard/card-1.png"
+  },
+  "public/assets/images/dashboard/ecommerce-dashboard/tab-bg.png": {
+    "file": "assets/tab-bg-CRqOUG2m.png",
+    "src": "public/assets/images/dashboard/ecommerce-dashboard/tab-bg.png"
+  },
+  "public/assets/images/dashboard/education/05.png": {
+    "file": "assets/05-29SkqOBK.png",
+    "src": "public/assets/images/dashboard/education/05.png"
+  },
+  "public/assets/images/dashboard/project/chat-bg.jpg": {
+    "file": "assets/chat-bg-CHYCVX5u.jpg",
+    "src": "public/assets/images/dashboard/project/chat-bg.jpg"
+  },
+  "public/assets/images/header/01.png": {
+    "file": "assets/01-38WDWU0I.png",
+    "src": "public/assets/images/header/01.png"
+  },
+  "public/assets/images/modals/css-patterns.png": {
+    "file": "assets/css-patterns-DrXYu8sH.png",
+    "src": "public/assets/images/modals/css-patterns.png"
+  },
+  "public/assets/images/pages/maintain_1.png": {
+    "file": "assets/maintain_1-D5p3pZGU.png",
+    "src": "public/assets/images/pages/maintain_1.png"
+  },
+  "public/assets/images/profile-app/25.jpg": {
+    "file": "assets/25-CHA0h_jE.jpg",
+    "src": "public/assets/images/profile-app/25.jpg"
+  },
+  "public/assets/images/profile-app/28.jpg": {
+    "file": "assets/28-C2gWcHB4.jpg",
+    "src": "public/assets/images/profile-app/28.jpg"
+  },
+  "public/assets/images/slick/11.jpg": {
+    "file": "assets/11-DSGyA6ou.jpg",
+    "src": "public/assets/images/slick/11.jpg"
+  },
+  "public/assets/images/slick/29.jpg": {
+    "file": "assets/11-DSGyA6ou.jpg",
+    "src": "public/assets/images/slick/11.jpg"
+  },
+  "public/assets/images/slick/30.jpg": {
+    "file": "assets/11-DSGyA6ou.jpg",
+    "src": "public/assets/images/slick/11.jpg"
+  },
+  "public/assets/images/slick/31.jpg": {
+    "file": "assets/11-DSGyA6ou.jpg",
+    "src": "public/assets/images/slick/11.jpg"
+  },
+  "public/assets/images/slick/32.jpg": {
+    "file": "assets/11-DSGyA6ou.jpg",
+    "src": "public/assets/images/slick/11.jpg"
+  },
+  "public/assets/images/slick/33.jpg": {
+    "file": "assets/11-DSGyA6ou.jpg",
+    "src": "public/assets/images/slick/11.jpg"
+  },
+  "public/assets/scss/style.scss": {
+    "file": "assets/style-D2t8qdCG.css",
+    "src": "public/assets/scss/style.scss",
+    "isEntry": true
+  }
+}

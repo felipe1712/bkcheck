@@ -1,8 +1,17 @@
-<script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/simplebar/simplebar.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/node-waves/waves.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/feather-icons/feather.min.js') }}"></script>
-<script src="{{ URL::asset('build/js/pages/plugins/lord-icon-2.1.0.js') }}"></script>
-<script src="{{ URL::asset('build/js/plugins.js') }}"></script>
+<!-- latest jquery -->
+<script src="{{ asset('assets/js/jquery-3.6.3.min.js') }}"></script>
+
+<!-- Bootstrap js -->
+<script src="{{ asset('assets/vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+
+<!-- Simple bar js -->
+<script src="{{ asset('assets/vendor/simplebar/simplebar.js') }}"></script>
+
+<!-- phosphor js -->
+<script src="{{ asset('assets/vendor/phosphor/phosphor.js') }}"></script>
+
+<!-- App js -->
+<script src="{{ asset('assets/js/script.js') }}"></script>
+
 @yield('script')
-@yield('script-bottom')
+@yield('scripts')

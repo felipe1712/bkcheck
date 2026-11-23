@@ -1,50 +1,27 @@
-<header id="page-topbar">
-    <div class="layout-width">
-        <div class="navbar-header">
-            <div class="d-flex">
-                <!-- LOGO -->
-                <div class="navbar-brand-box horizontal-logo">
-                    <a href="{{ route('root') }}" class="logo logo-dark text-decoration-none">
-                        <span class="logo-sm">
-                            <span class="fs-20 fw-bold" style="font-family: 'Rubik', sans-serif; color: #141923;">A<span style="color: #1877f2; font-weight: 800;">ID</span></span>
-                        </span>
-                        <span class="logo-lg text-start py-2 d-inline-block">
-                            <div class="brand-title" style="color: #141923;">Aval <span>ID</span></div>
-                            <div class="brand-slogan">LA CONFIANZA DE TU GENTE</div>
-                        </span>
-                    </a>
-
-                    <a href="{{ route('root') }}" class="logo logo-light text-decoration-none">
-                        <span class="logo-sm">
-                            <span class="fs-20 fw-bold text-white" style="font-family: 'Rubik', sans-serif;">A<span style="color: #00a6ff; font-weight: 800;">ID</span></span>
-                        </span>
-                        <span class="logo-lg text-start py-2 d-inline-block">
-                            <div class="brand-title text-white">Aval <span style="color: #00a6ff !important;">ID</span></div>
-                            <div class="brand-slogan text-white-50">LA CONFIANZA DE TU GENTE</div>
-                        </span>
-                    </a>
-                </div>
-
-                <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger material-shadow-none" id="topnav-hamburger-icon">
-                    <span class="hamburger-icon">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </span>
-                </button>
+<!-- Header Section starts -->
+<header class="header-main">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-6 col-sm-5 d-flex align-items-center header-left p-0">
+                <span class="header-toggle me-3">
+                    <i class="ti ti-menu-2"></i>
+                </span>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 d-none d-sm-inline-block">
+                    <i class="ti ti-radar me-1"></i> Porcupine v3
+                </span>
             </div>
 
-            <div class="d-flex align-items-center">
-                <!-- User Profile Dropdown -->
-                <div class="dropdown ms-sm-3 header-item topbar-user">
-                    <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="d-flex align-items-center">
-                            <div class="rounded-circle header-profile-user bg-light text-primary d-flex align-items-center justify-content-center">
-                                <i class="ri-user-line fs-16"></i>
-                            </div>
-                            <span class="text-start ms-xl-2">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ Auth::user()->name }}</span>
-                                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text text-capitalize">
+            <div class="col-6 col-sm-7 d-flex align-items-center justify-content-end header-right p-0">
+                <ul class="d-flex align-items-center mb-0 list-unstyled">
+                    <li class="header-profile">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="page-header-user-dropdown"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="h-35 w-35 d-flex-center b-r-50 bg-primary-subtle text-primary me-2">
+                                <i class="ti ti-user f-s-18"></i>
+                            </span>
+                            <span class="text-start d-none d-md-block">
+                                <span class="d-block fw-semibold text-dark f-s-13">{{ Auth::user()->name }}</span>
+                                <span class="d-block text-muted f-s-11">
                                     @if(Auth::user()->hasRole('super_admin'))
                                         Super Admin
                                     @elseif(Auth::user()->hasRole('tenant_admin'))
@@ -56,21 +33,21 @@
                                     @endif
                                 </span>
                             </span>
-                        </span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        <!-- item-->
-                        <h6 class="dropdown-header">¡Bienvenido!</h6>
-                        <a class="dropdown-item" href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> 
-                            <span>Cerrar Sesión</span>
                         </a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                            @csrf
-                        </form>
-                    </div>
-                </div>
+                        <div class="dropdown-menu dropdown-menu-end border shadow-sm">
+                            <h6 class="dropdown-header">¡Bienvenido, {{ Auth::user()->name }}!</h6>
+                            <a class="dropdown-item text-danger" href="javascript:void(0);"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="ti ti-logout me-1"></i> Cerrar Sesión
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
 </header>
+<!-- Header Section ends -->

@@ -1,107 +1,51 @@
-<meta name="csrf-token" content="{{ csrf_token() }}">
-@yield('css')
-<!-- Google Fonts: Rubik & Urbanist (Manual de Identidad AvalID) -->
+<!-- Animation css -->
+<link rel="stylesheet" href="{{ asset('assets/vendor/animation/animate.min.css') }}">
+
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Urbanist:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&display=swap" rel="stylesheet">
 
-<!-- Layout config Js -->
-<script src="{{ URL::asset('build/js/layout.js') }}"></script>
-<!-- Bootstrap Css -->
-<link href="{{ URL::asset('build/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css" />
-<!-- Icons Css -->
-<link href="{{ URL::asset('build/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-<!-- App Css-->
-<link href="{{ URL::asset('build/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
-<!-- custom Css-->
-<link href="{{ URL::asset('build/css/custom.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
+<!-- Tabler & Remix Icons -->
+<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/tabler-icons/tabler-icons.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+
+<!-- Bootstrap css -->
+<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/bootstrap/bootstrap.min.css') }}">
+
+<!-- Simplebar css -->
+<link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/simplebar/simplebar.css') }}">
+
+@yield('css')
+
+@vite(['public/assets/scss/style.scss'])
 
 <style>
-    :root {
-        --avalid-dark: #141923;
-        --avalid-surface: #1b2230;
-        --avalid-primary: #1877f2;
-        --avalid-cyan: #00a6ff;
-        --avalid-slate: #56657e;
-        --bs-primary: #1877f2;
-        --bs-primary-rgb: 24, 119, 242;
-        --bs-body-font-family: 'Urbanist', system-ui, -apple-system, sans-serif;
+    /* Tema claro uniforme para AvalID Porcupine */
+    :root, [data-theme="light"] {
+        --bs-body-bg: #f8fafc;
+        --bs-body-color: #1e293b;
+        --bs-card-bg: #ffffff;
     }
     body {
-        font-family: 'Urbanist', system-ui, -apple-system, sans-serif !important;
+        background-color: #f8fafc !important;
+        color: #1e293b;
+        font-family: 'Golos Text', sans-serif;
     }
-    h1, h2, h3, h4, h5, h6, .brand-font, .card-title, .btn, .badge, .navbar-brand, .menu-link {
-        font-family: 'Rubik', system-ui, -apple-system, sans-serif !important;
+    nav.vertical-sidebar, nav {
+        background-color: #ffffff !important;
+        border-right: 1px solid #e2e8f0 !important;
     }
-    .brand-slogan {
-        letter-spacing: 0.15em;
-        font-size: 0.65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: var(--avalid-slate);
+    header.header-main {
+        background-color: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
     }
-    .btn-primary {
-        background-color: #1877f2 !important;
-        border-color: #1877f2 !important;
+    .card {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     }
-    .btn-primary:hover {
-        background-color: #0a58ed !important;
-        border-color: #0a58ed !important;
-    }
-    .bg-primary {
-        background-color: #1877f2 !important;
-    }
-    .text-primary {
-        color: #1877f2 !important;
-    }
-    .navbar-brand-box {
-        height: 70px !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-    .navbar-brand-box .logo-lg {
-        display: inline-block !important;
-        height: auto !important;
-        line-height: 1.1 !important;
-    }
-    .navbar-brand-box .brand-title {
-        font-size: 26px !important;
-        font-family: 'Rubik', sans-serif !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.02em !important;
-        line-height: 1 !important;
-    }
-    .navbar-brand-box .brand-title span {
-        color: #1877f2 !important;
-        font-weight: 800 !important;
-    }
-    .navbar-brand-box .brand-slogan {
-        font-size: 8.5px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.18em !important;
-        color: #56657e !important;
-        margin-top: 3px !important;
-    }
-    /* Ocultar logo duplicado del sidebar en modo horizontal */
-    [data-layout="horizontal"] .app-menu .navbar-brand-box {
-        display: none !important;
-    }
-    /* Fix global pagination SVG sizing & alignment */
-    .pagination svg {
-        width: 14px !important;
-        height: 14px !important;
-        max-width: 14px !important;
-        max-height: 14px !important;
-        display: inline-block !important;
-        vertical-align: middle !important;
-    }
-    .pagination .page-item .page-link {
-        border-radius: 6px !important;
-        padding: 6px 12px;
-        font-size: 13px;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    .app-content main {
+        padding-top: 1rem;
     }
 </style>

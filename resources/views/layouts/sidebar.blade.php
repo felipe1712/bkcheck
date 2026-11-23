@@ -1,144 +1,94 @@
-<!-- ========== App Menu ========== -->
-<div class="app-menu navbar-menu">
-    <!-- LOGO -->
-    <div class="navbar-brand-box">
-        <!-- Dark Logo-->
-        <a href="{{ route('root') }}" class="logo logo-dark text-decoration-none">
-            <span class="logo-sm">
-                <span class="fs-20 fw-bold" style="font-family: 'Rubik', sans-serif; color: #141923;">A<span style="color: #1877f2; font-weight: 800;">ID</span></span>
-            </span>
-            <span class="logo-lg text-start py-2 d-inline-block">
-                <div class="brand-title" style="color: #141923;">Aval <span>ID</span></div>
-                <div class="brand-slogan">LA CONFIANZA DE TU GENTE</div>
-            </span>
+<!-- Menu Navigation starts -->
+<nav class="vertical-sidebar light-sidebar">
+    <div class="app-logo">
+        <a class="logo d-inline-block text-decoration-none" href="{{ route('root') }}">
+            <span class="fs-20 fw-bold" style="color: #0f172a;">Aval <span style="color: #1877f2;">ID</span></span>
+            <span class="d-block text-muted" style="font-size: 9px; letter-spacing: 0.08em;">PORCUPINE · DUE DILIGENCE</span>
         </a>
-        <!-- Light Logo-->
-        <a href="{{ route('root') }}" class="logo logo-light text-decoration-none">
-            <span class="logo-sm">
-                <span class="fs-20 fw-bold text-white" style="font-family: 'Rubik', sans-serif;">A<span style="color: #00a6ff; font-weight: 800;">ID</span></span>
-            </span>
-            <span class="logo-lg text-start py-2 d-inline-block">
-                <div class="brand-title text-white">Aval <span style="color: #00a6ff !important;">ID</span></div>
-                <div class="brand-slogan text-white-50">LA CONFIANZA DE TU GENTE</div>
-            </span>
-        </a>
-        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
-            id="vertical-hover">
-            <i class="ri-record-circle-line"></i>
-        </button>
+
+        <span class="bg-light-primary toggle-semi-nav">
+            <i class="ti ti-chevrons-right f-s-20"></i>
+        </span>
     </div>
 
-    <div class="dropdown sidebar-user m-1 rounded">
-        <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown"
-            aria-haspopup="true" aria-expanded="false">
-            <span class="d-flex align-items-center gap-2">
-                <div class="rounded-circle header-profile-user bg-light text-primary d-flex align-items-center justify-content-center">
-                    <i class="ri-user-line fs-16"></i>
-                </div>
-                <span class="text-start">
-                    <span class="d-block fw-medium sidebar-user-name-text">{{ Auth::user()->name }}</span>
-                    <span class="d-block fs-14 sidebar-user-name-sub-text">
-                        <i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> 
-                        <span class="align-middle">En línea</span>
-                    </span>
-                </span>
-            </span>
-        </button>
-        <div class="dropdown-menu dropdown-menu-end">
-            <!-- item-->
-            <h6 class="dropdown-header">¡Bienvenido {{ Auth::user()->name }}!</h6>
-            <a class="dropdown-item" href="javascript:void(0);"
-                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> 
-                <span>Cerrar Sesión</span>
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                @csrf
-            </form>
-        </div>
+    <div class="app-nav" id="app-simple-bar">
+        <ul class="main-nav p-0 mt-2">
+            <li class="menu-title">
+                <span>Due Diligence</span>
+            </li>
+
+            @role('super_admin')
+            <li class="no-sub">
+                <a href="{{ route('superadmin.dashboard') }}">
+                    <i class="ti ti-dashboard"></i> Dashboard Global
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('superadmin.tenants.index') }}">
+                    <i class="ti ti-building"></i> Clientes
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('superadmin.users.index') }}">
+                    <i class="ti ti-users"></i> Usuarios
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('superadmin.activity-logs') }}">
+                    <i class="ti ti-list-details"></i> Bitácora de Actividad
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('superadmin.audit-logs') }}">
+                    <i class="ti ti-shield-lock"></i> Auditoría de Consultas
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('superadmin.api-logs') }}">
+                    <i class="ti ti-code"></i> Log de APIs
+                </a>
+            </li>
+            @endrole
+
+            @hasanyrole('tenant_admin|investigador')
+            <li class="no-sub">
+                <a href="{{ route('tenant.dashboard') }}">
+                    <i class="ti ti-home"></i> Inicio
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('tenant.projects.index') }}">
+                    <i class="ti ti-folders"></i> Proyectos
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('tenant.subjects.index') }}">
+                    <i class="ti ti-user-search"></i> Sujetos (Consultas)
+                </a>
+            </li>
+
+            @role('tenant_admin')
+            <li class="menu-title">
+                <span>Administración</span>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('tenant.users.index') }}">
+                    <i class="ti ti-users"></i> Usuarios
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('tenant.consumption') }}">
+                    <i class="ti ti-chart-bar"></i> Consultas / Consumo
+                </a>
+            </li>
+            <li class="no-sub">
+                <a href="{{ route('tenant.settings') }}">
+                    <i class="ti ti-settings"></i> Configuración
+                </a>
+            </li>
+            @endrole
+            @endhasanyrole
+        </ul>
     </div>
-
-    <div id="scrollbar">
-        <div class="container-fluid">
-            <div id="two-column-menu"></div>
-            <ul class="navbar-nav" id="navbar-nav">
-                <li class="menu-title"><span>Due Diligence</span></li>
-
-                @role('super_admin')
-                <!-- Super Admin Menu -->
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('superadmin.dashboard') }}">
-                        <i class="ri-dashboard-2-line"></i> <span>Dashboard Global</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('superadmin.tenants.index') }}">
-                        <i class="ri-git-repository-private-line"></i> <span>Clientes</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('superadmin.users.index') }}">
-                        <i class="ri-group-line"></i> <span>Usuarios</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('superadmin.activity-logs') }}">
-                        <i class="ri-file-list-3-line"></i> <span>Bitácora de Actividad</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('superadmin.audit-logs') }}">
-                        <i class="ri-shield-keyhole-line"></i> <span>Auditoría de Consultas</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('superadmin.api-logs') }}">
-                        <i class="ri-code-s-slash-line"></i> <span>Log de APIs</span>
-                    </a>
-                </li>
-                @endrole
-
-                @hasanyrole('tenant_admin|investigador')
-                <!-- Tenant Menu -->
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.dashboard') }}">
-                        <i class="ri-dashboard-line"></i> <span>Inicio</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.projects.index') }}">
-                        <i class="ri-folder-open-line"></i> <span>Proyectos</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.subjects.index') }}">
-                        <i class="ri-user-search-line"></i> <span>Sujetos (Consultas)</span>
-                    </a>
-                </li>
-                @role('tenant_admin')
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.users.index') }}">
-                        <i class="ri-group-line"></i> <span>Usuarios</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.consumption') }}">
-                        <i class="ri-money-dollar-circle-line"></i> <span>Consultas / Consumo</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('tenant.settings') }}">
-                        <i class="ri-settings-3-line"></i> <span>Configuración</span>
-                    </a>
-                </li>
-                @endrole
-                @endhasanyrole
-            </ul>
-        </div>
-        <!-- Sidebar -->
-    </div>
-    <div class="sidebar-background"></div>
-</div>
-<!-- Left Sidebar End -->
-<!-- Vertical Overlay-->
-<div class="vertical-overlay"></div>
+</nav>
+<!-- Menu Navigation ends -->
