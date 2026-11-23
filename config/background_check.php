@@ -19,6 +19,10 @@ return [
         'api_key_judicial' => env('NUFI_API_KEY_JUDICIAL', '57e5493afbb14b9688bb6376af4d0999'),
         'mock' => env('NUFI_MOCK', false), // Live production/sandbox API mode by default
         'webhook_url' => env('NUFI_WEBHOOK_URL'),
+        'endpoints' => [
+            'antecedentes_penales' => env('NUFI_ENDPOINT_PENALES', '/antecedentes_penales/v1/consulta'),
+            'buro'                 => env('NUFI_ENDPOINT_BURO', '/buro/consulta'),
+        ],
     ],
 
     // Estimación de costos ficticios internos por API para tableros analíticos
@@ -34,11 +38,16 @@ return [
         'ine_vs_selfie'       => 2.00,
         'sanciones'           => 0.80,
         'litigios'            => 1.50,
+        'antecedentes_penales'=> 2.00,
         'selfie'              => 0.00,   // Sin costo extra (proceso interno)
         'presencia_en_linea'  => 0.00,   // Herramientas open source
+        'horus_osint'         => 0.00,   // Herramientas open source
+        'robin_darkweb'       => 0.50,   // Consumo LLM Anthropic
+        'tlaloc_phone'        => 0.10,   // Tlaloc PNN
         'curp'                => 0.00,   // Gratuito vía NuFi
         'comprobante_domicilio' => 1.00,
         'nss_imss'            => 0.80,
+        'cedula_profesional'  => 0.80,
         'score_crediticio'    => 2.50,
         'denue'               => 0.00,   // INEGI — API pública gratuita
     ],
@@ -56,11 +65,16 @@ return [
         'ine_vs_selfie'       => 5.00,
         'sanciones'           => 2.00,
         'litigios'            => 4.00,
+        'antecedentes_penales'=> 5.00,
         'selfie'              => 0.00,
         'presencia_en_linea'  => 0.00,
+        'horus_osint'         => 0.00,
+        'robin_darkweb'       => 2.00,
+        'tlaloc_phone'        => 0.50,
         'curp'                => 0.00,
         'comprobante_domicilio' => 3.00,
         'nss_imss'            => 2.00,
+        'cedula_profesional'  => 2.50,
         'score_crediticio'    => 6.00,
         'denue'               => 0.00,   // INEGI — sin margen, valor añadido gratuito
     ],
@@ -76,9 +90,15 @@ return [
     | sensibles, con disclaimer obligatorio y revisión humana.
     */
     'osint' => [
-        'enabled'     => env('OSINT_SERVICE_ENABLED', false),
-        'service_url' => env('OSINT_SERVICE_URL', 'http://127.0.0.1:5001'),
-        'secret'      => env('OSINT_SERVICE_SECRET', 'bkcheck-osint-dev-secret'),
+        'enabled'       => env('OSINT_SERVICE_ENABLED', false),
+        'horus_enabled' => env('OSINT_HORUS_ENABLED', false),
+        'robin_enabled' => env('OSINT_ROBIN_ENABLED', false),
+        'service_url'   => env('OSINT_SERVICE_URL', 'http://127.0.0.1:5001'),
+        'secret'        => env('OSINT_SERVICE_SECRET', 'bkcheck-osint-dev-secret'),
+        'robin'         => [
+            'llm_provider' => 'anthropic',
+            'model'        => env('ROBIN_ANTHROPIC_MODEL', 'claude-sonnet-4-20250514'),
+        ],
     ],
 
     /*
@@ -93,6 +113,17 @@ return [
     'denue' => [
         'token' => env('INEGI_DENUE_TOKEN', ''),
         'mock'  => env('INEGI_DENUE_MOCK', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tlaloc.sh — APIs de Validación y PNN (México)
+    |--------------------------------------------------------------------------
+    */
+    'tlaloc' => [
+        'base_url' => env('TLALOC_BASE_URL', 'https://api.tlaloc.sh/mx'),
+        'api_key'  => env('TLALOC_API_KEY', ''),
+        'mock'     => env('TLALOC_MOCK', false),
     ],
 ];
 

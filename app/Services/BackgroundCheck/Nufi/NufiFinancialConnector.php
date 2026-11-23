@@ -47,13 +47,15 @@ class NufiFinancialConnector extends NufiConnector
 
     protected function callApi(Subject $subject): array
     {
-        $response = $this->postRequest('/buro/consulta', [
+        $endpoint = config('background_check.nufi.endpoints.buro', '/buro/consulta');
+
+        $response = $this->postRequest($endpoint, [
             'rfc'                  => strtoupper($subject->rfc),
             'curp'                 => strtoupper($subject->curp),
-            'primer_apellido'      => $subject->primer_apellido ?? '',
-            'segundo_apellido'     => $subject->segundo_apellido ?? '',
-            'nombre'               => $subject->primer_nombre ?? $subject->name_or_company,
-            'fecha_nacimiento'     => $subject->fecha_nacimiento ?? '',
+            'primer_apellido'      => $subject->father_surname ?? '',
+            'segundo_apellido'     => $subject->mother_surname ?? '',
+            'nombre'               => $subject->first_name ?? $subject->name_or_company,
+            'fecha_nacimiento'     => $subject->birth_date?->format('Y-m-d') ?? '',
             'credit_consent_at'    => $subject->credit_consent_at?->toIso8601String(),
         ]);
 
@@ -63,22 +65,39 @@ class NufiFinancialConnector extends NufiConnector
     protected function mockResponse(Subject $subject): array
     {
         return [
-            'score_buro'          => 680,
-            'rango_score'         => 'Regular',   // Excelente > 750, Bueno 700-749, Regular 650-699, Malo < 650
-            'nivel_riesgo'        => 'Medio',
-            'cuentas_activas'     => 3,
-            'cuentas_cerradas'    => 2,
-            'cuentas_en_mora'     => 0,
-            'monto_total_deuda'   => 45000.00,
-            'monto_vencido'       => 0.00,
-            'max_atraso_meses'    => 1,
-            'consultas_recientes' => 2,
-            'fecha_consulta'      => now()->format('Y-m-d'),
-            'buro'                => 'Buró de Crédito',
-            'tiene_alertas'       => false,
-            'alertas'             => [],
-            'mensaje'             => '[MOCK] Score crediticio consultado exitosamente.',
-            'aviso_legal'         => 'Consulta realizada con autorización expresa del titular bajo consentimiento registrado en fecha ' . ($subject->credit_consent_at?->format('d/m/Y') ?? now()->format('d/m/Y')) . '.',
+            'score_buro'           => 680,
+            'rango_score'          => 'Regular',   // Excelente > 750, Bueno 700-749, Regular 650-699, Malo < 650
+            'nivel_riesgo'         => 'Medio',
+            'cuentas_activas'      => 3,
+            'cuentas_cerradas'     => 2,
+            'cuentas_en_mora'      => 0,
+            'monto_total_deuda'    => 45000.00,
+            'monto_vencido'        => 0.00,
+            'max_atraso_meses'     => 1,
+            'consultas_recientes'  => 2,
+            'fecha_consulta'       => now()->format('Y-m-d'),
+            'buro'                 => 'Buró de Crédito',
+            'tiene_alertas'        => false,
+            'alertas'              => [],
+            'domicilios_conocidos' => [
+                [
+                    'direccion'      => 'Av. Insurgentes Sur 1458, Col. Actipan, Benito Juárez, 03230, CDMX',
+                    'fecha_reporte'  => now()->subMonths(2)->format('Y-m-d'),
+                    'tipo'           => 'Domicilio Actual Reportado',
+                    'fuente'         => 'Buró de Crédito',
+                ],
+                [
+                    'direccion'      => 'Calle Morelos 214, Col. Centro, Guadalajara, 44100, Jalisco',
+                    'fecha_reporte'  => now()->subYears(2)->format('Y-m-d'),
+                    'tipo'           => 'Domicilio Histórico',
+                    'fuente'         => 'Buró de Crédito',
+                ],
+            ],
+            'telefonos_reportados' => [
+                ['numero' => '55-XXXX-1234', 'fecha_reporte' => now()->subMonths(2)->format('Y-m-d')],
+            ],
+            'mensaje'              => '[MOCK] Score crediticio y domicilios conocidos consultados exitosamente.',
+            'aviso_legal'          => 'Consulta realizada con autorización expresa del titular bajo consentimiento registrado en fecha ' . ($subject->credit_consent_at?->format('d/m/Y') ?? now()->format('d/m/Y')) . '.',
         ];
     }
 
@@ -105,10 +124,12 @@ class NufiFinancialConnector extends NufiConnector
             'consultas_recientes' => $response['consultas_recientes'] ?? null,
             'fecha_consulta'      => $response['fecha_consulta']      ?? null,
             'buro'                => $response['buro']                ?? null,
-            'tiene_alertas'       => $response['tiene_alertas']       ?? false,
-            'alertas'             => $response['alertas']             ?? [],
-            'mensaje'             => $response['mensaje']             ?? null,
-            'aviso_legal'         => $response['aviso_legal']         ?? null,
+            'tiene_alertas'        => $response['tiene_alertas']        ?? false,
+            'alertas'              => $response['alertas']              ?? [],
+            'domicilios_conocidos' => $response['domicilios_conocidos'] ?? ($response['domicilios'] ?? []),
+            'telefonos_reportados' => $response['telefonos_reportados'] ?? ($response['telefonos'] ?? []),
+            'mensaje'              => $response['mensaje']              ?? null,
+            'aviso_legal'          => $response['aviso_legal']          ?? null,
         ];
     }
 }

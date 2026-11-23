@@ -43,8 +43,11 @@ class ReportController extends Controller
             $riskService = new \App\Services\BackgroundCheck\RiskAssessmentService();
             $riskAssessment = $riskService->calculateRisk($subject);
 
+            $locationService = new \App\Services\BackgroundCheck\LocationProfileService();
+            $radiografia = $locationService->build($subject, $queries);
+
             // Render PDF using Laravel DomPDF
-            $pdf = Pdf::loadView('tenant.reports.subject_pdf', compact('subject', 'queries', 'riskAssessment'));
+            $pdf = Pdf::loadView('tenant.reports.subject_pdf', compact('subject', 'queries', 'riskAssessment', 'radiografia'));
 
             // Use stream to open in browser window/tab
             return $pdf->stream("Expediente_{$subject->rfc}_{$subject->id}.pdf");

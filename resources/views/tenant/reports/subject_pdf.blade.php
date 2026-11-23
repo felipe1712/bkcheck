@@ -200,6 +200,52 @@
         </tr>
     </table>
 
+    @if(!empty($radiografia))
+    <div class="section-title">Radiografía de Localización e Inteligencia (Porcupine v3)</div>
+    <table class="data-table">
+        <tr>
+            <th style="width: 25%;">Identidad & Salvaguarda</th>
+            <th style="width: 40%;">Domicilios Conocidos</th>
+            <th style="width: 35%;">Actividad Laboral, Penal & OSINT</th>
+        </tr>
+        <tr>
+            <td>
+                <strong>RFC:</strong> <code>{{ $radiografia['identidad']['rfc'] ?? 'N/A' }}</code>
+                @if(($radiografia['identidad']['rfc_source'] ?? '') === 'calculated_from_curp')
+                    <span class="badge badge-info">Calc. CURP</span>
+                @endif
+                <br>
+                @if(!is_null($radiografia['identidad']['confianza_score']))
+                    <strong>Confianza:</strong> {{ $radiografia['identidad']['confianza_score'] }}%<br>
+                @endif
+                @if(!empty($radiografia['telefonos']))
+                    <strong>Tel:</strong> {{ implode(', ', $radiografia['telefonos']) }}<br>
+                @endif
+                @if(!empty($subject->email))
+                    <strong>Email:</strong> {{ $subject->email }}
+                @endif
+            </td>
+            <td>
+                @forelse($radiografia['domicilios'] as $dom)
+                    <div style="margin-bottom: 3px;">
+                        <strong>[{{ $dom['fuente'] }}]</strong> {{ $dom['direccion'] }}
+                    </div>
+                @empty
+                    Sin domicilios reportados.
+                @endforelse
+            </td>
+            <td>
+                @if(!empty($radiografia['actividad_laboral']['patron_actual']))
+                    <strong>Patrón IMSS:</strong> {{ $radiografia['actividad_laboral']['patron_actual']['patron'] ?? 'N/A' }}<br>
+                @endif
+                @php $penal = $radiografia['riesgo_legal']['antecedentes_penales'] ?? []; @endphp
+                <strong>Penales:</strong> {{ !empty($penal['tiene_antecedentes']) ? ($penal['total_registros'] ?? 1) . ' registro(s)' : 'Sin registros' }}<br>
+                <strong>OSINT (Sherlock):</strong> {{ $radiografia['huella_digital']['total_redes'] ?? 0 }} perfiles
+            </td>
+        </tr>
+    </table>
+    @endif
+
     <!-- Executive Recommendation Box -->
     <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid {{ $riskAssessment['text_color'] }}; padding: 6px 10px; margin-bottom: 8px; border-radius: 3px;">
         <div style="font-size: 10px; font-weight: bold; color: #141923; text-transform: uppercase;">

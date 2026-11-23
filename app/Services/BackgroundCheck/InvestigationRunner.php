@@ -6,6 +6,7 @@ use App\Models\Subject;
 use App\Models\SourceQuery;
 use App\Models\ApiUsage;
 use App\Jobs\ProcessConnectorQuery;
+use App\Jobs\ResolveIdentityFromCurpJob;
 use App\Services\BackgroundCheck\Nufi\NufiRfcConnector;
 use App\Services\BackgroundCheck\Nufi\NufiCsdConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSigerConnector;
@@ -17,13 +18,18 @@ use App\Services\BackgroundCheck\Nufi\NufiListaNominalConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIneVsSelfieConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSancionesConnector;
 use App\Services\BackgroundCheck\Nufi\NufiLitigiosConnector;
+use App\Services\BackgroundCheck\Nufi\NufiPenalesConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSelfieConnector;
 use App\Services\BackgroundCheck\Nufi\NufiCurpConnector;
 use App\Services\BackgroundCheck\Nufi\NufiDomicilioConnector;
 use App\Services\BackgroundCheck\Nufi\NufiNssConnector;
+use App\Services\BackgroundCheck\Nufi\NufiCedulaProfesionalConnector;
 use App\Services\BackgroundCheck\Nufi\NufiFinancialConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIdentidadDigitalConnector;
 use App\Services\BackgroundCheck\PresenciaEnLineaConnector;
+use App\Services\BackgroundCheck\HorusOsintConnector;
+use App\Services\BackgroundCheck\RobinDarkWebConnector;
+use App\Services\BackgroundCheck\Tlaloc\TlalocPhoneConnector;
 use App\Services\BackgroundCheck\Inegi\DenueConnector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -53,11 +59,29 @@ class InvestigationRunner
             new NufiSelfieConnector(),
             new NufiDomicilioConnector(),
             new NufiNssConnector(),
+            new NufiCedulaProfesionalConnector(),
             new NufiFinancialConnector(),
             new NufiIdentidadDigitalConnector(),
             new PresenciaEnLineaConnector(),
+            new HorusOsintConnector(),
+            new RobinDarkWebConnector(),
+            new TlalocPhoneConnector(),
             new DenueConnector(),
         ];
+    }
+
+    /**
+     * Determina si el sujeto requiere Fase 1 (resolución de identidad desde CURP).
+     */
+    public function needsIdentityResolution(Subject $subject): bool
+    {
+        return $subject->tipo === 'persona_fisica'
+            && !empty($subject->curp)
+            && (
+                empty($subject->rfc)
+                || empty($subject->name_or_company)
+                || str_starts_with($subject->name_or_company, 'Por resolver')
+            );
     }
 
     /**
@@ -73,10 +97,47 @@ class InvestigationRunner
             throw new \Exception("El sujeto no está asociado a un Tenant válido.");
         }
 
+        // Get current user and IP address details
+        $userId = Auth::id() ?? $tenant->users()->first()?->id ?? 1;
+        $ipAddress = request()->ip();
+
+        // Salvaguarda Fase 1: Si solo se conoce la CURP, resolver RENAPO + calcular/validar RFC primero
+        if ($this->needsIdentityResolution($subject)) {
+            $period = now()->format('Y-m');
+            $currentUsage = ApiUsage::withoutGlobalScopes()
+                ->where('tenant_id', $tenant->id)
+                ->where('periodo', $period)
+                ->sum('conteo');
+
+            if (($currentUsage + 2) > $tenant->limite_consultas_mensual) {
+                throw new \Exception("Se ha excedido el límite mensual de consultas para su organización.");
+            }
+
+            ResolveIdentityFromCurpJob::dispatch($subject->id, $userId, $ipAddress);
+            Log::info("Investigación Fase 1 (CURP -> RFC) iniciada para sujeto {$subject->id} por usuario {$userId}.");
+            return;
+        }
+
+        $this->dispatchPhaseTwo($subject, $userId, $ipAddress);
+    }
+
+    /**
+     * Despacha en paralelo todos los conectores aplicables para el sujeto.
+     */
+    public function dispatchPhaseTwo(Subject $subject, int $userId, ?string $ipAddress = null, array $excludeIdentifiers = []): void
+    {
+        $tenant = $subject->project->tenant;
+        if (!$tenant) {
+            throw new \Exception("El sujeto no está asociado a un Tenant válido.");
+        }
+
         // 1. Determine which connectors apply to this subject and tier level
         $subjectTier = $subject->tier_level ?? 4;
         $applicableConnectors = [];
         foreach ($this->getConnectors() as $connector) {
+            if (in_array($connector->getIdentifier(), $excludeIdentifiers, true)) {
+                continue;
+            }
             $minTier = method_exists($connector, 'getMinTierLevel') ? $connector->getMinTierLevel() : 1;
             if ($minTier <= $subjectTier && $connector->appliesTo($subject)) {
                 $applicableConnectors[] = $connector;
@@ -84,7 +145,10 @@ class InvestigationRunner
         }
 
         if (empty($applicableConnectors)) {
-            throw new \Exception("No hay conectores aplicables para este sujeto.");
+            if (empty($excludeIdentifiers)) {
+                throw new \Exception("No hay conectores aplicables para este sujeto.");
+            }
+            return;
         }
 
         $requestedCount = count($applicableConnectors);
@@ -102,19 +166,13 @@ class InvestigationRunner
             throw new \Exception("Se ha excedido el límite mensual de consultas para su organización. Límite: {$limit}, Consumo Actual: {$currentUsage}, Requerido: {$requestedCount}.");
         }
 
-        // Get current user and IP address details
-        $userId = Auth::id() ?? $tenant->users()->first()?->id ?? 1;
-        $ipAddress = request()->ip();
-
         // 3. Dispatch queries
         foreach ($applicableConnectors as $connector) {
-            // Check if there's an existing query for this subject and type, delete it so we always display the latest execution
             SourceQuery::withoutGlobalScopes()
                 ->where('subject_id', $subject->id)
                 ->where('source_type', $connector->getIdentifier())
                 ->delete();
 
-            // Create new query record
             $sourceQuery = SourceQuery::create([
                 'tenant_id' => $tenant->id,
                 'subject_id' => $subject->id,
@@ -122,11 +180,10 @@ class InvestigationRunner
                 'status' => 'pending',
             ]);
 
-            // Dispatch job to the queue
             ProcessConnectorQuery::dispatch($sourceQuery, $userId, $ipAddress);
         }
 
-        Log::info("Investigación iniciada para sujeto {$subject->id} por el usuario {$userId} con {$requestedCount} consultas despachadas.");
+        Log::info("Investigación Fase 2 iniciada para sujeto {$subject->id} por usuario {$userId} con {$requestedCount} consultas despachadas.");
     }
 
     /**

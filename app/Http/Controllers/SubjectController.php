@@ -44,9 +44,9 @@ class SubjectController extends Controller
         $request->validate([
             'project_id'           => 'required|exists:projects,id',
             'tipo'                 => 'required|string|in:persona_fisica,persona_moral',
-            'name_or_company'      => 'required|string|max:255',
+            'name_or_company'      => 'nullable|required_if:tipo,persona_moral|required_without:curp|string|max:255',
             'rfc' => [
-                'required', 'string', 'min:12', 'max:13',
+                'nullable', 'required_if:tipo,persona_moral', 'required_without:curp', 'string', 'min:12', 'max:13',
                 'regex:/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A\d])$/i'
             ],
             'curp' => [
@@ -54,6 +54,9 @@ class SubjectController extends Controller
                 'regex:/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/i'
             ],
             'address'              => 'nullable|string|max:500',
+            'phone'                => 'nullable|string|max:30',
+            'email'                => 'nullable|email|max:255',
+            'known_aliases'        => 'nullable|string|max:500',
             'consent_granted'      => 'required|boolean|accepted',
             'consent_legal_basis'  => 'required|string|max:255',
             'consent_document'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -95,13 +98,21 @@ class SubjectController extends Controller
         $finKey = $request->input('finalidad_clave', 'CONTRATACION_LABORAL');
         $finDesc = $catFinalidades[$finKey]['descripcion'] ?? $request->consent_legal_basis;
 
+        $knownAliases = [];
+        if ($request->filled('known_aliases')) {
+            $knownAliases = array_values(array_filter(array_map('trim', explode(',', $request->known_aliases))));
+        }
+
         $subject = Subject::create([
             'project_id'             => $request->project_id,
             'tipo'                   => $request->tipo,
-            'name_or_company'        => $request->name_or_company,
-            'rfc'                    => strtoupper($request->rfc),
+            'name_or_company'        => $request->name_or_company ?: ($request->curp ? 'Por resolver vía RENAPO (' . strtoupper($request->curp) . ')' : null),
+            'rfc'                    => $request->rfc ? strtoupper($request->rfc) : null,
+            'rfc_source'             => $request->rfc ? 'manual' : 'pending_curp',
             'curp'                   => $request->curp ? strtoupper($request->curp) : null,
             'address'                => $request->address,
+            'phone'                  => $request->phone ?: null,
+            'email'                  => $request->email ?: null,
             'consent_granted'        => $request->consent_granted,
             'consent_date'           => now(),
             'consent_legal_basis'    => $finDesc,
@@ -110,6 +121,7 @@ class SubjectController extends Controller
             'ine_back_path'          => $ineBackPath,
             // Tier 2 & v2
             'username'               => $request->username ?: null,
+            'known_aliases'          => !empty($knownAliases) ? $knownAliases : null,
             'nss'                    => $request->nss ?: null,
             'proof_of_address_path'  => $proofOfAddressPath,
             'credit_consent_granted' => $creditConsent,
@@ -147,7 +159,10 @@ class SubjectController extends Controller
             $riskService = new \App\Services\BackgroundCheck\RiskAssessmentService();
             $riskAssessment = $riskService->calculateRisk($subject);
 
-            return view('tenant.subjects.show', compact('subject', 'queries', 'riskAssessment'));
+            $locationService = new \App\Services\BackgroundCheck\LocationProfileService();
+            $radiografia = $locationService->build($subject, $queries);
+
+            return view('tenant.subjects.show', compact('subject', 'queries', 'riskAssessment', 'radiografia'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return back()->with('error', 'El expediente especificado no existe o no pertenece a tu organización.');
         } catch (\Throwable $e) {

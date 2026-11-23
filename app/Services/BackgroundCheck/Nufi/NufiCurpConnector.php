@@ -3,6 +3,8 @@
 namespace App\Services\BackgroundCheck\Nufi;
 
 use App\Models\Subject;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Conector de Validación CURP / RENAPO.
@@ -36,6 +38,16 @@ class NufiCurpConnector extends NufiConnector
 
     protected function callApi(Subject $subject): array
     {
+        // 1. Primera opción: Tlaloc.sh ($0.25 MXN / consulta)
+        $tlalocKey = config('background_check.tlaloc.api_key', '');
+        if (!empty($tlalocKey) && !config('background_check.tlaloc.mock', false)) {
+            $tlalocResult = $this->callTlalocCurp($subject, $tlalocKey);
+            if ($tlalocResult !== null) {
+                return $tlalocResult;
+            }
+        }
+
+        // 2. Fallback automático: NuFi
         if (!empty($subject->curp)) {
             $payload = [
                 'tipo_busqueda' => 'curp',
@@ -56,8 +68,63 @@ class NufiCurpConnector extends NufiConnector
         }
 
         $response = $this->postRequest('/curp/v1/consulta', $payload);
+        $normalized = $this->normalizar($response, $subject);
+        $normalized['proveedor'] = !empty($tlalocKey) ? 'nufi_fallback' : 'nufi';
 
-        return $this->normalizar($response, $subject);
+        return $normalized;
+    }
+
+    private function callTlalocCurp(Subject $subject, string $apiKey): ?array
+    {
+        $baseUrl = rtrim(config('background_check.tlaloc.base_url', 'https://api.tlaloc.sh/mx'), '/');
+        $url     = "{$baseUrl}/v1/curp";
+        $params  = [];
+
+        if (!empty($subject->curp)) {
+            $params['curp'] = strtoupper(trim($subject->curp));
+        } elseif (!empty($subject->name_or_company)) {
+            $params['names'] = $subject->first_name ?? $subject->name_or_company;
+            if (!empty($subject->father_surname)) {
+                $params['first_last_name'] = $subject->father_surname;
+            }
+            if (!empty($subject->mother_surname)) {
+                $params['second_last_name'] = $subject->mother_surname;
+            }
+        } else {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(20)
+                ->withToken($apiKey)
+                ->acceptJson()
+                ->get($url, $params);
+
+            $body = $response->json();
+
+            if ($response->successful() && is_array($body) && (!empty($body['curp']) || !empty($body['nombres']))) {
+                $this->lastLog = [
+                    'provider' => 'tlaloc',
+                    'url'      => $url,
+                    'method'   => 'GET',
+                    'query'    => $params,
+                    'response' => [
+                        'status' => $response->status(),
+                        'body'   => $body,
+                    ],
+                ];
+
+                $normalized = $this->normalizar($body, $subject);
+                $normalized['proveedor'] = 'tlaloc';
+                return $normalized;
+            }
+
+            Log::warning("Tlaloc CURP retornó HTTP {$response->status()}; ejecutando fallback NuFi.");
+        } catch (\Throwable $e) {
+            Log::warning("Tlaloc CURP falló ({$e->getMessage()}); ejecutando fallback NuFi.");
+        }
+
+        return null;
     }
 
     protected function mockResponse(Subject $subject): array

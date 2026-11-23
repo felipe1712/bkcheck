@@ -15,9 +15,17 @@ class Subject extends Model
         'project_id',
         'tipo',
         'name_or_company',
+        'first_name',
+        'father_surname',
+        'mother_surname',
+        'birth_date',
         'rfc',
+        'rfc_source',
+        'identity_confidence_score',
         'curp',
         'address',
+        'phone',
+        'email',
         'consent_granted',
         'consent_date',
         'consent_legal_basis',
@@ -34,6 +42,7 @@ class Subject extends Model
         'selfie_path',
         'liveness_id_validacion',
         'username',
+        'known_aliases',
         'proof_of_address_path',
         'nss',
         'credit_consent_granted',
@@ -45,6 +54,9 @@ class Subject extends Model
 
     protected $casts = [
         'tier_level'                => 'integer',
+        'identity_confidence_score' => 'integer',
+        'birth_date'                => 'date',
+        'known_aliases'             => 'array',
         'consent_granted'           => 'boolean',
         'consent_date'              => 'datetime',
         'enrollment_expires_at'     => 'datetime',
@@ -128,6 +140,60 @@ class Subject extends Model
     public function setNssAttribute($value)
     {
         $this->attributes['nss'] = !empty($value) ? \Illuminate\Support\Facades\Crypt::encryptString($value) : null;
+    }
+
+    public function getPhoneAttribute($value)
+    {
+        return $this->decryptField($value);
+    }
+
+    public function setPhoneAttribute($value)
+    {
+        $this->attributes['phone'] = !empty($value) ? \Illuminate\Support\Facades\Crypt::encryptString(trim($value)) : null;
+    }
+
+    public function getEmailAttribute($value)
+    {
+        return $this->decryptField($value);
+    }
+
+    public function setEmailAttribute($value)
+    {
+        $this->attributes['email'] = !empty($value) ? \Illuminate\Support\Facades\Crypt::encryptString(strtolower(trim($value))) : null;
+    }
+
+    private function decryptField($value): ?string
+    {
+        if (empty($value)) return null;
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
+        } catch (\Throwable $e) {
+            try {
+                return decrypt($value);
+            } catch (\Throwable $e2) {
+                return $value;
+            }
+        }
+    }
+
+    /**
+     * Retorna todos los usernames / aliases conocidos del sujeto para OSINT.
+     */
+    public function getAllAliases(): array
+    {
+        $aliases = [];
+        if (!empty($this->username)) {
+            $aliases[] = trim($this->username);
+        }
+        if (is_array($this->known_aliases)) {
+            foreach ($this->known_aliases as $alias) {
+                $clean = trim((string) $alias);
+                if ($clean !== '' && !in_array($clean, $aliases, true)) {
+                    $aliases[] = $clean;
+                }
+            }
+        }
+        return $aliases;
     }
 
     public function getTierLevelAttribute($value)

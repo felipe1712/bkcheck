@@ -125,6 +125,8 @@
 </div>
 @endif
 
+@include('tenant.subjects.partials.radiografia')
+
 <div class="row">
     <!-- Ficha de Datos Horizontal (Ancho completo) -->
     <div class="col-12">

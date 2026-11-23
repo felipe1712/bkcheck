@@ -120,24 +120,83 @@
                         </div>
 
                         <div class="mb-4" id="usernameGroup" style="display:none;">
-                            <label for="username" class="form-label">
-                                <i class="ri-at-line me-1 text-muted"></i>
-                                Username / Alias en Redes Sociales
-                                <span class="badge bg-info-subtle text-info fs-10 ms-1">OSINT</span>
-                            </label>
-                            <input type="text"
-                                class="form-control @error('username') is-invalid @enderror"
-                                id="username" name="username"
-                                value="{{ old('username') }}"
-                                placeholder="ej: jperez (sin el @)"
-                                maxlength="100">
-                            <div class="form-text text-muted">
-                                <i class="ri-information-line me-1"></i>
-                                Opcional. Si se proporciona, se usará para buscar la presencia digital del investigado en más de 300 plataformas.
+                            <div class="d-flex align-items-center mb-3 mt-2 border-bottom pb-2">
+                                <i class="ri-radar-line me-2 text-info fs-16"></i>
+                                <span class="fw-semibold text-muted fs-13">Inteligencia Digital, Contacto y OSINT (Sherlock / Horus / Robin)</span>
                             </div>
-                            @error('username')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">
+                                        <i class="ri-phone-line me-1 text-muted"></i>
+                                        Teléfono / Celular (Horus)
+                                    </label>
+                                    <input type="text"
+                                        class="form-control @error('phone') is-invalid @enderror"
+                                        id="phone" name="phone"
+                                        value="{{ old('phone') }}"
+                                        placeholder="ej: +525512345678"
+                                        maxlength="30">
+                                    <div class="form-text text-muted fs-12">Opcional. Permite consultar carrier, geolocalización y huella digital telefónica.</div>
+                                    @error('phone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">
+                                        <i class="ri-mail-line me-1 text-muted"></i>
+                                        Correo Electrónico (Horus / Robin)
+                                    </label>
+                                    <input type="email"
+                                        class="form-control @error('email') is-invalid @enderror"
+                                        id="email" name="email"
+                                        value="{{ old('email') }}"
+                                        placeholder="ej: juan.perez@dominio.com"
+                                        maxlength="255">
+                                    <div class="form-text text-muted fs-12">Opcional. Permite verificar dominio, registros y posibles filtraciones.</div>
+                                    @error('email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <label for="username" class="form-label">
+                                        <i class="ri-at-line me-1 text-muted"></i>
+                                        Username Principal (Sherlock)
+                                        <span class="badge bg-info-subtle text-info fs-10 ms-1">OSINT</span>
+                                    </label>
+                                    <input type="text"
+                                        class="form-control @error('username') is-invalid @enderror"
+                                        id="username" name="username"
+                                        value="{{ old('username') }}"
+                                        placeholder="ej: jperez (sin el @)"
+                                        maxlength="100">
+                                    <div class="form-text text-muted fs-12">
+                                        Opcional. Si se omite, Sherlock generará variantes automáticas a partir del nombre.
+                                    </div>
+                                    @error('username')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="known_aliases" class="form-label">
+                                        <i class="ri-user-search-line me-1 text-muted"></i>
+                                        Aliases / Usernames Adicionales
+                                    </label>
+                                    <input type="text"
+                                        class="form-control @error('known_aliases') is-invalid @enderror"
+                                        id="known_aliases" name="known_aliases"
+                                        value="{{ old('known_aliases') }}"
+                                        placeholder="ej: juanp90, jperez_mx, el_juan"
+                                        maxlength="500">
+                                    <div class="form-text text-muted fs-12">
+                                        Opcional. Separa múltiples aliases por coma para ampliar el barrido en redes sociales.
+                                    </div>
+                                    @error('known_aliases')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
 
                         {{-- ─── Tier 2: NSS, Comprobante de Domicilio, Score Crediticio ─── --}}
@@ -260,6 +319,27 @@
 </div>
 
 <script>
+    function updateCurpOnlyRequirements() {
+        var tipo = document.getElementById('tipo').value;
+        var curpVal = (document.getElementById('curp').value || '').trim();
+        var nameInput = document.getElementById('name_or_company');
+        var rfcInput = document.getElementById('rfc');
+
+        if (tipo === 'persona_fisica' && curpVal.length === 18) {
+            nameInput.removeAttribute('required');
+            rfcInput.removeAttribute('required');
+            nameInput.placeholder = 'Opcional si ya ingresaste CURP (se resolverá en RENAPO)';
+            rfcInput.placeholder = 'Opcional (se calculará y validará desde la CURP)';
+        } else {
+            nameInput.setAttribute('required', 'required');
+            rfcInput.setAttribute('required', 'required');
+            if (tipo === 'persona_fisica') {
+                nameInput.placeholder = 'Ej: Juan Pérez López';
+                rfcInput.placeholder = 'Ej: PELJ900101XYZ';
+            }
+        }
+    }
+
     function toggleSubjectTypeFields() {
         var tipo = document.getElementById('tipo').value;
         var curpGroup = document.getElementById('curpGroup');
@@ -289,6 +369,12 @@
             document.getElementById('name_or_company').placeholder = 'Ej: Aceros de México S.A. de C.V.';
             document.getElementById('rfc').placeholder = 'Ej: AME120304XYZ';
         }
+        updateCurpOnlyRequirements();
+    }
+
+    var curpInputEl = document.getElementById('curp');
+    if (curpInputEl) {
+        curpInputEl.addEventListener('input', updateCurpOnlyRequirements);
     }
 
     // Mostrar el consentimiento crediticio solo cuando la base legal es crédito

@@ -45,8 +45,10 @@ class PresenciaEnLineaConnector extends BaseSourceConnector
      */
     public function appliesTo(Subject $subject): bool
     {
-        // Requiere al menos nombre o username para buscar
-        return !empty($subject->name_or_company);
+        // Requiere al menos nombre, username o email para buscar
+        return !empty($subject->name_or_company)
+            || !empty($subject->username)
+            || !empty($subject->email);
     }
 
     /**
@@ -86,8 +88,11 @@ class PresenciaEnLineaConnector extends BaseSourceConnector
         $secret     = config('background_check.osint.secret', 'bkcheck-osint-dev-secret');
 
         $payload = [
-            'nombre'   => $subject->name_or_company,
-            'username' => $subject->username ?? '',
+            'nombre'     => $subject->name_or_company,
+            'username'   => $subject->username ?? '',
+            'email'      => $subject->email ?? '',
+            'aliases'    => $subject->getAllAliases(),
+            'birth_year' => $subject->birth_date ? $subject->birth_date->format('Y') : '',
         ];
 
         $this->lastLog['request'] = [
@@ -137,7 +142,7 @@ class PresenciaEnLineaConnector extends BaseSourceConnector
             'total_coincidencias'       => $data['total_coincidencias'] ?? 0,
             'nivel_exposicion'          => $data['nivel_exposicion'] ?? 'ninguno',
             'disclaimer'                => $data['disclaimer'] ?? $this->getDisclaimer(),
-            'fuentes_ejecutadas'        => ['sherlock', 'social_analyzer'],
+            'fuentes_ejecutadas'        => $data['fuentes_ejecutadas'] ?? ['sherlock', 'blackbird', 'social_analyzer'],
         ];
     }
 

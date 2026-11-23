@@ -103,27 +103,36 @@ class NufiLitigiosConnector extends NufiConnector
         $response = $this->postRequest('/antecedentes_judiciales/v2/persona_fisica_nacional', $payload);
 
         $juicios = [];
+        $juiciosPenales = [];
         $data = $response['data'] ?? $response['resultados'] ?? $response['expedientes'] ?? (is_array($response) ? $response : []);
         if (is_array($data)) {
             foreach ($data as $item) {
                 if (is_array($item)) {
-                    $juicios[] = [
+                    $materia = $item['materia'] ?? $item['tipo'] ?? 'Civil / Penal / Mercantil';
+                    $entry = [
                         'expediente' => $item['expediente'] ?? $item['numero'] ?? 'N/A',
                         'juzgado'    => $item['juzgado'] ?? $item['tribunal'] ?? 'N/A',
                         'fuero'      => $item['fuero'] ?? 'Nacional / Local',
-                        'materia'    => $item['materia'] ?? $item['tipo'] ?? 'Civil / Penal / Mercantil',
+                        'materia'    => $materia,
                         'actor'      => $item['actor'] ?? $item['demandante'] ?? 'N/A',
                         'demandado'  => $item['demandado'] ?? 'N/A',
                         'fecha'      => $item['fecha'] ?? $item['fecha_acuerdo'] ?? null,
                         'acuerdos'   => $item['acuerdos'] ?? [],
                     ];
+                    $juicios[] = $entry;
+                    if (stripos((string) $materia, 'penal') !== false || stripos((string) $entry['juzgado'], 'penal') !== false) {
+                        $juiciosPenales[] = $entry;
+                    }
                 }
             }
         }
 
         return [
-            'tiene_juicios' => count($juicios) > 0,
-            'juicios'       => $juicios,
+            'tiene_juicios'            => count($juicios) > 0,
+            'juicios'                  => $juicios,
+            'tiene_antecedentes_penales' => count($juiciosPenales) > 0,
+            'total_penales'            => count($juiciosPenales),
+            'juicios_penales'          => $juiciosPenales,
         ];
     }
 
@@ -157,8 +166,11 @@ class NufiLitigiosConnector extends NufiConnector
         }
 
         return [
-            'tiene_juicios' => $tieneJuicios,
-            'juicios'       => $juicios,
+            'tiene_juicios'              => $tieneJuicios,
+            'juicios'                    => $juicios,
+            'tiene_antecedentes_penales' => false,
+            'total_penales'              => 0,
+            'juicios_penales'            => [],
         ];
     }
 

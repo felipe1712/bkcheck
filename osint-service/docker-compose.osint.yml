@@ -1,0 +1,14 @@
+services:
+  osint-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bkcheck-porcupine-osint
+    ports:
+      - "5001:5001"
+    environment:
+      - OSINT_SECRET=${OSINT_SECRET:-bkcheck-osint-dev-secret}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ROBIN_ANTHROPIC_MODEL=${ROBIN_ANTHROPIC_MODEL:-claude-sonnet-4-20250514}
+      - SHERLOCK_TIMEOUT=10
+    restart: unless-stopped

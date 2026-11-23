@@ -17,13 +17,18 @@ use App\Services\BackgroundCheck\Nufi\NufiListaNominalConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIneVsSelfieConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSancionesConnector;
 use App\Services\BackgroundCheck\Nufi\NufiLitigiosConnector;
+use App\Services\BackgroundCheck\Nufi\NufiPenalesConnector;
 use App\Services\BackgroundCheck\Nufi\NufiSelfieConnector;
 use App\Services\BackgroundCheck\Nufi\NufiCurpConnector;
 use App\Services\BackgroundCheck\Nufi\NufiDomicilioConnector;
 use App\Services\BackgroundCheck\Nufi\NufiNssConnector;
+use App\Services\BackgroundCheck\Nufi\NufiCedulaProfesionalConnector;
 use App\Services\BackgroundCheck\Nufi\NufiFinancialConnector;
 use App\Services\BackgroundCheck\Nufi\NufiIdentidadDigitalConnector;
 use App\Services\BackgroundCheck\PresenciaEnLineaConnector;
+use App\Services\BackgroundCheck\HorusOsintConnector;
+use App\Services\BackgroundCheck\RobinDarkWebConnector;
+use App\Services\BackgroundCheck\Tlaloc\TlalocPhoneConnector;
 use App\Services\BackgroundCheck\Inegi\DenueConnector;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -73,6 +78,14 @@ class ProcessConnectorQuery implements ShouldQueue
                 if (!empty($payload['tiene_juicios'])) return 'CONFIRMADO_NEGATIVO';
                 break;
 
+            case 'antecedentes_penales':
+                if (!empty($payload['tiene_antecedentes'])) return 'CONFIRMADO_NEGATIVO';
+                break;
+
+            case 'curp':
+                if (isset($payload['valida']) && !$payload['valida']) return 'CONFIRMADO_NEGATIVO';
+                break;
+
             case 'ine_vs_selfie':
                 if (isset($payload['coincide_rostro']) && !$payload['coincide_rostro']) return 'CONFIRMADO_NEGATIVO';
                 break;
@@ -119,15 +132,20 @@ class ProcessConnectorQuery implements ShouldQueue
                 'ine_reverso'      => new NufiIneReversoConnector(),
                 'lista_nominal'    => new NufiListaNominalConnector(),
                 'ine_vs_selfie'    => new NufiIneVsSelfieConnector(),
-                'sanciones'        => new NufiSancionesConnector(),
-                'litigios'         => new NufiLitigiosConnector(),
+                'sanciones'            => new NufiSancionesConnector(),
+                'litigios'             => new NufiLitigiosConnector(),
+                'antecedentes_penales' => new NufiPenalesConnector(),
                 'selfie'               => new NufiSelfieConnector(),
                 'curp'                 => new NufiCurpConnector(),
                 'comprobante_domicilio'=> new NufiDomicilioConnector(),
                 'nss_imss'             => new NufiNssConnector(),
+                'cedula_profesional'   => new NufiCedulaProfesionalConnector(),
                 'score_crediticio'     => new NufiFinancialConnector(),
                 'identidad_digital'    => new NufiIdentidadDigitalConnector(),
                 'presencia_en_linea'   => new PresenciaEnLineaConnector(),
+                'horus_osint'          => new HorusOsintConnector(),
+                'robin_darkweb'        => new RobinDarkWebConnector(),
+                'tlaloc_phone'         => new TlalocPhoneConnector(),
                 'denue'                => new DenueConnector(),
                 default => throw new \Exception("Conector no soportado: {$type}"),
             };
