@@ -1,6 +1,6 @@
 flask==3.1.0
 sherlock-project==0.15.0
-social-analyzer==0.83
+social-analyzer>=0.45
 requests==2.32.3
 PySocks==1.7.1
 phonenumbers==8.13.50
