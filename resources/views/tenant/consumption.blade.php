@@ -103,7 +103,7 @@
                 </div>
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
-                        <h4 class="fs-22 fw-semibold ff-secondary mb-1">${{ number_format($totalCost, 2) }} <span class="fs-13 text-muted">USD</span></h4>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-1">${{ number_format($totalCost, 2) }} <span class="fs-13 text-muted">MXN</span></h4>
                         <span class="badge bg-success-subtle text-success">Período seleccionado</span>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
@@ -151,7 +151,7 @@
                 </div>
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
-                        <h4 class="fs-22 fw-semibold ff-secondary mb-1">${{ number_format($yearlyCost, 2) }} <span class="fs-13 text-muted">USD</span></h4>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-1">${{ number_format($yearlyCost, 2) }} <span class="fs-13 text-muted">MXN</span></h4>
                         <span class="badge bg-warning-subtle text-warning">Acumulado anual</span>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
@@ -178,19 +178,33 @@
                         <thead class="table-light">
                             <tr>
                                 <th scope="col">Servicio / API</th>
+                                <th scope="col">Proveedor</th>
                                 <th scope="col">Consultas Realizadas</th>
-                                <th scope="col">Tarifa Unitario</th>
+                                <th scope="col">Tarifa Unitaria (MXN)</th>
                                 <th scope="col">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody>
                             @php
+                                $prices = config('background_check.prices', []);
+                                $pricesTlaloc = config('background_check.prices_tlaloc', []);
                                 $servicesList = [
-                                    'rfc' => ['name' => 'Validación de RFC (SAT)', 'price' => 1.50],
-                                    'csd' => ['name' => 'Certificados CSD y FIEL (SAT)', 'price' => 3.00],
-                                    'siger' => ['name' => 'Registro Público de Comercio (SIGER)', 'price' => 8.00],
-                                    'sat_listas' => ['name' => 'Listas SAT 69/69B (EFOS/EDOS)', 'price' => 1.00],
-                                    'marcas' => ['name' => 'Búsqueda de Marcas (IMPI)', 'price' => 5.00],
+                                    'curp'               => ['name' => 'Validación CURP (RENAPO)', 'provider' => 'Tlaloc (1ª opción) / NuFi (Fallback)', 'tlaloc_first' => true],
+                                    'rfc'                => ['name' => 'Validación de RFC (SAT)', 'provider' => 'Tlaloc (1ª opción) / NuFi (Fallback)', 'tlaloc_first' => true],
+                                    'tlaloc_phone'       => ['name' => 'Inteligencia Telefónica PNN', 'provider' => 'Tlaloc', 'tlaloc_first' => true],
+                                    'cedula_profesional' => ['name' => 'Cédula Profesional (SEP)', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'litigios'           => ['name' => 'Antecedentes Judiciales y Penales', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'nss_imss'           => ['name' => 'Historial Laboral IMSS / Semanas Cotizadas', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'score_crediticio'   => ['name' => 'Buró de Crédito y Domicilios Conocidos', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'csd'                => ['name' => 'Certificados CSD y FIEL (SAT)', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'siger'              => ['name' => 'Registro Público de Comercio (SIGER)', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'sat_listas'         => ['name' => 'Listas SAT 69/69B (EFOS/EDOS)', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'sanciones'          => ['name' => 'Listas PLD / OFAC / ONU / PEPs', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'marcas'             => ['name' => 'Búsqueda de Marcas (IMPI)', 'provider' => 'NuFi', 'tlaloc_first' => false],
+                                    'presencia_en_linea' => ['name' => 'OSINT Redes (Sherlock + Blackbird + Social Analyzer)', 'provider' => 'OSINT Local ($0)', 'tlaloc_first' => false],
+                                    'horus_osint'        => ['name' => 'Horus OSINT (Teléfono y Correo/Dominio)', 'provider' => 'OSINT Local ($0)', 'tlaloc_first' => false],
+                                    'robin_darkweb'      => ['name' => 'Robin Dark Web (Anthropic + Tor)', 'provider' => 'OSINT / Anthropic', 'tlaloc_first' => false],
+                                    'denue'              => ['name' => 'INEGI DENUE (Unidades Económicas)', 'provider' => 'INEGI ($0)', 'tlaloc_first' => false],
                                 ];
                             @endphp
                             
@@ -198,21 +212,37 @@
                                 @php
                                     $usageRecord = $usages->firstWhere('servicio', $key);
                                     $count = $usageRecord ? $usageRecord->conteo : 0;
-                                    $subtotal = $count * $serv['price'];
+                                    $unitPrice = $serv['tlaloc_first']
+                                        ? ($pricesTlaloc[$key] ?? ($prices[$key] ?? 0.00))
+                                        : ($prices[$key] ?? 0.00);
+                                    $fallbackPrice = $prices[$key] ?? 0.00;
+                                    $subtotal = $usageRecord ? (float) $usageRecord->ingreso_estimado : 0.00;
                                 @endphp
                                 <tr>
                                     <td class="fw-semibold">{{ $serv['name'] }}</td>
+                                    <td>
+                                        @if($serv['tlaloc_first'])
+                                            <span class="badge bg-primary-subtle text-primary">{{ $serv['provider'] }}</span>
+                                        @else
+                                            <span class="badge bg-light text-dark border">{{ $serv['provider'] }}</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $count }}</td>
-                                    <td>${{ number_format($serv['price'], 2) }} USD</td>
-                                    <td class="fw-semibold text-dark">${{ number_format($subtotal, 2) }} USD</td>
+                                    <td>
+                                        ${{ number_format($unitPrice, 2) }} MXN
+                                        @if($serv['tlaloc_first'] && $fallbackPrice > $unitPrice)
+                                            <small class="text-muted d-block">(Fallback NuFi: ${{ number_format($fallbackPrice, 2) }} MXN)</small>
+                                        @endif
+                                    </td>
+                                    <td class="fw-semibold text-dark">${{ number_format($subtotal, 2) }} MXN</td>
                                 </tr>
                             @endforeach
                             
                             <!-- Total row -->
                             <tr class="table-light border-top-double">
-                                <td colspan="2" class="fw-bold fs-14">Total Consolidado</td>
+                                <td colspan="3" class="fw-bold fs-14">Total Consolidado</td>
                                 <td></td>
-                                <td class="fw-bold fs-14 text-primary">${{ number_format($totalCost, 2) }} USD</td>
+                                <td class="fw-bold fs-14 text-primary">${{ number_format($totalCost, 2) }} MXN</td>
                             </tr>
                         </tbody>
                     </table>

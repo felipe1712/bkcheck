@@ -25,58 +25,69 @@ return [
         ],
     ],
 
-    // Estimación de costos ficticios internos por API para tableros analíticos
+    // Estimación de costos internos en MXN por API (Tlaloc-primero / NuFi fallback)
+    'costs_tlaloc' => [
+        'rfc'          => 0.10,
+        'curp'         => 0.25,
+        'tlaloc_phone' => 0.10,
+    ],
+    'prices_tlaloc' => [
+        'rfc'          => 0.50,
+        'curp'         => 0.75,
+        'tlaloc_phone' => 0.50,
+    ],
+
     'costs' => [
-        'rfc'                 => 0.50,
-        'csd'                 => 1.20,
-        'siger'               => 3.50,
-        'sat_listas'          => 0.40,
-        'marcas'              => 2.00,
-        'ine_frente'          => 1.50,
-        'ine_reverso'         => 1.50,
-        'lista_nominal'       => 1.50,
-        'ine_vs_selfie'       => 2.00,
-        'sanciones'           => 0.80,
-        'litigios'            => 1.50,
-        'antecedentes_penales'=> 2.00,
-        'selfie'              => 0.00,   // Sin costo extra (proceso interno)
+        'rfc'                 => 3.00,   // NuFi fallback (Tlaloc: $0.10 MXN)
+        'csd'                 => 3.00,
+        'siger'               => 3.00,
+        'sat_listas'          => 3.00,
+        'marcas'              => 3.00,
+        'ine_frente'          => 3.00,
+        'ine_reverso'         => 3.00,
+        'lista_nominal'       => 3.00,
+        'ine_vs_selfie'       => 3.00,
+        'sanciones'           => 3.00,
+        'litigios'            => 3.00,
+        'antecedentes_penales'=> 3.00,
+        'selfie'              => 0.00,
         'presencia_en_linea'  => 0.00,   // Herramientas open source
         'horus_osint'         => 0.00,   // Herramientas open source
-        'robin_darkweb'       => 0.50,   // Consumo LLM Anthropic
+        'robin_darkweb'       => 1.50,   // Consumo LLM Anthropic
         'tlaloc_phone'        => 0.10,   // Tlaloc PNN
-        'curp'                => 0.00,   // Gratuito vía NuFi
-        'comprobante_domicilio' => 1.00,
-        'nss_imss'            => 0.80,
-        'cedula_profesional'  => 0.80,
-        'score_crediticio'    => 2.50,
+        'curp'                => 3.00,   // NuFi fallback (Tlaloc: $0.25 MXN)
+        'comprobante_domicilio' => 3.00,
+        'nss_imss'            => 3.00,
+        'cedula_profesional'  => 3.00,
+        'score_crediticio'    => 5.00,
         'denue'               => 0.00,   // INEGI — API pública gratuita
     ],
 
-    // Tarifas cobradas ficticiamente al tenant por consulta para margen/ingreso
+    // Tarifas al tenant en MXN por consulta
     'prices' => [
-        'rfc'                 => 1.50,
-        'csd'                 => 3.00,
-        'siger'               => 8.00,
-        'sat_listas'          => 1.00,
-        'marcas'              => 5.00,
-        'ine_frente'          => 3.50,
-        'ine_reverso'         => 3.50,
-        'lista_nominal'       => 3.50,
-        'ine_vs_selfie'       => 5.00,
-        'sanciones'           => 2.00,
-        'litigios'            => 4.00,
-        'antecedentes_penales'=> 5.00,
+        'rfc'                 => 5.00,   // NuFi fallback (Tlaloc: $0.50 MXN)
+        'csd'                 => 8.00,
+        'siger'               => 12.00,
+        'sat_listas'          => 5.00,
+        'marcas'              => 10.00,
+        'ine_frente'          => 6.00,
+        'ine_reverso'         => 6.00,
+        'lista_nominal'       => 6.00,
+        'ine_vs_selfie'       => 8.00,
+        'sanciones'           => 5.00,
+        'litigios'            => 8.00,
+        'antecedentes_penales'=> 8.00,
         'selfie'              => 0.00,
         'presencia_en_linea'  => 0.00,
         'horus_osint'         => 0.00,
-        'robin_darkweb'       => 2.00,
+        'robin_darkweb'       => 5.00,
         'tlaloc_phone'        => 0.50,
-        'curp'                => 0.00,
-        'comprobante_domicilio' => 3.00,
-        'nss_imss'            => 2.00,
-        'cedula_profesional'  => 2.50,
-        'score_crediticio'    => 6.00,
-        'denue'               => 0.00,   // INEGI — sin margen, valor añadido gratuito
+        'curp'                => 5.00,   // NuFi fallback (Tlaloc: $0.75 MXN)
+        'comprobante_domicilio' => 6.00,
+        'nss_imss'            => 6.00,
+        'cedula_profesional'  => 6.00,
+        'score_crediticio'    => 15.00,
+        'denue'               => 0.00,
     ],
 
     /*

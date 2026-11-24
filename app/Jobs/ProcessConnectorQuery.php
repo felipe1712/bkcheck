@@ -196,10 +196,15 @@ class ProcessConnectorQuery implements ShouldQueue
                 'created_at' => now(),
             ]);
 
-            // 2. Track & increment tenant API monthly usage counters
+            // 2. Track & increment tenant API monthly usage counters (en MXN; tarifa diferenciada Tlaloc vs NuFi fallback)
             $period = now()->format('Y-m');
-            $cost = config("background_check.costs.{$type}", 0.00);
-            $price = config("background_check.prices.{$type}", 0.00);
+            $usedTlaloc = ($payload['proveedor'] ?? null) === 'tlaloc' || $type === 'tlaloc_phone';
+            $cost = $usedTlaloc
+                ? config("background_check.costs_tlaloc.{$type}", config("background_check.costs.{$type}", 0.00))
+                : config("background_check.costs.{$type}", 0.00);
+            $price = $usedTlaloc
+                ? config("background_check.prices_tlaloc.{$type}", config("background_check.prices.{$type}", 0.00))
+                : config("background_check.prices.{$type}", 0.00);
 
             // Bypass tenant scopes for background job execution to avoid missing Auth::user() context issues
             $usage = ApiUsage::withoutGlobalScopes()
