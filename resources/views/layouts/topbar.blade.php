@@ -6,7 +6,7 @@
                 <span class="header-toggle me-3">
                     <i class="ti ti-menu-2"></i>
                 </span>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 d-none d-sm-inline-block">
+                <span class="badge px-2 py-1 d-none d-sm-inline-block" style="background-color: #1e3a8a; color: #ffffff;">
                     <i class="ti ti-radar me-1"></i> Porcupine v3
                 </span>
             </div>
